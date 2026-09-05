@@ -1,0 +1,257 @@
+/**
+ * Job Drive & Placement Cell Controller
+ * Handles company drive listings, student eligibility matching, one-click applications, and candidate shortlisting.
+ */
+
+const pool = require('../config/db');
+
+/**
+ * GET /api/job-drives
+ * Lists all active placement drives with eligibility computation for current student
+ */
+exports.getJobDrives = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const userRole = req.user.role;
+
+    // Fetch all active drives
+    const [drives] = await pool.query(`
+      SELECT 
+        jd.id, jd.company_name, jd.job_title, jd.job_role, jd.package_lpa,
+        jd.min_cgpa, jd.min_aptitude_score, jd.min_coding_score,
+        jd.required_skills, jd.job_description, jd.status, jd.created_at,
+        COUNT(ja.id) AS total_applicants
+      FROM job_drives jd
+      LEFT JOIN job_applications ja ON jd.id = ja.job_drive_id
+      GROUP BY jd.id
+      ORDER BY jd.package_lpa DESC
+    `);
+
+    // If student, check eligibility & application status
+    let studentProfile = null;
+    let applicationsMap = {};
+
+    if (userRole === 'student') {
+      const [stuRows] = await pool.query(`
+        SELECT s.cgpa, sm.aptitude_score, sm.coding_score, sm.placement_ready_score
+        FROM students s
+        LEFT JOIN student_metrics sm ON s.user_id = sm.student_id
+        WHERE s.user_id = ?
+      `, [userId]);
+
+      if (stuRows.length > 0) {
+        studentProfile = {
+          cgpa: Number(stuRows[0].cgpa) || 0,
+          aptitude_score: Number(stuRows[0].aptitude_score) || 0,
+          coding_score: Number(stuRows[0].coding_score) || 0,
+          placement_ready_score: Number(stuRows[0].placement_ready_score) || 0
+        };
+      }
+
+      const [apps] = await pool.query(
+        'SELECT job_drive_id, status, ml_match_score FROM job_applications WHERE student_id = ?',
+        [userId]
+      );
+      apps.forEach(a => {
+        applicationsMap[a.job_drive_id] = {
+          status: a.status,
+          ml_match_score: a.ml_match_score
+        };
+      });
+    }
+
+    const formattedDrives = drives.map(d => {
+      let isEligible = true;
+      let eligibilityDetails = {
+        cgpa_eligible: true,
+        aptitude_eligible: true,
+        coding_eligible: true
+      };
+
+      if (studentProfile) {
+        eligibilityDetails.cgpa_eligible = studentProfile.cgpa >= Number(d.min_cgpa);
+        eligibilityDetails.aptitude_eligible = studentProfile.aptitude_score >= Number(d.min_aptitude_score);
+        eligibilityDetails.coding_eligible = studentProfile.coding_score >= Number(d.min_coding_score);
+        isEligible = eligibilityDetails.cgpa_eligible && eligibilityDetails.aptitude_eligible && eligibilityDetails.coding_eligible;
+      }
+
+      return {
+        ...d,
+        required_skills: typeof d.required_skills === 'string' ? JSON.parse(d.required_skills) : (d.required_skills || []),
+        is_eligible: isEligible,
+        eligibility_details: eligibilityDetails,
+        application_status: applicationsMap[d.id]?.status || null,
+        my_match_score: applicationsMap[d.id]?.ml_match_score || null
+      };
+    });
+
+    res.json({
+      success: true,
+      data: formattedDrives
+    });
+  } catch (error) {
+    console.error('Fetch job drives error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+/**
+ * POST /api/job-drives
+ * Create a new campus placement drive (Admin/Teacher only)
+ */
+exports.createJobDrive = async (req, res) => {
+  try {
+    const {
+      company_name,
+      job_title,
+      job_role,
+      package_lpa,
+      min_cgpa,
+      min_aptitude_score,
+      min_coding_score,
+      required_skills,
+      job_description
+    } = req.body;
+
+    if (!company_name || !job_title) {
+      return res.status(400).json({ success: false, message: 'Company name and job title are required.' });
+    }
+
+    const [result] = await pool.query(`
+      INSERT INTO job_drives 
+      (company_name, job_title, job_role, package_lpa, min_cgpa, min_aptitude_score, min_coding_score, required_skills, job_description, created_by)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `, [
+      company_name,
+      job_title,
+      job_role || 'Engineering',
+      Number(package_lpa) || 6.0,
+      Number(min_cgpa) || 6.5,
+      Number(min_aptitude_score) || 60.0,
+      Number(min_coding_score) || 60.0,
+      JSON.stringify(required_skills || []),
+      job_description || '',
+      req.user.id
+    ]);
+
+    res.status(201).json({
+      success: true,
+      message: 'Placement drive created successfully.',
+      drive_id: result.insertId
+    });
+  } catch (error) {
+    console.error('Create job drive error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+/**
+ * POST /api/job-drives/:id/apply
+ * Student applies for a placement drive
+ */
+exports.applyToJobDrive = async (req, res) => {
+  try {
+    const studentId = req.user.id;
+    const { id: driveId } = req.params;
+
+    // Check drive exists
+    const [drives] = await pool.query('SELECT * FROM job_drives WHERE id = ?', [driveId]);
+    if (drives.length === 0) {
+      return res.status(404).json({ success: false, message: 'Placement drive not found.' });
+    }
+    const drive = drives[0];
+
+    // Check student metrics
+    const [stuRows] = await pool.query(`
+      SELECT s.cgpa, sm.aptitude_score, sm.coding_score, sm.placement_ready_score
+      FROM students s
+      LEFT JOIN student_metrics sm ON s.user_id = sm.student_id
+      WHERE s.user_id = ?
+    `, [studentId]);
+
+    const cgpa = Number(stuRows[0]?.cgpa) || 7.0;
+    const apt = Number(stuRows[0]?.aptitude_score) || 70.0;
+    const code = Number(stuRows[0]?.coding_score) || 70.0;
+    const matchScore = Math.min(Math.round(((cgpa * 10 * 0.3) + (apt * 0.35) + (code * 0.35))), 99);
+
+    await pool.query(`
+      INSERT INTO job_applications (job_drive_id, student_id, ml_match_score, status)
+      VALUES (?, ?, ?, 'applied')
+      ON DUPLICATE KEY UPDATE status = 'applied'
+    `, [driveId, studentId, matchScore]);
+
+    res.json({
+      success: true,
+      message: `Successfully applied to ${drive.company_name} (${drive.job_title})!`,
+      ml_match_score: matchScore
+    });
+  } catch (error) {
+    console.error('Apply job drive error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+/**
+ * GET /api/job-drives/:id/candidates
+ * View applicant pool sorted by ML placement match score
+ */
+exports.getDriveCandidates = async (req, res) => {
+  try {
+    const { id: driveId } = req.params;
+
+    const [candidates] = await pool.query(`
+      SELECT 
+        ja.id AS application_id,
+        ja.student_id,
+        ja.ml_match_score,
+        ja.status AS application_status,
+        ja.applied_at,
+        u.full_name,
+        u.email,
+        s.enrollment_number,
+        s.cgpa,
+        d.name AS department_name,
+        sm.aptitude_score,
+        sm.coding_score,
+        sm.placement_ready_score
+      FROM job_applications ja
+      JOIN users u ON ja.student_id = u.id
+      LEFT JOIN students s ON u.id = s.user_id
+      LEFT JOIN departments d ON s.department_id = d.id
+      LEFT JOIN student_metrics sm ON u.id = sm.student_id
+      WHERE ja.job_drive_id = ?
+      ORDER BY ja.ml_match_score DESC
+    `, [driveId]);
+
+    res.json({
+      success: true,
+      data: candidates
+    });
+  } catch (error) {
+    console.error('Get drive candidates error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+/**
+ * PUT /api/job-drives/applications/:applicationId/status
+ * Update candidate status (shortlisted / interview_scheduled / selected / rejected)
+ */
+exports.updateCandidateStatus = async (req, res) => {
+  try {
+    const { applicationId } = req.params;
+    const { status } = req.body;
+
+    await pool.query(
+      'UPDATE job_applications SET status = ? WHERE id = ?',
+      [status, applicationId]
+    );
+
+    res.json({
+      success: true,
+      message: `Candidate application status updated to ${status}.`
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+};

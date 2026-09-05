@@ -1,0 +1,681 @@
+/* Student Analytics Dashboard Styles */
+
+.analytics-container {
+  padding: 24px;
+  max-width: 1300px;
+  margin: 0 auto;
+  color: #1e293b;
+}
+
+/* Header & Subheader */
+.analytics-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 28px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.analytics-title h1 {
+  font-size: 1.85rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0 0 6px 0;
+  letter-spacing: -0.02em;
+}
+
+.analytics-subtitle {
+  color: #64748b;
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+.analytics-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.refresh-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  color: #334155;
+  font-weight: 600;
+  font-size: 0.88rem;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+}
+
+.refresh-btn:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  transform: translateY(-1px);
+}
+
+.batch-badge {
+  background: #e0f2fe;
+  color: #0369a1;
+  font-weight: 700;
+  font-size: 0.85rem;
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1px solid #bae6fd;
+}
+
+/* Top KPI Grid */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 20px;
+  margin-bottom: 28px;
+}
+
+.kpi-card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 22px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04);
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.kpi-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+}
+
+.kpi-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: linear-gradient(90deg, #3b82f6, #06b6d4);
+}
+
+.kpi-card.placement::before {
+  background: linear-gradient(90deg, #10b981, #059669);
+}
+
+.kpi-card.aptitude::before {
+  background: linear-gradient(90deg, #6366f1, #8b5cf6);
+}
+
+.kpi-card.coding::before {
+  background: linear-gradient(90deg, #f59e0b, #ea580c);
+}
+
+.kpi-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.kpi-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.kpi-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  font-size: 1.15rem;
+  background: #f1f5f9;
+}
+
+.kpi-value-wrap {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.kpi-value {
+  font-size: 2.1rem;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1;
+}
+
+.kpi-unit {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #94a3b8;
+}
+
+.kpi-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 12px;
+}
+
+.kpi-badge.improving {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.kpi-badge.stable {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.kpi-badge.declining {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.kpi-footer {
+  font-size: 0.82rem;
+  color: #64748b;
+  margin-top: 6px;
+}
+
+/* 2-Column Analytics Layout */
+.analytics-dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-bottom: 28px;
+}
+
+@media (max-width: 1024px) {
+  .analytics-dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Card General */
+.dashboard-panel {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 24px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04);
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.panel-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Cohort Comparison Card */
+.cohort-meter-container {
+  background: #f8fafc;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.cohort-stat-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-size: 0.9rem;
+}
+
+.cohort-stat-row.primary {
+  font-weight: 700;
+  color: #0f172a;
+  font-size: 1rem;
+}
+
+.cohort-bar-wrapper {
+  margin: 14px 0 6px 0;
+}
+
+.cohort-bar-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.78rem;
+  color: #64748b;
+  margin-bottom: 6px;
+}
+
+.cohort-progress-track {
+  height: 12px;
+  background: #e2e8f0;
+  border-radius: 6px;
+  position: relative;
+  overflow: visible;
+}
+
+.cohort-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #3b82f6, #0284c7);
+  border-radius: 6px;
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.cohort-benchmark-pin {
+  position: absolute;
+  top: -6px;
+  width: 3px;
+  height: 24px;
+  background: #ef4444;
+  border-radius: 2px;
+  transform: translateX(-50%);
+  box-shadow: 0 0 6px rgba(239, 68, 68, 0.6);
+}
+
+.cohort-pin-label {
+  position: absolute;
+  top: -24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1e293b;
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.cohort-summary-box {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 10px;
+  padding: 14px;
+}
+
+.cohort-percentile-badge {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #1d4ed8;
+  line-height: 1;
+}
+
+.cohort-summary-text {
+  font-size: 0.86rem;
+  color: #1e40af;
+  line-height: 1.4;
+  margin: 0;
+}
+
+/* Assessment Trends */
+.trends-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 320px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.trend-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  transition: background 0.15s ease;
+}
+
+.trend-item:hover {
+  background: #f1f5f9;
+}
+
+.trend-item-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.trend-item-title {
+  font-weight: 700;
+  font-size: 0.92rem;
+  color: #0f172a;
+}
+
+.trend-item-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.78rem;
+  color: #64748b;
+}
+
+.trend-type-tag {
+  background: #e2e8f0;
+  color: #334155;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-transform: capitalize;
+}
+
+.trend-item-score-wrap {
+  text-align: right;
+}
+
+.trend-item-score {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.trend-item-status {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.trend-item-status.pass {
+  color: #16a34a;
+}
+
+.trend-item-status.fail {
+  color: #dc2626;
+}
+
+/* Category Performance Bars */
+.category-bars-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.category-bar-card {
+  background: #f8fafc;
+  border-radius: 10px;
+  padding: 14px;
+  border: 1px solid #e2e8f0;
+}
+
+.category-bar-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: #334155;
+}
+
+.category-bar-track {
+  height: 8px;
+  background: #e2e8f0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.category-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #6366f1, #3b82f6);
+  border-radius: 4px;
+}
+
+/* Skills Matrix Section */
+.skills-filter-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.filter-tab {
+  padding: 7px 14px;
+  border-radius: 8px;
+  background: #f1f5f9;
+  color: #475569;
+  font-weight: 600;
+  font-size: 0.84rem;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.filter-tab.active {
+  background: #2563eb;
+  color: #ffffff;
+}
+
+.skills-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.skill-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: all 0.2s ease;
+}
+
+.skill-card:hover {
+  background: #ffffff;
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.skill-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.skill-name {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #0f172a;
+}
+
+.skill-level-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 10px;
+  text-transform: uppercase;
+}
+
+.skill-level-badge.advanced {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.skill-level-badge.intermediate {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.skill-level-badge.beginner {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.skill-progress-bar {
+  height: 8px;
+  background: #e2e8f0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.skill-progress-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.5s ease;
+}
+
+.skill-progress-fill.advanced {
+  background: #10b981;
+}
+
+.skill-progress-fill.intermediate {
+  background: #f59e0b;
+}
+
+.skill-progress-fill.beginner {
+  background: #ef4444;
+}
+
+.skill-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.78rem;
+  color: #64748b;
+}
+
+/* Strengths & Weaknesses Section */
+.strengths-weaknesses-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-bottom: 28px;
+}
+
+@media (max-width: 768px) {
+  .strengths-weaknesses-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.insight-card {
+  border-radius: 14px;
+  padding: 20px;
+  border: 1px solid;
+}
+
+.insight-card.strengths {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+}
+
+.insight-card.weaknesses {
+  background: #fffbeb;
+  border-color: #fde68a;
+}
+
+.insight-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.insight-header h3 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.insight-card.strengths h3 {
+  color: #166534;
+}
+
+.insight-card.weaknesses h3 {
+  color: #92400e;
+}
+
+.insight-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.insight-item {
+  background: #ffffff;
+  padding: 12px 16px;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+}
+
+.insight-item-top {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 700;
+  font-size: 0.9rem;
+  margin-bottom: 4px;
+}
+
+.insight-recommendation {
+  font-size: 0.82rem;
+  color: #64748b;
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* Loading & Empty States */
+.analytics-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 360px;
+  gap: 16px;
+}
+
+.spinner {
+  width: 44px;
+  height: 44px;
+  border: 4px solid #e2e8f0;
+  border-top-color: #2563eb;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: #64748b;
+}
+
+.empty-state-icon {
+  font-size: 2.5rem;
+  margin-bottom: 12px;
+}
+
+.empty-state p {
+  margin: 4px 0 16px 0;
+  font-size: 0.9rem;
+}

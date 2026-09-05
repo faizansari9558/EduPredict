@@ -1,0 +1,46 @@
+# Node / JS
+node_modules/
+frontend/node_modules/
+backend/node_modules/
+.env
+.env.*
+!.env.example
+npm-debug.log*
+
+# Python
+__pycache__/
+*.py[cod]
+venv/
+.venv/
+env/
+.pytest_cache/
+*.egg-info/
+ml/.venv/
+
+# Build output
+frontend/build/
+frontend/dist/
+backend/uploads/private/
+backend/logs/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/settings.json
+
+# MySQL / DB dumps
+*.sqlite
+*.db
+*.dump
+*.sql.gz
+!database/*.sql
+
+# Secrets
+*.pem
+*.key
+secrets/
+
+# Generated docs / output
+coverage/
+*.log

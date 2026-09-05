@@ -1,0 +1,76 @@
+version: '3.8'
+
+services:
+  # MySQL Database
+  mysql:
+    image: mysql:8.0
+    container_name: edupredict-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: edupredict
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+    networks:
+      - edupredict-network
+
+  # FastAPI Machine Learning Service
+  ml-service:
+    build:
+      context: ./ml
+      dockerfile: Dockerfile
+    container_name: edupredict-ml
+    restart: always
+    environment:
+      - PORT=8000
+    ports:
+      - "8000:8000"
+    networks:
+      - edupredict-network
+
+  # Express Node.js Backend API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: edupredict-backend
+    restart: always
+    environment:
+      - PORT=5000
+      - DB_HOST=mysql
+      - DB_USER=root
+      - DB_PASSWORD=root
+      - DB_NAME=edupredict
+      - ML_SERVICE_URL=http://ml-service:8000
+      - JWT_SECRET=production_secret_key_edupredict_2026
+    ports:
+      - "5000:5000"
+    depends_on:
+      - mysql
+      - ml-service
+    networks:
+      - edupredict-network
+
+  # React Frontend (Vite)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: edupredict-frontend
+    restart: always
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - edupredict-network
+
+volumes:
+  db_data:
+
+networks:
+  edupredict-network:
+    driver: bridge

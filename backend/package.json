@@ -1,0 +1,28 @@
+{
+  "name": "edupredict-backend",
+  "version": "1.0.0",
+  "description": "Backend API for EduPredict",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "test": "node --test"
+  },
+  "keywords": [
+    "edupredict",
+    "express",
+    "mysql"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.2",
+    "express-rate-limit": "^7.4.1",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^1.4.5-lts.1",
+    "mysql2": "^3.4.1",
+    "validator": "^13.1.0"
+  }
+}

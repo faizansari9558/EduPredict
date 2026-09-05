@@ -1,0 +1,261 @@
+.resume-analyzer-page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.resume-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+@media (max-width: 960px) {
+  .resume-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.resume-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.05);
+}
+
+.sample-btn {
+  background: rgba(37, 99, 235, 0.08);
+  color: var(--primary);
+  border: 1px solid var(--primary);
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sample-btn:hover {
+  background: var(--primary);
+  color: #ffffff;
+}
+
+.select-input,
+.resume-textarea {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 0.88rem;
+  box-sizing: border-box;
+}
+
+.resume-textarea {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  resize: vertical;
+}
+
+.scan-btn {
+  width: 100%;
+  padding: 12px;
+  background: var(--primary);
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  margin-top: 14px;
+}
+
+.scan-btn:hover:not(:disabled) {
+  background: var(--primary-dark, #1d4ed8);
+}
+
+.scan-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.results-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  min-height: 400px;
+  color: var(--text-muted);
+}
+
+.placeholder-icon {
+  font-size: 3rem;
+  margin-bottom: 12px;
+}
+
+.ats-score-banner {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  padding: 18px;
+  background: #f8fafc;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  margin-bottom: 20px;
+}
+
+.ats-circle {
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  border: 6px solid var(--primary);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #ffffff;
+}
+
+.score-num {
+  font-size: 1.5rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.score-label {
+  font-size: 0.68rem;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.ats-meta h3 {
+  margin: 4px 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.ats-meta p {
+  margin: 0;
+  font-size: 0.82rem;
+  color: #64748b;
+}
+
+.grade-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.analysis-section {
+  margin-top: 18px;
+}
+
+.analysis-section h4 {
+  margin: 0 0 10px;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #334155;
+}
+
+.sections-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 8px;
+}
+
+.section-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.section-chip.detected {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.section-chip.missing {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.keywords-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.keyword-tag {
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.keyword-tag.matched {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.keyword-tag.missing {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.verified-box {
+  padding: 14px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 10px;
+}
+
+.tips-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tip-card {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 10px 14px;
+  background: #f8fafc;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.tip-card p {
+  margin: 0;
+  font-size: 0.82rem;
+  color: #334155;
+  line-height: 1.4;
+}
+
+.tip-badge {
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.tip-badge.high {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.tip-badge.medium {
+  background: #fef3c7;
+  color: #d97706;
+}

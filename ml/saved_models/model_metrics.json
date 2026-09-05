@@ -1,0 +1,54 @@
+{
+  "best_model": "Logistic Regression (Baseline)",
+  "metrics": {
+    "accuracy": 0.826,
+    "precision": 0.8457,
+    "recall": 0.8906,
+    "f1_score": 0.8676,
+    "roc_auc": 0.8984,
+    "cv_roc_auc_mean": 0.8956,
+    "cv_roc_auc_std": 0.013
+  },
+  "feature_importances": {},
+  "all_models": {
+    "Logistic Regression (Baseline)": {
+      "accuracy": 0.826,
+      "precision": 0.8457,
+      "recall": 0.8906,
+      "f1_score": 0.8676,
+      "roc_auc": 0.8984,
+      "cv_roc_auc_mean": 0.8956,
+      "cv_roc_auc_std": 0.013
+    },
+    "Decision Tree Classifier": {
+      "accuracy": 0.788,
+      "precision": 0.8282,
+      "recall": 0.8438,
+      "f1_score": 0.8359,
+      "roc_auc": 0.8302,
+      "cv_roc_auc_mean": 0.8346,
+      "cv_roc_auc_std": 0.018
+    },
+    "Random Forest Classifier": {
+      "accuracy": 0.822,
+      "precision": 0.8532,
+      "recall": 0.8719,
+      "f1_score": 0.8624,
+      "roc_auc": 0.8813,
+      "cv_roc_auc_mean": 0.8899,
+      "cv_roc_auc_std": 0.0105
+    },
+    "Gradient Boosting Classifier": {
+      "accuracy": 0.82,
+      "precision": 0.8485,
+      "recall": 0.875,
+      "f1_score": 0.8615,
+      "roc_auc": 0.8835,
+      "cv_roc_auc_mean": 0.8867,
+      "cv_roc_auc_std": 0.0105
+    }
+  },
+  "trained_at": "2026-09-01T06:52:51.945994",
+  "samples_count": 2500,
+  "features_count": 16
+}

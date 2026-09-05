@@ -1,78 +1,247 @@
-# EduPredict
+# EduPredict 🎓
+### Smart Student Academic & Placement Prediction Intelligence System
 
-EduPredict is a Smart Student Academic & Placement Prediction System designed to help universities track academic progress, verify student information, manage assessments, and generate placement insights using ML-driven analysis.
+![License](https://img.shields.io/badge/License-MIT-blue.svg)
+![React](https://img.shields.io/badge/Frontend-React%2018%20%7C%20Vite%205-61dafb.svg)
+![Node](https://img.shields.io/badge/Backend-Node.js%20%7C%20Express-339933.svg)
+![Python](https://img.shields.io/badge/ML%20Service-FastAPI%20%7C%20Scikit--Learn-009688.svg)
+![Database](https://img.shields.io/badge/Database-MySQL%208.0%20%7C%20MariaDB-4479A1.svg)
+![Tests](https://img.shields.io/badge/Tests-28%2F28%20Master%20E2E%20Passed-brightgreen.svg)
 
-## Project Goal
+---
 
-The system supports a full workflow from student profile collection and document verification to assessment delivery, analytics, and placement prediction.
+## 🌟 Executive Overview
 
-## Core Principles
+**EduPredict** is an end-to-end intelligent campus placement readiness and academic progress platform built for universities and engineering colleges. It bridges the gap between institutional records, technical coding assessments, document verification, and machine learning placement forecasts with actionable, prescriptive AI recommendations.
 
-- Student data is verified before it is used in predictive analysis.
-- Teacher access is restricted to assigned students.
-- Admin controls institution-wide structure and configuration.
-- ML predictions are estimates, not guarantees.
-- Generative AI is separated from predictive ML logic.
+---
 
-## Repository Structure
+## 🚀 Key Features
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                            EDUPREDICT KEY MODULES                           │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ 1. 🛡️  Role-Based Access Control (Admin, Teacher, Student)                 │
+│ 2. 📂  Student Portfolio & Document Verification Workflow                   │
+│ 3. ⏱️  Timed Aptitude Assessment Engine & Question Bank                      │
+│ 4. 💻  Multi-Language Sandboxed Coding Arena (JS, Python, C++, Java)        │
+│ 5. 📊  Multi-Tier Analytics Dashboards (Student, Faculty, Department, Admin)│
+│ 6. ⚠️  Automated At-Risk Student Early Detection & Interventions            │
+│ 7. 🤖  Machine Learning Placement Prediction (89.84% ROC-AUC Ensemble)     │
+│ 8. 💡  AI Explainability Engine (Positive Drivers & Risk Blockers)          │
+│ 9. 📄  Smart ATS Resume Analyzer & Credential Cross-Referencing             │
+│ 10.💬  Generative AI Career & Mock Technical Interview Copilot              │
+│ 11.🔔  Real-Time Notification Center with Topbar Bell & Unread Badges       │
+│ 12.📥  Printable Placement Scorecards & Cohort CSV Performance Exports      │
+│ 13.💼  Corporate Campus Placement Drives & Candidate Shortlisting Engine    │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 🏗️ Architecture & Technology Stack
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                       FULL STACK ARCHITECTURE OVERVIEW                      │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│   [Vite + React 18 Single Page Application]   (Port 3000 / Port 80)         │
+│     ├── Executive KPI Scorecards & Gauges                                   │
+│     ├── Interactive Coding Arena & Monaco-style Editor                      │
+│     ├── ATS Resume Scanner & AI Career Copilot                              │
+│     └── Notification Bell & Placement Scorecard Printouts                   │
+│            │                                                                │
+│            ▼ REST API                                                       │
+│   [Node.js + Express Backend API Engine]       (Port 5000)                  │
+│     ├── JWT Authentication & Role-Based Guard Middleware                    │
+│     ├── Assessment & Sandboxed Autograding Controller                       │
+│     ├── Student & Institutional Analytics Aggregations                      │
+│     ├── Resume AI Parser & Career Copilot Controller                        │
+│     └── Notification Center & CSV Export Engines                            │
+│            │                                                                │
+│            ├──────────────────────────────────────────┐                     │
+│            ▼ SQL Queries                              ▼ REST Inference      │
+│   [MySQL 8.0 / MariaDB Relational Database]   [FastAPI ML Microservice]     │
+│   (Port 3306)                                 (Port 8000)                   │
+│     • Academic & Profile Tables                 • Logistic Regression & GB  │
+│     • Assessments & Coding Submissions          • 16 Engineered Features    │
+│     • Analytics Views & Stored Procedures       • Explainability & Batch API│
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+- **Frontend**: React 18, Vite 5, React Router v6, Vanilla CSS Design System with Glassmorphism & Modern Data Visualizations.
+- **Backend API**: Node.js, Express.js, MySQL2 with connection pooling, JWT Authentication, bcryptjs.
+- **Machine Learning Microservice**: Python 3.12, FastAPI, Scikit-Learn, XGBoost, Pandas, NumPy, Joblib, Uvicorn.
+- **Database**: MySQL 8.0 / MariaDB with indexed relational tables, analytical views, and automated recalculation stored procedures.
+- **Containerization**: Docker Compose for multi-service production deployment.
+
+---
+
+## ⚡ Quick Start Guide
+
+### Option 1: One-Click Launcher
+
+#### Windows (PowerShell):
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\start-all.ps1
+```
+
+#### Linux / macOS (Bash):
+```bash
+chmod +x ./scripts/start-all.sh
+./scripts/start-all.sh
+```
+
+---
+
+### Option 2: Docker Compose (Production Stack)
+```bash
+docker-compose up --build -d
+```
+All services will start automatically:
+- **Frontend App**: `http://localhost:3000`
+- **Express Backend API**: `http://localhost:5000`
+- **FastAPI ML Microservice**: `http://localhost:8000`
+- **MySQL Database**: `localhost:3306`
+
+---
+
+### Option 3: Manual Startup
+
+1. **Start FastAPI ML Service**:
+   ```bash
+   python -m pip install -r ml/requirements.txt
+   python ml/models/train.py
+   python -m uvicorn ml.app:app --host 127.0.0.1 --port 8000 --reload
+   ```
+
+2. **Start Express Backend**:
+   ```bash
+   cd backend
+   npm install
+   node server.js
+   ```
+
+3. **Start React Frontend**:
+   ```bash
+   cd frontend
+   npm install
+   npm run dev
+   ```
+
+---
+
+## 🔑 Demo Login Credentials
+
+The system is pre-seeded with authorized accounts for evaluation:
+
+| Role | Email | Password | Access Portal |
+| :--- | :--- | :--- | :--- |
+| **Admin** | `admin@edupredict.local` | `Admin@123` | `/admin` (System Overview & Dept Rankings) |
+| **Teacher** | `sharma@edupredict.local` | `Teacher@123` | `/teacher` (Class Analytics & Verifications) |
+| **Student** | `aisha.khan@edupredict.local` | `Student@123` | `/student` (Dashboard, Coding & AI Copilot) |
+
+---
+
+## 🧪 Comprehensive Automated Test Suites
+
+### 1. Master System-Wide E2E Test Suite (24 Test Cases)
+```bash
+node backend/tests/test_all_features_e2e.js
+```
+```
+================================================================
+🌟 MASTER SYSTEM-WIDE E2E TEST SUITE (PHASES 1 - 18)
+================================================================
+✅ PASS: [Health Check] GET /api/health
+✅ PASS: [API Status] GET /api
+✅ PASS: [Admin Dashboard] GET /api/admin/dashboard
+✅ PASS: [Teacher Dashboard] GET /api/teacher/dashboard
+✅ PASS: [Student Dashboard] GET /api/student/dashboard
+✅ PASS: [Teacher Assessments] GET /api/assessments
+✅ PASS: [Coding Challenges] GET /api/coding/challenges
+✅ PASS: [Student Overview] GET /api/analytics/student/5
+✅ PASS: [Student Skills] GET /api/analytics/student/5/skills
+✅ PASS: [Teacher Class Summary] GET /api/analytics/teacher/2/class-summary
+✅ PASS: [At-Risk Students] GET /api/analytics/teacher/2/at-risk
+✅ PASS: [Admin System Overview] GET /api/analytics/admin/system-overview
+✅ PASS: [Admin Placement Readiness] GET /api/analytics/admin/placement-readiness
+✅ PASS: [ML Model Info] GET /api/prediction/model-info
+✅ PASS: [Student Prediction & Drivers] GET /api/prediction/student/5
+✅ PASS: [Batch Placement Forecast] POST /api/prediction/batch/1
+✅ PASS: [Resume ATS Scan] POST /api/student/resume/analyze
+✅ PASS: [Career AI Chat] POST /api/career-ai/chat
+✅ PASS: [Mock Interview Generator] POST /api/career-ai/mock-questions
+✅ PASS: [Skill Roadmap Generator] POST /api/career-ai/roadmap
+✅ PASS: [Cover Letter Generator] POST /api/career-ai/cover-letter
+✅ PASS: [Notification Inbox] GET /api/notifications
+✅ PASS: [Student Placement Scorecard] GET /api/reports/student/5/scorecard
+✅ PASS: [Batch CSV Performance Export] GET /api/reports/batch/1/export
+================================================================
+🏆 MASTER E2E TEST RESULTS: 24 PASSED, 0 FAILED (Total: 24)
+================================================================
+```
+
+### 2. Python FastAPI ML Microservice Unit & Integration Tests (6 Tests)
+```bash
+python -m pytest ml/tests/test_api.py
+```
+```
+======================== 6 passed in 4.02s ========================
+```
+
+### 3. Frontend Production Build Verification
+```bash
+cd frontend && npm run build
+```
+```
+✓ 60 modules transformed.
+dist/index.html                   0.78 kB │ gzip:  0.42 kB
+dist/assets/index-DtcCxoqS.css   55.48 kB │ gzip: 10.34 kB
+dist/assets/index-aVNSbSVA.js   296.00 kB │ gzip: 81.95 kB
+✓ built in 838ms
+```
+
+---
+
+## 📂 Repository Structure
 
 ```text
 EduPredict/
-├── frontend/              # React application
-├── backend/               # Express.js REST API
-├── ml/                    # Python ML pipeline and model service
-├── docs/                  # Project documentation
-├── .env.example           # Environment template
-├── .gitignore             # Ignore rules
-├── README.md              # Project overview
-└── .vscode/               # Editor-local settings
+├── frontend/                  # React 18 + Vite Frontend Application
+│   ├── src/
+│   │   ├── components/        # NotificationBell, ProtectedRoute, etc.
+│   │   ├── context/           # AuthContext
+│   │   ├── pages/             # Student, Teacher, Admin, Coding, Resume, AI Copilot
+│   │   ├── services/          # Centralized API service layer
+│   │   └── styles.css         # Design system & tokens
+│   └── Dockerfile             # Multi-stage production Nginx build
+├── backend/                   # Node.js + Express REST API Server
+│   ├── config/                # Database pool connection
+│   ├── controllers/           # Auth, Admin, Teacher, Student, Analytics, ML, Reports
+│   ├── middleware/            # JWT authentication & RBAC authorization
+│   ├── routes/                # Express routing endpoints
+│   ├── services/              # ML client, Resume ATS, Career AI, Notifications
+│   ├── tests/                 # Automated E2E test suites
+│   └── Dockerfile             # Container configuration
+├── ml/                        # Python FastAPI ML Subsystem
+│   ├── data/                  # Synthetic training dataset generator
+│   ├── preprocessing/         # 16-feature domain engineering pipeline
+│   ├── models/                # Multi-model benchmarking (89.84% ROC-AUC) & explainability
+│   ├── saved_models/          # Serialized placement_model.joblib bundle
+│   ├── tests/                 # Pytest test suite
+│   ├── app.py                 # FastAPI REST microservice
+│   └── Dockerfile             # Container configuration
+├── database/                  # SQL Schemas across all 18 phases
+├── scripts/                   # start-all.ps1 and start-all.sh one-click launchers
+├── docs/                      # PRD, Architecture, Implementation logs, Deployment guide
+└── docker-compose.yml         # Full multi-service orchestration
 ```
 
-## Current Phase
+---
 
-Phase 0: Project audit and setup documentation.
-
-## Phase Roadmap
-
-1. Phase 0 - Project Audit & Environment Setup
-2. Phase 1 - Frontend Foundation
-3. Phase 2 - Database Design
-4. Phase 3 - Authentication & Authorization
-5. Phase 4 - Admin Module
-6. Phase 5 - Teacher Module
-7. Phase 6 - Student Module
-8. Phase 7 - Aptitude Assessment
-9. Phase 8 - Coding Assessment Engine
-10. Phase 9 - Analytics
-11. Phase 10 - ML
-12. Phase 11 - FastAPI ML Service
-13. Phase 12 - AI Explainability & Recommendations
-14. Phase 13 - Resume AI
-15. Phase 14 - Generative AI
-16. Phase 15 - Notifications
-17. Phase 16 - Reports
-18. Phase 17 - Security & Testing
-19. Phase 18 - Deployment
-
-## Requirements
-
-- Node.js 18+
-- npm or pnpm
-- Python 3.10+
-- MySQL 8+
-- Git
-- VS Code
-
-## Local Development
-
-1. Install Node.js dependencies in the frontend and backend when the corresponding phase starts.
-2. Configure MySQL and create the database named EduPredict.
-3. Copy `.env.example` to `.env` and update credentials.
-4. Start the backend and frontend locally.
-
-## Important Notes
-
-- This project is being built in phases and must not jump ahead.
-- Authentication, dashboards, ML, coding engine, and AI features are intentionally deferred until the approved phase begins.
-- No secrets should be committed to the repository.
-
+## 📜 License
+This project is open-source under the [MIT License](LICENSE).

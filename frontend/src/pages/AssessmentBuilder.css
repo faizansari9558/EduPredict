@@ -1,0 +1,398 @@
+/* Assessment Builder Styles */
+
+.assessment-builder {
+  padding: 24px;
+  max-width: 1200px;
+}
+
+.assessment-list-view {
+  margin-top: 32px;
+}
+
+.assessment-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 24px;
+  margin-top: 24px;
+}
+
+.assessment-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s;
+}
+
+.assessment-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border-color: var(--primary);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.card-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #1f2937;
+}
+
+.card-description {
+  font-size: 0.9rem;
+  color: #6b7280;
+  margin: 8px 0 12px;
+  line-height: 1.4;
+}
+
+.card-meta {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+  padding: 12px 0;
+  border-top: 1px solid #f3f4f6;
+  border-bottom: 1px solid #f3f4f6;
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
+.card-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.card-actions button {
+  flex: 1;
+  min-width: 120px;
+  padding: 8px 12px;
+  border: 1px solid #e5e7eb;
+  background: white;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.card-actions .btn-secondary:hover {
+  background: #f3f4f6;
+  border-color: #d1d5db;
+}
+
+.card-actions .btn-success {
+  background: #10b981;
+  color: white;
+  border-color: #10b981;
+}
+
+.card-actions .btn-success:hover {
+  background: #059669;
+}
+
+.card-actions .btn-info {
+  background: #3b82f6;
+  color: white;
+  border-color: #3b82f6;
+}
+
+/* Assessment Form */
+
+.assessment-form-view {
+  background: white;
+  border-radius: 8px;
+  padding: 32px;
+  margin-top: 24px;
+}
+
+.btn-back {
+  background: none;
+  border: none;
+  color: var(--primary);
+  cursor: pointer;
+  font-size: 0.95rem;
+  margin-bottom: 24px;
+  padding: 0;
+  text-decoration: none;
+}
+
+.btn-back:hover {
+  text-decoration: underline;
+}
+
+.assessment-form {
+  max-width: 600px;
+}
+
+.form-section h2 {
+  margin-top: 0;
+  margin-bottom: 24px;
+  color: #1f2937;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 600;
+  color: #374151;
+  font-size: 0.95rem;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-size: 0.95rem;
+  font-family: inherit;
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.form-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 32px;
+}
+
+.btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: white;
+}
+
+.btn-primary:hover {
+  background: #2563eb;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.btn-secondary {
+  background: #f3f4f6;
+  color: #374151;
+  border: 1px solid #d1d5db;
+}
+
+.btn-secondary:hover {
+  background: #e5e7eb;
+}
+
+/* Questions View */
+
+.questions-view {
+  background: white;
+  border-radius: 8px;
+  padding: 32px;
+  margin-top: 24px;
+}
+
+.questions-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.questions-header h2 {
+  margin: 0;
+  color: #1f2937;
+}
+
+.questions-header p {
+  margin: 4px 0 0;
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+
+.add-question-section {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 24px;
+  margin-bottom: 32px;
+}
+
+.add-question-section h3 {
+  margin-top: 0;
+  margin-bottom: 20px;
+  color: #1f2937;
+}
+
+.question-form {
+  background: white;
+  padding: 20px;
+  border-radius: 6px;
+}
+
+.options-list {
+  display: grid;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.option-input {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.option-input input[type="text"] {
+  flex: 1;
+}
+
+.option-input input[type="radio"] {
+  width: auto;
+  cursor: pointer;
+}
+
+.questions-list {
+  margin-top: 32px;
+}
+
+.questions-list h3 {
+  margin-top: 0;
+  margin-bottom: 16px;
+  color: #1f2937;
+}
+
+.question-item {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  padding: 16px;
+  margin-bottom: 12px;
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.question-number {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  background: var(--primary);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.question-content {
+  flex: 1;
+}
+
+.question-content p {
+  margin: 0 0 8px;
+  color: #1f2937;
+}
+
+.question-meta {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  font-size: 0.8rem;
+}
+
+.type-badge,
+.marks-badge,
+.difficulty-badge,
+.category-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  background: white;
+  border: 1px solid #d1d5db;
+  border-radius: 3px;
+  color: #6b7280;
+}
+
+.difficulty-badge.easy {
+  background: #dcfce7;
+  border-color: #86efac;
+  color: #22c55e;
+}
+
+.difficulty-badge.medium {
+  background: #fef3c7;
+  border-color: #fcd34d;
+  color: #f59e0b;
+}
+
+.difficulty-badge.hard {
+  background: #fee2e2;
+  border-color: #fca5a5;
+  color: #ef4444;
+}
+
+.btn-delete {
+  background: #fee2e2;
+  color: #dc2626;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.2s;
+}
+
+.btn-delete:hover {
+  background: #fecaca;
+}
+
+@media (max-width: 900px) {
+  .form-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .assessment-cards {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .card-actions {
+    flex-direction: column;
+  }
+
+  .card-actions button {
+    min-width: auto;
+  }
+}
