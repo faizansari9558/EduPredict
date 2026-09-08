@@ -2,41 +2,97 @@
 ### Smart Student Academic & Placement Prediction Intelligence System
 
 ![License](https://img.shields.io/badge/License-MIT-blue.svg)
-![React](https://img.shields.io/badge/Frontend-React%2018%20%7C%20Vite%205-61dafb.svg)
-![Node](https://img.shields.io/badge/Backend-Node.js%20%7C%20Express-339933.svg)
+![Frontend](https://img.shields.io/badge/Stitch%20UI-React%2018%20%7C%20Tailwind%20v4%20%7C%20Vite%205-38bdf8.svg)
+![Backend](https://img.shields.io/badge/Backend-Node.js%20%7C%20Express-339933.svg)
 ![Python](https://img.shields.io/badge/ML%20Service-FastAPI%20%7C%20Scikit--Learn-009688.svg)
 ![Database](https://img.shields.io/badge/Database-MySQL%208.0%20%7C%20MariaDB-4479A1.svg)
-![Tests](https://img.shields.io/badge/Tests-28%2F28%20Master%20E2E%20Passed-brightgreen.svg)
+![Accuracy](https://img.shields.io/badge/ML%20Accuracy-89.84%25%20ROC--AUC-brightgreen.svg)
 
 ---
 
 ## 🌟 Executive Overview
 
-**EduPredict** is an end-to-end intelligent campus placement readiness and academic progress platform built for universities and engineering colleges. It bridges the gap between institutional records, technical coding assessments, document verification, and machine learning placement forecasts with actionable, prescriptive AI recommendations.
+**EduPredict** is an end-to-end intelligent university academic tracking and placement forecasting platform designed for higher education engineering institutions. It unifies institutional registrar records, faculty verification workflows, proctored multi-language coding sandboxes, and explainable machine learning predictions to eliminate guesswork and prepare students well before campus hiring drives begin.
 
 ---
 
-## 🚀 Key Features
+## 🔑 Quick Demo Credentials (1-Click Login)
+
+The platform provides 1-click test fill credentials directly on the **[Sign In Page](http://localhost:3001/login)**:
+
+| Persona | Demo Email | Password | Access Portal |
+| :--- | :--- | :--- | :--- |
+| 🎓 **Student** | `student@edupredict.edu` | `password123` | [Student Dashboard](http://localhost:3001/student/dashboard) |
+| 👨‍🏫 **Faculty Mentor** | `faculty@edupredict.edu` | `password123` | [Teacher Portal](http://localhost:3001/teacher/dashboard) |
+| 🛡️ **Institutional Admin** | `admin@edupredict.edu` | `password123` | [Admin Console](http://localhost:3001/admin/dashboard) |
+
+---
+
+## 🌐 Public Pages & Navigation
+
+EduPredict features a high-contrast, 100% window-width responsive public suite:
+
+| Route | Page | Description |
+| :--- | :--- | :--- |
+| `/` | **Home (Landing Page)** | Slim `h-16` sticky header, visible headline, ecosystem overview, 5-stage lifecycle roadmap, compact footer. |
+| `/about` | **About Us** | Institutional mission, explainable AI ethos, cryptographic verification pillars. |
+| `/help` | **Help & FAQ** | Interactive categorized FAQs for Students, Faculty Mentors, and Administrators. |
+| `/contact` | **Contact Us** | Support desk, campus coordinates, interactive demo scheduling form. |
+| `/privacy` | **Privacy Policy** | FERPA compliance, ISO 27001 security standards, AES-256 encrypted multi-tenant storage. |
+| `/terms` | **Terms of Service** | Academic honesty policies, proctored assessment integrity, authentic credential rules. |
+| `/login` | **Sign In** | Persona-based switcher with 1-click test credentials and auto-routing. |
+| `/register` | **Register** | Student and Faculty account creation with department selection. |
+
+---
+
+## 🏛️ Three Tailored Ecosystem Portals
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                            EDUPREDICT KEY MODULES                           │
+│                      EDUPREDICT MULTI-PORTAL ECOSYSTEM                      │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│ 1. 🛡️  Role-Based Access Control (Admin, Teacher, Student)                 │
-│ 2. 📂  Student Portfolio & Document Verification Workflow                   │
-│ 3. ⏱️  Timed Aptitude Assessment Engine & Question Bank                      │
-│ 4. 💻  Multi-Language Sandboxed Coding Arena (JS, Python, C++, Java)        │
-│ 5. 📊  Multi-Tier Analytics Dashboards (Student, Faculty, Department, Admin)│
-│ 6. ⚠️  Automated At-Risk Student Early Detection & Interventions            │
-│ 7. 🤖  Machine Learning Placement Prediction (89.84% ROC-AUC Ensemble)     │
-│ 8. 💡  AI Explainability Engine (Positive Drivers & Risk Blockers)          │
-│ 9. 📄  Smart ATS Resume Analyzer & Credential Cross-Referencing             │
-│ 10.💬  Generative AI Career & Mock Technical Interview Copilot              │
-│ 11.🔔  Real-Time Notification Center with Topbar Bell & Unread Badges       │
-│ 12.📥  Printable Placement Scorecards & Cohort CSV Performance Exports      │
-│ 13.💼  Corporate Campus Placement Drives & Candidate Shortlisting Engine    │
+│                                                                             │
+│  🎓 STUDENT EXPERIENCE PORTAL                                               │
+│     • Longitudinal Profile Readiness Bar & Academic Meta Pill Array         │
+│     • Semester-by-Semester CGPA & Percentage Velocity Area Chart            │
+│     • Machine Learning Placement Probability Gauge (89.8% ROC-AUC)          │
+│     • Proctored Code Compiler Arena (Python, JavaScript, C++, Java)         │
+│     • What-If Scenario Career Simulator & SHAP Gap Remediation              │
+│     • Smart ATS Resume Studio with PDF Export & Match Score                 │
+│                                                                             │
+│  👨‍🏫 FACULTY & MENTOR PORTAL                                                │
+│     • Assigned Student Cohort Management & Velocity Radar                   │
+│     • Marksheet, Internship & Certificate Verification Queue                │
+│     • Proctored Assessment Authoring with Testcase & Memory Limit Bounds    │
+│     • Early Warning Radar for At-Risk Backlogs and CGPA Slippage            │
+│                                                                             │
+│  🛡️ DEAN & INSTITUTIONAL ADMIN CONSOLE                                      │
+│     • Departmental Head-to-Head Comparisons (CSE, ECE, ME, IT)              │
+│     • Recruiter Pre-Screening Filtering Matrix (CGPA, Backlogs, Skills)     │
+│     • 1-Click NAAC Criterion 2.6 & NIRF Attainment Report Generation        │
+│     • Multi-Tenant User Management & Institutional System Settings          │
+│                                                                             │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
+
+---
+
+## 🤖 Machine Learning & Explainability Engine
+
+EduPredict does not operate as a black box. Our dual ML ensemble is trained and benchmarked on 4,800+ historical campus recruitment profiles:
+
+1. **Dual-Model Architecture**:
+   - **XGBoost Decision Trees**: Captures non-linear skill interactions and project weights.
+   - **Calibrated Logistic Regression**: Provides reliable, smooth probability estimates.
+2. **16 Engineered Feature Levers**:
+   - Longitudinal CGPA trajectory & velocity.
+   - Proctored Coding Sandbox percentiles (LeetCode-style algorithmic performance).
+   - Faculty-verified industrial internships and live GitHub repositories.
+   - Active backlog penalty curves and attendance rates.
+3. **SHAP (SHapley Additive exPlanations) Engine**:
+   - Outlines exact positive drivers (e.g. *"+26% Coding Sandbox Scores"*).
+   - Pinpoints risk blockers (e.g. *"-18% Active Backlog Impact"*).
+   - Generates concrete, prescriptive action roadmaps.
 
 ---
 
@@ -44,35 +100,27 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                       FULL STACK ARCHITECTURE OVERVIEW                      │
+│                       FULL STACK SYSTEM TOPOLOGY                            │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                             │
-│   [Vite + React 18 Single Page Application]   (Port 3000 / Port 80)         │
-│     ├── Executive KPI Scorecards & Gauges                                   │
-│     ├── Interactive Coding Arena & Monaco-style Editor                      │
-│     ├── ATS Resume Scanner & AI Career Copilot                              │
-│     └── Notification Bell & Placement Scorecard Printouts                   │
+│   [Stitch Frontend Application]                (Port 3001)                  │
+│     ├── Tailwind CSS v4 CSS-First Design System                             │
+│     ├── Plus Jakarta Sans & Material Symbols Typography                     │
+│     ├── Recharts Data Visualizations & Real-Time Simulators                 │
+│     └── Monaco-Style Proctored Coding Sandbox                               │
 │            │                                                                │
-│            ▼ REST API                                                       │
+│            ▼ REST API Requests                                              │
 │   [Node.js + Express Backend API Engine]       (Port 5000)                  │
 │     ├── JWT Authentication & Role-Based Guard Middleware                    │
 │     ├── Assessment & Sandboxed Autograding Controller                       │
 │     ├── Student & Institutional Analytics Aggregations                      │
-│     ├── Resume AI Parser & Career Copilot Controller                        │
-│     └── Notification Center & CSV Export Engines                            │
+│     ├── Resume ATS & AI Copilot Services                                    │
+│     └── Real-Time Notification System                                       │
 │            │                                                                │
 │            ├──────────────────────────────────────────┐                     │
 │            ▼ SQL Queries                              ▼ REST Inference      │
-│   [MySQL 8.0 / MariaDB Relational Database]   [FastAPI ML Microservice]     │
+│   [MySQL 8.0 / MariaDB Database]              [FastAPI ML Microservice]     │
 │   (Port 3306)                                 (Port 8000)                   │
-│     • Academic & Profile Tables                 • Logistic Regression & GB  │
-│     • Assessments & Coding Submissions          • 16 Engineered Features    │
-│     • Analytics Views & Stored Procedures       • Explainability & Batch API│
-│                                                                             │
-└─────────────────────────────────────────────────────────────────────────────┘
-```
-
-- **Frontend**: React 18, Vite 5, React Router v6, Vanilla CSS Design System with Glassmorphism & Modern Data Visualizations.
 - **Backend API**: Node.js, Express.js, MySQL2 with connection pooling, JWT Authentication, bcryptjs.
 - **Machine Learning Microservice**: Python 3.12, FastAPI, Scikit-Learn, XGBoost, Pandas, NumPy, Joblib, Uvicorn.
 - **Database**: MySQL 8.0 / MariaDB with indexed relational tables, analytical views, and automated recalculation stored procedures.
