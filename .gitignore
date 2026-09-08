@@ -22,6 +22,7 @@ ml/.venv/
 frontend/build/
 frontend/dist/
 stitch/dist/
+stitch/.vite/
 backend/uploads/private/
 backend/logs/
 
