@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import Logo from '../components/Logo';
 import StudentAnalytics from './StudentAnalytics';
 import ResumeAnalyzer from './ResumeAnalyzer';
 import CareerAssistant from './CareerAssistant';
@@ -227,13 +228,16 @@ export default function StudentDashboard() {
 
   return (
     <section className="student-dashboard">
-      <div className="page-header">
-        <div>
-          <span className="eyebrow">Student Portal</span>
-          <h1>Welcome back, {dashboard.student.full_name}</h1>
-          <p style={{ margin: '8px 0 0', color: 'var(--muted)' }}>
-            {dashboard.student.batch} • {dashboard.student.department}
-          </p>
+      <div className="page-header dashboard-brand-header">
+        <div className="header-identity">
+          <Logo size="md" theme="light" />
+          <div className="header-text">
+            <span className="eyebrow">Student Portal</span>
+            <h1>Welcome back, {dashboard.student.full_name}</h1>
+            <p style={{ margin: '4px 0 0', color: 'var(--muted)' }}>
+              {dashboard.student.batch} • {dashboard.student.department}
+            </p>
+          </div>
         </div>
       </div>
 

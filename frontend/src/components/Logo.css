@@ -1,0 +1,81 @@
+/* EduPredict Official Stitch Vector Logo Styles */
+
+.edupredict-vector-logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  user-select: none;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.edupredict-logo__link {
+  display: inline-flex;
+  text-decoration: none;
+  color: inherit;
+  align-items: center;
+}
+
+.edupredict-logo__link:hover .edupredict-vector-logo {
+  transform: translateY(-1px);
+}
+
+.edupredict-svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* Size Presets */
+.edupredict-vector-logo--sm {
+  width: 150px;
+  height: 38px;
+}
+
+.edupredict-vector-logo--md {
+  width: 190px;
+  height: 48px;
+}
+
+.edupredict-vector-logo--lg {
+  width: 250px;
+  height: 64px;
+}
+
+.edupredict-vector-logo--xl {
+  width: 320px;
+  height: 80px;
+}
+
+/* Standalone Mark Sizing */
+.edupredict-vector-logo--mark.edupredict-vector-logo--sm {
+  width: 32px;
+  height: 32px;
+}
+
+.edupredict-vector-logo--mark.edupredict-vector-logo--md {
+  width: 44px;
+  height: 44px;
+}
+
+.edupredict-vector-logo--mark.edupredict-vector-logo--lg {
+  width: 56px;
+  height: 56px;
+}
+
+.edupredict-vector-logo--mark.edupredict-vector-logo--xl {
+  width: 72px;
+  height: 72px;
+}
+
+@media (max-width: 640px) {
+  .edupredict-vector-logo--lg {
+    width: 210px;
+    height: 54px;
+  }
+  .edupredict-vector-logo--xl {
+    width: 240px;
+    height: 60px;
+  }
+}

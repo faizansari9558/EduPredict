@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import Logo from '../components/Logo';
 import AdminAnalytics from './AdminAnalytics';
 
 const statCards = [
@@ -83,10 +84,13 @@ export default function AdminDashboard() {
 
   return (
     <section className="admin-dashboard">
-      <div className="page-header">
-        <div>
-          <span className="eyebrow">Admin Console</span>
-          <h1>Institution Overview</h1>
+      <div className="page-header dashboard-brand-header">
+        <div className="header-identity">
+          <Logo size="md" theme="light" />
+          <div className="header-text">
+            <span className="eyebrow">Admin Console</span>
+            <h1>Institution Overview</h1>
+          </div>
         </div>
       </div>
 

@@ -125,12 +125,24 @@ All services will start automatically:
    node server.js
    ```
 
-3. **Start React Frontend**:
+3. **Start Legacy Frontend (Port 3000)**:
    ```bash
    cd frontend
    npm install
    npm run dev
    ```
+
+4. **Start Google Stitch UI Frontend (Port 3001)**:
+   ```bash
+   # Windows One-Click:
+   .\start-stitch.bat
+
+   # Or manual:
+   cd stitch
+   npm install
+   npm run dev
+   ```
+   Open `http://localhost:3001` in your browser.
 
 ---
 

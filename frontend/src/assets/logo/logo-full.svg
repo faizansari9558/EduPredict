@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 320" width="100%" height="100%" fill="none">
+  <defs>
+    <linearGradient id="epNavyFull" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0e2a47"/>
+      <stop offset="100%" stop-color="#081c31"/>
+    </linearGradient>
+    
+    <linearGradient id="epTealFull" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#0d9488"/>
+      <stop offset="60%" stop-color="#10b981"/>
+      <stop offset="100%" stop-color="#34d399"/>
+    </linearGradient>
+
+    <linearGradient id="epTextTeal" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#0d9488"/>
+      <stop offset="100%" stop-color="#10b981"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Centered Icon Mark Group -->
+  <g transform="translate(150, 0)">
+    <!-- Mortarboard Cap -->
+    <polygon points="100,20 174,54 100,86 26,54" fill="url(#epNavyFull)"/>
+    <!-- White Trim Arch -->
+    <path d="M 48,68 Q 100,88 152,68" stroke="#ffffff" stroke-width="4.5" stroke-linecap="round" fill="none"/>
+    <!-- Cap Base -->
+    <path d="M 54,64 Q 52,112 100,118 Q 136,114 142,78" fill="url(#epNavyFull)"/>
+    <!-- Tassel -->
+    <circle cx="100" cy="53" r="3.5" fill="#ffffff"/>
+    <path d="M 98,54 Q 60,58 46,84" stroke="url(#epNavyFull)" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <circle cx="46" cy="86" r="3" fill="url(#epNavyFull)"/>
+    <path d="M 43,88 L 42,110 Q 46,112 50,110 L 49,88 Z" fill="url(#epNavyFull)"/>
+
+    <!-- Circuit Hexagon & Traces -->
+    <polygon points="126,98 156,114 156,148 126,164 96,148 96,114" fill="none" stroke="url(#epNavyFull)" stroke-width="4.5" stroke-linejoin="round"/>
+    <path d="M 126,108 L 126,128" stroke="url(#epNavyFull)" stroke-width="3.5" stroke-linecap="round"/>
+    <circle cx="126,108" r="3.5" fill="url(#epNavyFull)"/>
+    <path d="M 110,122 L 126,132 L 142,122" stroke="url(#epNavyFull)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    <circle cx="110,122" r="3" fill="url(#epNavyFull)"/>
+    <circle cx="142,122" r="3" fill="url(#epNavyFull)"/>
+    <path d="M 114,142 L 126,134 L 138,142" stroke="url(#epNavyFull)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    <circle cx="126,134" r="3" fill="url(#epNavyFull)"/>
+    <circle cx="114,142" r="3" fill="url(#epNavyFull)"/>
+    <circle cx="138,142" r="3" fill="url(#epNavyFull)"/>
+
+    <!-- Dynamic Blue Graph Segment -->
+    <polygon points="34,150 64,114 88,138 126,92 112,80 86,114 64,94 24,144" fill="url(#epNavyFull)"/>
+
+    <!-- Dual Ascending Green Growth Arrows -->
+    <!-- Lower Arrow -->
+    <path d="M 122,86 L 148,54 L 140,52 L 168,34 L 166,64 L 158,56 L 138,88 Z" fill="url(#epTealFull)"/>
+    <!-- Upper Prominent Arrow -->
+    <path d="M 142,82 L 166,52 L 158,50 L 192,30 L 190,64 L 182,56 L 158,86 Z" fill="url(#epTealFull)"/>
+  </g>
+
+  <!-- Brand Typography: EduPredict -->
+  <text x="250" y="240" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif" font-size="52" font-weight="800" letter-spacing="-0.5">
+    <tspan fill="#0e2a47">Edu</tspan><tspan fill="url(#epTextTeal)">Predict</tspan>
+  </text>
+
+  <!-- Tagline: Smart Student Academic & Placement Prediction System -->
+  <text x="250" y="280" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif" font-size="16" font-weight="600" fill="#1e293b" letter-spacing="0.2">
+    Smart Student Academic &amp; Placement Prediction System
+  </text>
+</svg>

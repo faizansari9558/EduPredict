@@ -14,6 +14,7 @@ import CareerAssistant from './pages/CareerAssistant';
 import JobDrives from './pages/JobDrives';
 import NotificationBell from './components/NotificationBell';
 import ProtectedRoute from './components/ProtectedRoute';
+import Logo from './components/Logo';
 import { useAuth } from './context/AuthContext';
 import { loginUser } from './services/api';
 
@@ -24,11 +25,7 @@ function Layout({ children }) {
     <div className="app-shell">
       <header className="topbar">
         <div className="brand-wrap">
-          <div className="brand-mark">E</div>
-          <div>
-            <div className="brand-name">EduPredict</div>
-            <div className="brand-tag">Analyze • Predict • Improve • Succeed</div>
-          </div>
+          <Logo size="md" theme="dark" linkTo="/" />
         </div>
 
         <nav className="main-nav" aria-label="Main navigation">
@@ -55,7 +52,10 @@ function Layout({ children }) {
       <main className="page-content">{children}</main>
 
       <footer className="footer">
-        <p>© 2026 EduPredict • Smart Student Academic & Placement Prediction System</p>
+        <div className="footer-content">
+          <Logo size="sm" theme="dark" linkTo="/" />
+          <p>© 2026 EduPredict • Smart Student Academic &amp; Placement Prediction System</p>
+        </div>
       </footer>
     </div>
   );
@@ -65,6 +65,9 @@ function HomePage() {
   return (
     <section className="hero-section">
       <div className="hero-copy">
+        <div className="hero-logo-banner">
+          <Logo size="xl" theme="light" />
+        </div>
         <span className="eyebrow">Smart Campus Intelligence</span>
         <h1>Empower students with smarter academic and placement decisions.</h1>
         <p>
@@ -128,6 +131,9 @@ function LoginPage() {
   return (
     <section className="auth-panel">
       <div className="auth-box">
+        <div className="auth-logo-header">
+          <Logo size="lg" theme="light" linkTo="/" />
+        </div>
         <h2>Welcome Back</h2>
         <p>Use your university account to continue.</p>
 
@@ -153,6 +159,9 @@ function RegisterPage() {
   return (
     <section className="auth-panel">
       <div className="auth-box">
+        <div className="auth-logo-header">
+          <Logo size="lg" theme="light" linkTo="/" />
+        </div>
         <h2>Create Account</h2>
         <p>Complete university verification to activate your EduPredict account.</p>
 

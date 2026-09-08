@@ -1,0 +1,93 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #00152a;
+  --color-primary-container: #102a43;
+  --color-on-primary: #ffffff;
+  --color-on-primary-container: #7a92b0;
+  --color-primary-fixed: #d1e4ff;
+  --color-primary-fixed-dim: #b0c9e8;
+
+  --color-secondary: #0051d5;
+  --color-secondary-container: #316bf3;
+  --color-secondary-fixed: #dbe1ff;
+  --color-secondary-fixed-dim: #b4c5ff;
+  --color-on-secondary: #ffffff;
+  --color-on-secondary-fixed-variant: #003ea8;
+
+  --color-tertiary: #00190e;
+  --color-tertiary-container: #00301e;
+  --color-tertiary-fixed: #6ffbbe;
+  --color-tertiary-fixed-dim: #4edea3;
+  --color-on-tertiary: #ffffff;
+  --color-on-tertiary-fixed: #002113;
+  --color-on-tertiary-container: #00a472;
+
+  --color-background: #f8f9ff;
+  --color-on-background: #0b1c30;
+
+  --color-surface: #f8f9ff;
+  --color-surface-dim: #cbdbf5;
+  --color-surface-bright: #f8f9ff;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #eff4ff;
+  --color-surface-container: #e5eeff;
+  --color-surface-container-high: #dce9ff;
+  --color-surface-container-highest: #d3e4fe;
+
+  --color-on-surface: #0b1c30;
+  --color-on-surface-variant: #43474d;
+  --color-outline: #74777e;
+  --color-outline-variant: #c3c6ce;
+
+  --color-error: #ba1a1a;
+  --color-error-container: #ffdad6;
+  --color-on-error: #ffffff;
+
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-heading: 'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif;
+
+  --spacing-sidebar-expanded: 16rem;
+  --spacing-sidebar-collapsed: 4.5rem;
+  --spacing-header-height: 4.25rem;
+  --spacing-gutter: 1.5rem;
+}
+
+/* Custom Base Utility Overrides */
+@layer base {
+  body {
+    background-color: var(--color-background);
+    color: var(--color-on-surface);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading);
+    letter-spacing: -0.02em;
+  }
+}
+
+/* Smooth transitions for interactive elements */
+button, a {
+  transition: all 0.15s ease-in-out;
+}
+
+/* Custom scrollbar matching Stitch */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import Logo from '../components/Logo';
 import TeacherAnalytics from './TeacherAnalytics';
 
 export default function TeacherDashboard() {
@@ -119,13 +120,16 @@ export default function TeacherDashboard() {
 
   return (
     <section className="teacher-dashboard">
-      <div className="page-header">
-        <div>
-          <span className="eyebrow">Teacher Portal</span>
-          <h1>Welcome, {dashboard.teacher.full_name}</h1>
-          <p style={{ margin: '8px 0 0', color: 'var(--muted)' }}>
-            {dashboard.teacher.designation} • {dashboard.teacher.department}
-          </p>
+      <div className="page-header dashboard-brand-header">
+        <div className="header-identity">
+          <Logo size="md" theme="light" />
+          <div className="header-text">
+            <span className="eyebrow">Teacher Portal</span>
+            <h1>Welcome, {dashboard.teacher.full_name}</h1>
+            <p style={{ margin: '4px 0 0', color: 'var(--muted)' }}>
+              {dashboard.teacher.designation} • {dashboard.teacher.department}
+            </p>
+          </div>
         </div>
       </div>
 

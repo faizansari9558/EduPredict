@@ -1,4 +1,4 @@
-# PowerShell script to start all 3 EduPredict services concurrently
+# PowerShell script to start all 3 EduPredict services concurrently at maximum speed
 
 Write-Host "================================================================" -ForegroundColor Cyan
 Write-Host "  EDUPREDICT SYSTEM LAUNCHER (FastAPI ML + Node API + React)   " -ForegroundColor Cyan
@@ -22,3 +22,7 @@ Write-Host "`nAll 3 services launched successfully!" -ForegroundColor Green
 Write-Host "• Frontend: http://localhost:3000" -ForegroundColor White
 Write-Host "• Backend API: http://localhost:5000" -ForegroundColor White
 Write-Host "• ML Microservice: http://localhost:8000" -ForegroundColor White
+
+Start-Sleep -Seconds 2
+Start-Process "http://localhost:3000"
+
