@@ -10,8 +10,8 @@ export default function LoginPage() {
   const location = useLocation();
 
   const [role, setRole] = useState('student');
-  const [emailOrId, setEmailOrId] = useState('student@edupredict.edu');
-  const [password, setPassword] = useState('password123');
+  const [emailOrId, setEmailOrId] = useState('aisha.khan@edupredict.local');
+  const [password, setPassword] = useState('testpass123');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -30,14 +30,14 @@ export default function LoginPage() {
     setRole(newRole);
     setError('');
     if (newRole === 'student') {
-      setEmailOrId('student@edupredict.edu');
-      setPassword('password123');
+      setEmailOrId('aisha.khan@edupredict.local');
+      setPassword('testpass123');
     } else if (newRole === 'teacher') {
-      setEmailOrId('faculty@edupredict.edu');
-      setPassword('password123');
+      setEmailOrId('sharma@edupredict.local');
+      setPassword('testpass123');
     } else if (newRole === 'admin') {
-      setEmailOrId('admin@edupredict.edu');
-      setPassword('password123');
+      setEmailOrId('admin@edupredict.local');
+      setPassword('testpass123');
     }
   };
 
@@ -150,7 +150,7 @@ export default function LoginPage() {
             <div className="grid grid-cols-3 gap-2">
               <button
                 type="button"
-                onClick={() => handleQuickLogin('student', 'student@edupredict.edu', 'password123')}
+                onClick={() => handleQuickLogin('student', 'aisha.khan@edupredict.local', 'testpass123')}
                 className="p-2.5 rounded-xl bg-surface-container hover:bg-surface-container-high border border-outline-variant/40 text-center transition-all cursor-pointer hover:shadow-sm active:scale-95 group"
               >
                 <span className="block text-xs font-bold text-primary group-hover:scale-105 transition-transform">🎓 Student</span>
@@ -159,7 +159,7 @@ export default function LoginPage() {
 
               <button
                 type="button"
-                onClick={() => handleQuickLogin('teacher', 'faculty@edupredict.edu', 'password123')}
+                onClick={() => handleQuickLogin('teacher', 'sharma@edupredict.local', 'testpass123')}
                 className="p-2.5 rounded-xl bg-surface-container hover:bg-surface-container-high border border-outline-variant/40 text-center transition-all cursor-pointer hover:shadow-sm active:scale-95 group"
               >
                 <span className="block text-xs font-bold text-secondary group-hover:scale-105 transition-transform">👨‍🏫 Faculty</span>
@@ -168,7 +168,7 @@ export default function LoginPage() {
 
               <button
                 type="button"
-                onClick={() => handleQuickLogin('admin', 'admin@edupredict.edu', 'password123')}
+                onClick={() => handleQuickLogin('admin', 'admin@edupredict.local', 'testpass123')}
                 className="p-2.5 rounded-xl bg-surface-container hover:bg-surface-container-high border border-outline-variant/40 text-center transition-all cursor-pointer hover:shadow-sm active:scale-95 group"
               >
                 <span className="block text-xs font-bold text-purple-700 dark:text-purple-400 group-hover:scale-105 transition-transform">🛡️ Admin</span>

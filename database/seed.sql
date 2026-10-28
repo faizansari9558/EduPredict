@@ -1,6 +1,6 @@
 -- EduPredict Comprehensive Seed Data
 -- Default password for all accounts: testpass123
--- Bcrypt hash: $2b$10$rIL7JJdV7Rn/9iYCfIz5J.UKr7JEq7RBKzZYZC9gv5xHHHHHHHHHG
+-- Bcrypt hash: generated for testpass123
 
 USE EduPredict;
 
@@ -35,13 +35,13 @@ INSERT IGNORE INTO batches (name, department_id, academic_year_id) VALUES
 
 -- ===== USERS: ADMIN =====
 INSERT IGNORE INTO users (role_id, email, password_hash, user_id_number, full_name, phone_number, status) VALUES
-  ((SELECT id FROM roles WHERE name = 'admin'), 'admin@edupredict.local', '$2b$10$rIL7JJdV7Rn/9iYCfIz5J.UKr7JEq7RBKzZYZC9gv5xHHHHHHHHHG', 'ADMIN001', 'Admin User', '9999999999', 'active');
+  ((SELECT id FROM roles WHERE name = 'admin'), 'admin@edupredict.local', '$2a$10$tQaX6Y1McIpiNkLJIVIize5M1SdxfFRxTakdvEicuIILLvdPJwIee', 'ADMIN001', 'Admin User', '9999999999', 'active');
 
 -- ===== USERS: TEACHERS =====
 INSERT IGNORE INTO users (role_id, email, password_hash, user_id_number, full_name, phone_number, status) VALUES
-  ((SELECT id FROM roles WHERE name = 'teacher'), 'sharma@edupredict.local', '$2b$10$rIL7JJdV7Rn/9iYCfIz5J.UKr7JEq7RBKzZYZC9gv5xHHHHHHHHHG', 'PROF001', 'Dr. Sharma', '9876543211', 'active'),
-  ((SELECT id FROM roles WHERE name = 'teacher'), 'patel@edupredict.local', '$2b$10$rIL7JJdV7Rn/9iYCfIz5J.UKr7JEq7RBKzZYZC9gv5xHHHHHHHHHG', 'PROF002', 'Prof. Patel', '9876543212', 'active'),
-  ((SELECT id FROM roles WHERE name = 'teacher'), 'gupta@edupredict.local', '$2b$10$rIL7JJdV7Rn/9iYCfIz5J.UKr7JEq7RBKzZYZC9gv5xHHHHHHHHHG', 'PROF003', 'Prof. Gupta', '9876543213', 'active');
+  ((SELECT id FROM roles WHERE name = 'teacher'), 'sharma@edupredict.local', '$2a$10$tQaX6Y1McIpiNkLJIVIize5M1SdxfFRxTakdvEicuIILLvdPJwIee', 'PROF001', 'Dr. Sharma', '9876543211', 'active'),
+  ((SELECT id FROM roles WHERE name = 'teacher'), 'patel@edupredict.local', '$2a$10$tQaX6Y1McIpiNkLJIVIize5M1SdxfFRxTakdvEicuIILLvdPJwIee', 'PROF002', 'Prof. Patel', '9876543212', 'active'),
+  ((SELECT id FROM roles WHERE name = 'teacher'), 'gupta@edupredict.local', '$2a$10$tQaX6Y1McIpiNkLJIVIize5M1SdxfFRxTakdvEicuIILLvdPJwIee', 'PROF003', 'Prof. Gupta', '9876543213', 'active');
 
 -- ===== TEACHER RECORDS =====
 INSERT IGNORE INTO teachers (user_id, department_id, designation, employee_code) VALUES
@@ -51,11 +51,11 @@ INSERT IGNORE INTO teachers (user_id, department_id, designation, employee_code)
 
 -- ===== USERS: STUDENTS =====
 INSERT IGNORE INTO users (role_id, email, password_hash, user_id_number, full_name, phone_number, status) VALUES
-  ((SELECT id FROM roles WHERE name = 'student'), 'aisha.khan@edupredict.local', '$2b$10$rIL7JJdV7Rn/9iYCfIz5J.UKr7JEq7RBKzZYZC9gv5xHHHHHHHHHG', 'STU001', 'Aisha Khan', '8765432101', 'active'),
-  ((SELECT id FROM roles WHERE name = 'student'), 'raj.patel@edupredict.local', '$2b$10$rIL7JJdV7Rn/9iYCfIz5J.UKr7JEq7RBKzZYZC9gv5xHHHHHHHHHG', 'STU002', 'Raj Patel', '8765432102', 'active'),
-  ((SELECT id FROM roles WHERE name = 'student'), 'priya.sharma@edupredict.local', '$2b$10$rIL7JJdV7Rn/9iYCfIz5J.UKr7JEq7RBKzZYZC9gv5xHHHHHHHHHG', 'STU003', 'Priya Sharma', '8765432103', 'active'),
-  ((SELECT id FROM roles WHERE name = 'student'), 'arjun.gupta@edupredict.local', '$2b$10$rIL7JJdV7Rn/9iYCfIz5J.UKr7JEq7RBKzZYZC9gv5xHHHHHHHHHG', 'STU004', 'Arjun Gupta', '8765432104', 'active'),
-  ((SELECT id FROM roles WHERE name = 'student'), 'neha.singh@edupredict.local', '$2b$10$rIL7JJdV7Rn/9iYCfIz5J.UKr7JEq7RBKzZYZC9gv5xHHHHHHHHHG', 'STU005', 'Neha Singh', '8765432105', 'active');
+  ((SELECT id FROM roles WHERE name = 'student'), 'aisha.khan@edupredict.local', '$2a$10$tQaX6Y1McIpiNkLJIVIize5M1SdxfFRxTakdvEicuIILLvdPJwIee', 'STU001', 'Aisha Khan', '8765432101', 'active'),
+  ((SELECT id FROM roles WHERE name = 'student'), 'raj.patel@edupredict.local', '$2a$10$tQaX6Y1McIpiNkLJIVIize5M1SdxfFRxTakdvEicuIILLvdPJwIee', 'STU002', 'Raj Patel', '8765432102', 'active'),
+  ((SELECT id FROM roles WHERE name = 'student'), 'priya.sharma@edupredict.local', '$2a$10$tQaX6Y1McIpiNkLJIVIize5M1SdxfFRxTakdvEicuIILLvdPJwIee', 'STU003', 'Priya Sharma', '8765432103', 'active'),
+  ((SELECT id FROM roles WHERE name = 'student'), 'arjun.gupta@edupredict.local', '$2a$10$tQaX6Y1McIpiNkLJIVIize5M1SdxfFRxTakdvEicuIILLvdPJwIee', 'STU004', 'Arjun Gupta', '8765432104', 'active'),
+  ((SELECT id FROM roles WHERE name = 'student'), 'neha.singh@edupredict.local', '$2a$10$tQaX6Y1McIpiNkLJIVIize5M1SdxfFRxTakdvEicuIILLvdPJwIee', 'STU005', 'Neha Singh', '8765432105', 'active');
 
 -- ===== STUDENT RECORDS =====
 INSERT IGNORE INTO students (user_id, batch_id, department_id, enrollment_number, cgpa, tenth_percentage, twelfth_percentage, graduation_percentage, verification_status) VALUES

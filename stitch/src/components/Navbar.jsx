@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ThemeToggle from './ThemeToggle';
+import { authApi } from '../services/api';
 
 /**
  * Stitch Official Topbar Header
@@ -168,6 +169,7 @@ export default function Navbar({
                 <button
                   onClick={() => {
                     setPersonaOpen(false);
+                    authApi.logout();
                     navigate('/login');
                   }}
                   className="w-full text-left px-3 py-2 rounded-xl text-xs text-rose-600 hover:bg-rose-50 flex items-center gap-2 font-semibold"

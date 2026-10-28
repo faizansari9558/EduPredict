@@ -1,6 +1,7 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import Logo from './Logo';
+import { authApi } from '../services/api';
 
 /**
  * Stitch Official Navigation Sidebar
@@ -127,6 +128,7 @@ export default function Sidebar({
       <div className="p-3 border-t border-white/5 bg-primary/20 space-y-1">
         <NavLink
           to="/login"
+          onClick={() => authApi.logout()}
           className="flex items-center gap-3 px-3 py-2 rounded-lg text-rose-300 hover:bg-rose-500/20 transition-colors font-medium text-sm"
         >
           <span className="material-symbols-outlined text-[20px]">logout</span>

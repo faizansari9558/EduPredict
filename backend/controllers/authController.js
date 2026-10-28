@@ -30,10 +30,13 @@ async function login(req, res) {
       });
     }
 
+    const identifier = email.trim().toLowerCase();
     const [rows] = await db.query(
       `SELECT u.id, u.email, u.password_hash, r.name AS role_name
        FROM users u JOIN roles r ON r.id = u.role_id
-       WHERE u.email = ? AND u.status = 'active'`, [email.trim().toLowerCase()]);
+       WHERE (u.email = ? OR LOWER(u.user_id_number) = ?) AND u.status = 'active'`,
+      [identifier, identifier]
+    );
     const user = rows[0];
     if (!user || !(await comparePassword(password, user.password_hash))) {
       return res.status(401).json({success:false, message:'Invalid credentials.'});
