@@ -74,8 +74,11 @@ export const adminApi = {
   createUser: async (userData) => {
     return await apiClient('/admin/users', { body: userData });
   },
-  bulkImportUsers: async (users) => {
-    return await apiClient('/admin/users/bulk', { body: { users } });
+  bulkImportUsers: async (usersOrFile) => {
+    if (usersOrFile instanceof File) {
+      return await apiClient('/admin/users/bulk', { body: usersOrFile });
+    }
+    return await apiClient('/admin/users/bulk', { body: { users: usersOrFile } });
   }
 };
 

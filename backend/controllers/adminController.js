@@ -1,5 +1,5 @@
 const db = require('../config/db');
-const { hashPassword } = require('../utils/password');
+const XLSX = require('xlsx');
 
 async function getDashboardOverview(req, res) {
   const overview = {
@@ -33,22 +33,23 @@ async function getDashboardOverview(req, res) {
 async function getAllUsers(req, res) {
   try {
     const { role, status, limit = 50, offset = 0 } = req.query;
-    let query = 'SELECT u.id, u.email, u.full_name, u.phone_number, u.status, r.name AS role FROM users u INNER JOIN roles r ON r.id = u.role_id WHERE 1=1';
-    const params = [];
-
-    if (role) {
-      query += ' AND r.name = ?';
-      params.push(role);
-    }
-    if (status) {
-      query += ' AND u.status = ?';
-      params.push(status);
-    }
-
-    query += ' ORDER BY u.created_at DESC LIMIT ? OFFSET ?';
-    params.push(parseInt(limit), parseInt(offset));
-
-    const [users] = await db.query(query, params);
+    const [registered] = await db.query(
+      `SELECT u.id, u.email, u.full_name, u.user_id_number, u.phone_number,
+              u.status, r.name AS role, 'registered' AS record_status
+       FROM users u INNER JOIN roles r ON r.id = u.role_id`
+    );
+    const [preauthorized] = await db.query(
+      `SELECT CONCAT('identity-', i.id) AS id, i.email, i.full_name, i.user_id_number,
+              NULL AS phone_number,
+              CASE WHEN i.consumed_user_id IS NULL THEN 'preauthorized' ELSE 'registered' END AS status,
+              i.role_name AS role, 'preauthorized' AS record_status
+       FROM institutional_identity_records i`
+    );
+    const users = [...registered, ...preauthorized]
+      .filter(user => !role || user.role === role)
+      .filter(user => !status || user.status === status)
+      .sort((a, b) => String(b.id).localeCompare(String(a.id)))
+      .slice(parseInt(offset), parseInt(offset) + parseInt(limit));
 
     return res.json({
       success: true,
@@ -412,38 +413,22 @@ async function createUser(req, res) {
     const cleanEmail = email.trim().toLowerCase();
     const cleanId = userIdNumber.trim();
     const cleanRole = role.toLowerCase();
-
-    const [roleRows] = await db.query('SELECT id FROM roles WHERE name = ?', [cleanRole]);
-    const roleId = roleRows.length ? roleRows[0].id : (cleanRole === 'admin' ? 1 : cleanRole === 'teacher' ? 2 : 3);
-
-    const defaultPassHash = await hashPassword('password123');
-
-    const [result] = await db.query(
-      `INSERT INTO users (role_id, email, password_hash, user_id_number, full_name, phone_number, status)
-       VALUES (?, ?, ?, ?, ?, ?, ?)
-       ON DUPLICATE KEY UPDATE full_name = VALUES(full_name), user_id_number = VALUES(user_id_number), status = VALUES(status)`,
-      [roleId, cleanEmail, defaultPassHash, cleanId, fullName.trim(), phoneNumber || null, status]
-    );
-
-    if (cleanRole === 'student') {
-      try {
-        const [deptRows] = await db.query('SELECT id FROM departments WHERE name LIKE ? LIMIT 1', [`%${department || 'Computer'}%`]);
-        const deptId = deptRows.length ? deptRows[0].id : 1;
-        await db.query(
-          `INSERT IGNORE INTO students (user_id, roll_number, department_id, batch_id, academic_year_id)
-           VALUES (?, ?, ?, 1, 1)`,
-          [result.insertId || 1, cleanId, deptId]
-        );
-      } catch (err) {
-        console.warn('Student detail insert warning:', err.message);
-      }
+    if (!['student', 'teacher'].includes(cleanRole)) {
+      return res.status(400).json({ success: false, message: 'Only student and teacher identity records can be provisioned here.' });
     }
+
+    await db.query(
+      `INSERT INTO institutional_identity_records
+       (email, user_id_number, full_name, role_name, department_id)
+       VALUES (?, ?, ?, ?, (SELECT id FROM departments WHERE name LIKE ? LIMIT 1))`,
+      [cleanEmail, cleanId, fullName.trim(), cleanRole, `%${department || ''}%`]
+    );
 
     return res.status(201).json({
       success: true,
       message: 'User record provisioned successfully.',
       data: {
-        id: result.insertId,
+        id: cleanId,
         email: cleanEmail,
         fullName: fullName.trim(),
         userIdNumber: cleanId,
@@ -453,6 +438,9 @@ async function createUser(req, res) {
     });
   } catch (error) {
     console.error('Create user error:', error);
+    if (error.code === 'ER_DUP_ENTRY') {
+      return res.status(409).json({ success: false, message: 'A record with this email or university ID already exists.' });
+    }
     return res.status(500).json({
       success: false,
       message: error.message || 'Failed to create user.'
@@ -462,7 +450,18 @@ async function createUser(req, res) {
 
 async function bulkImportUsers(req, res) {
   try {
-    const { users } = req.body;
+    let users = req.body.users;
+    if (req.file) {
+      const workbook = XLSX.read(req.file.buffer, { type: 'buffer' });
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      users = XLSX.utils.sheet_to_json(sheet, { defval: '' }).map(row => ({
+        fullName: row['Full Name'] || row.fullName || row['Full Name*'],
+        email: row['Official Email'] || row.email,
+        userIdNumber: row['University User ID'] || row.userIdNumber || row['University ID'],
+        role: row.Role || row.role || 'student',
+        department: row.Department || row.department || ''
+      }));
+    }
     if (!Array.isArray(users) || !users.length) {
       return res.status(400).json({
         success: false,
@@ -470,32 +469,41 @@ async function bulkImportUsers(req, res) {
       });
     }
 
-    const defaultPassHash = await hashPassword('password123');
     let imported = 0;
+    const rejected = [];
 
-    for (const u of users) {
-      if (!u.email || !u.userIdNumber || !u.fullName) continue;
-      const cleanEmail = u.email.trim().toLowerCase();
-      const cleanId = u.userIdNumber.trim();
-      const cleanRole = (u.role || 'student').toLowerCase();
-      const cleanStatus = u.status || 'active';
-
-      const [roleRows] = await db.query('SELECT id FROM roles WHERE name = ?', [cleanRole]);
-      const roleId = roleRows.length ? roleRows[0].id : (cleanRole === 'admin' ? 1 : cleanRole === 'teacher' ? 2 : 3);
-
-      await db.query(
-        `INSERT INTO users (role_id, email, password_hash, user_id_number, full_name, phone_number, status)
-         VALUES (?, ?, ?, ?, ?, ?, ?)
-         ON DUPLICATE KEY UPDATE full_name = VALUES(full_name), user_id_number = VALUES(user_id_number), status = VALUES(status)`,
-        [roleId, cleanEmail, defaultPassHash, cleanId, u.fullName.trim(), u.phoneNumber || null, cleanStatus]
-      );
-      imported++;
+    for (const [index, u] of users.entries()) {
+      if (!u.email || !u.userIdNumber || !u.fullName) {
+        rejected.push({ row: index + 2, reason: 'Full name, email, and university ID are required.' });
+        continue;
+      }
+      const cleanEmail = String(u.email).trim().toLowerCase();
+      const cleanId = String(u.userIdNumber).trim();
+      const cleanRole = String(u.role || 'student').toLowerCase();
+      if (!['student', 'teacher'].includes(cleanRole)) {
+        rejected.push({ row: index + 2, reason: 'Role must be student or teacher.' });
+        continue;
+      }
+      try {
+        await db.query(
+          `INSERT INTO institutional_identity_records
+           (email, user_id_number, full_name, role_name, department_id)
+           VALUES (?, ?, ?, ?, (SELECT id FROM departments WHERE name LIKE ? LIMIT 1))
+           ON DUPLICATE KEY UPDATE full_name = VALUES(full_name), role_name = VALUES(role_name), department_id = VALUES(department_id)`,
+          [cleanEmail, cleanId, String(u.fullName).trim(), cleanRole, `%${u.department || ''}%`]
+        );
+        imported++;
+      } catch (error) {
+        if (error.code === 'ER_DUP_ENTRY') rejected.push({ row: index + 2, reason: 'Email or university ID conflicts with another record.' });
+        else throw error;
+      }
     }
 
     return res.json({
       success: true,
       message: `Successfully imported ${imported} user records.`,
-      importedCount: imported
+      importedCount: imported,
+      rejected
     });
   } catch (error) {
     console.error('Bulk import error:', error);

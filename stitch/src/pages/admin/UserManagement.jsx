@@ -43,6 +43,7 @@ Ananya Roy,ananya.roy@university.edu,21IT089,student,Information Tech
 Prof. Meera Kulkarni,m.kulkarni@university.edu,EMP-7714,teacher,Information Tech
 Rohan Gupta,rohan.gupta@university.edu,21EC015,student,Electronics & Comm`
   );
+  const [bulkFile, setBulkFile] = useState(null);
 
   // Fetch users on load
   const loadUsers = async () => {
@@ -137,7 +138,11 @@ Rohan Gupta,rohan.gupta@university.edu,21EC015,student,Electronics & Comm`
         return;
       }
 
-      await adminApi.bulkImportUsers(parsedUsers);
+      if (bulkFile) {
+        await adminApi.bulkImportUsers(bulkFile);
+      } else {
+        await adminApi.bulkImportUsers(parsedUsers);
+      }
 
       const newRecords = parsedUsers.map((u, idx) => ({
         id: Date.now() + idx,
@@ -152,6 +157,7 @@ Rohan Gupta,rohan.gupta@university.edu,21EC015,student,Electronics & Comm`
 
       setUsers([...newRecords, ...users]);
       setIsBulkModalOpen(false);
+      setBulkFile(null);
       setNotification({ message: `Successfully imported ${parsedUsers.length} student and faculty admission records into the database!`, type: 'success' });
     } catch (err) {
       setNotification({ message: 'Bulk import failed: ' + err.message, type: 'error' });
@@ -391,8 +397,14 @@ Rohan Gupta,rohan.gupta@university.edu,21EC015,student,Electronics & Comm`
       >
         <form onSubmit={handleBulkImport} className="space-y-4">
           <p className="text-xs text-on-surface-variant">
-            Paste or edit the comma-separated student and faculty admission records below. Format: <code>Full Name, Official Email, University User ID, Role, Department</code>
+            Upload an Excel workbook (.xlsx) or CSV with columns: <code>Full Name, Official Email, University User ID, Role, Department</code>. You may also paste CSV rows below.
           </p>
+          <input
+            type="file"
+            accept=".xlsx,.xls,.csv"
+            onChange={(e) => setBulkFile(e.target.files?.[0] || null)}
+            className="w-full text-xs"
+          />
 
           <div>
             <textarea

@@ -22,6 +22,9 @@ implemented and tested.
   assessment values when data is missing.
 - Projects, certifications, internships, and skills have API-backed student flows.
 - Login, forgot-password, and registration front-end flows no longer display a fake OTP.
+- Admin user provisioning now creates preauthorized student/teacher identity records
+  rather than silently creating accounts with a shared default password. Bulk `.xlsx`,
+  `.xls`, and `.csv` imports are supported through the protected admin endpoint.
 
 ## Files and migration
 
@@ -54,6 +57,10 @@ unavailable response; it does not simulate delivery.
   mock presentation data and require replacement with API-backed empty/loading states.
 - Startup scripts, Docker/MySQL readiness checks, exports, notifications, and all routed
   pages require a dedicated browser/integration audit.
+- Admin panel browser testing is blocked until a valid active admin account is available;
+  the current seeded `admin@edupredict.local` / `testpass123` credentials returned 401
+  during browser testing. The protected admin users endpoint correctly returns 401
+  without a token.
 
 ## Startup
 

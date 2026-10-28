@@ -16,6 +16,8 @@ const {
   updateDepartment
 } = require('../controllers/adminController');
 const { authenticateToken, authorizeRoles } = require('../middleware/auth');
+const multer = require('multer');
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
 
 const router = express.Router();
 
@@ -46,6 +48,7 @@ router.post(
   '/users/bulk',
   authenticateToken,
   authorizeRoles('admin'),
+  upload.single('file'),
   bulkImportUsers
 );
 
