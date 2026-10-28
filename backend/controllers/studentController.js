@@ -219,23 +219,24 @@ async function uploadDocument(req, res) {
     });
   }
 
-  async function downloadDocument(req, res) {
-    try {
-      const [rows] = await db.query(
-        `SELECT file_name, stored_path FROM documents WHERE id = ? AND user_id = ?`,
-        [req.params.documentId, req.user.id]
-      );
-      if (!rows.length) return res.status(404).json({ success: false, message: 'Document not found.' });
-      const root = path.resolve(__dirname, '..');
-      const filePath = path.resolve(root, rows[0].stored_path);
-      if (!filePath.startsWith(`${root}${path.sep}`)) return res.status(400).json({ success: false, message: 'Invalid document path.' });
-      await fs.access(filePath);
-      return res.download(filePath, rows[0].file_name);
-    } catch (error) {
-      if (error.code === 'ENOENT') return res.status(404).json({ success: false, message: 'Document file is unavailable.' });
-      console.error('Download document error:', error);
-      return res.status(500).json({ success: false, message: 'Failed to retrieve document.' });
-    }
+}
+
+async function downloadDocument(req, res) {
+  try {
+    const [rows] = await db.query(
+      `SELECT file_name, stored_path FROM documents WHERE id = ? AND user_id = ?`,
+      [req.params.documentId, req.user.id]
+    );
+    if (!rows.length) return res.status(404).json({ success: false, message: 'Document not found.' });
+    const root = path.resolve(__dirname, '..');
+    const filePath = path.resolve(root, rows[0].stored_path);
+    if (!filePath.startsWith(`${root}${path.sep}`)) return res.status(400).json({ success: false, message: 'Invalid document path.' });
+    await fs.access(filePath);
+    return res.download(filePath, rows[0].file_name);
+  } catch (error) {
+    if (error.code === 'ENOENT') return res.status(404).json({ success: false, message: 'Document file is unavailable.' });
+    console.error('Download document error:', error);
+    return res.status(500).json({ success: false, message: 'Failed to retrieve document.' });
   }
 }
 
@@ -262,76 +263,76 @@ async function getStudentDocuments(req, res) {
       message: 'Failed to retrieve documents.'
     });
   }
+}
 
-  async function getPortfolioItems(req, res) {
-    const allowedTypes = new Set(['project', 'certification', 'internship']);
-    const itemType = req.params.itemType;
-    if (!allowedTypes.has(itemType)) return res.status(400).json({ success: false, message: 'Invalid portfolio item type.' });
-    try {
-      const [rows] = await db.query(
-        `SELECT id, payload_json, verification_status, review_notes, created_at, updated_at
-         FROM student_portfolio_items WHERE student_id = ? AND item_type = ? ORDER BY created_at DESC`,
-        [req.user.id, itemType]
-      );
-      return res.json({
-        success: true,
-        data: rows.map(row => ({ id: row.id, ...JSON.parse(row.payload_json), status: row.verification_status, review_notes: row.review_notes, created_at: row.created_at, updated_at: row.updated_at }))
-      });
-    } catch (error) {
-      console.error('Get portfolio items error:', error);
-      return res.status(500).json({ success: false, message: 'Failed to retrieve portfolio items.' });
-    }
-  }
-
-  async function createPortfolioItem(req, res) {
-    const allowedTypes = new Set(['project', 'certification', 'internship']);
-    const itemType = req.params.itemType;
-    if (!allowedTypes.has(itemType) || !req.body || typeof req.body !== 'object') {
-      return res.status(400).json({ success: false, message: 'Invalid portfolio item.' });
-    }
-
-    async function getSkills(req, res) {
+async function getPortfolioItems(req, res) {
+      const allowedTypes = new Set(['project', 'certification', 'internship']);
+      const itemType = req.params.itemType;
+      if (!allowedTypes.has(itemType)) return res.status(400).json({ success: false, message: 'Invalid portfolio item type.' });
       try {
         const [rows] = await db.query(
-          `SELECT id, skill_category AS category, skill_name AS name, avg_score AS score,
-                  CASE WHEN avg_score >= 80 THEN 'Advanced' WHEN avg_score >= 60 THEN 'Intermediate' ELSE 'Foundational' END AS level
-           FROM skill_proficiency WHERE student_id = ? ORDER BY skill_name`,
-          [req.user.id]
+          `SELECT id, payload_json, verification_status, review_notes, created_at, updated_at
+           FROM student_portfolio_items WHERE student_id = ? AND item_type = ? ORDER BY created_at DESC`,
+          [req.user.id, itemType]
         );
-        return res.json({ success: true, data: rows });
+        return res.json({
+          success: true,
+          data: rows.map(row => ({ id: row.id, ...JSON.parse(row.payload_json), status: row.verification_status, review_notes: row.review_notes, created_at: row.created_at, updated_at: row.updated_at }))
+        });
       } catch (error) {
-        console.error('Get skills error:', error);
-        return res.status(500).json({ success: false, message: 'Failed to retrieve skills.' });
+        console.error('Get portfolio items error:', error);
+        return res.status(500).json({ success: false, message: 'Failed to retrieve portfolio items.' });
       }
-    }
+}
 
-    async function createSkill(req, res) {
-      const { category, name } = req.body || {};
-      if (!category || !name) return res.status(400).json({ success: false, message: 'Skill category and name are required.' });
-      try {
-        const [result] = await db.query(
-          `INSERT INTO skill_proficiency (student_id, skill_category, skill_name)
-           VALUES (?, ?, ?)
-           ON DUPLICATE KEY UPDATE skill_category = VALUES(skill_category)`,
-          [req.user.id, category.trim(), name.trim()]
-        );
-        return res.status(201).json({ success: true, data: { id: result.insertId, category: category.trim(), name: name.trim(), score: 0, level: 'Foundational' } });
-      } catch (error) {
-        console.error('Create skill error:', error);
-        return res.status(500).json({ success: false, message: 'Failed to save skill.' });
-      }
-    }
-    try {
-      const [result] = await db.query(
-        `INSERT INTO student_portfolio_items (student_id, item_type, payload_json)
-         VALUES (?, ?, ?)`,
-        [req.user.id, itemType, JSON.stringify(req.body)]
-      );
-      return res.status(201).json({ success: true, data: { id: result.insertId, ...req.body, status: 'pending' } });
-    } catch (error) {
-      console.error('Create portfolio item error:', error);
-      return res.status(500).json({ success: false, message: 'Failed to save portfolio item.' });
-    }
+async function createPortfolioItem(req, res) {
+  const allowedTypes = new Set(['project', 'certification', 'internship']);
+  const itemType = req.params.itemType;
+  if (!allowedTypes.has(itemType) || !req.body || typeof req.body !== 'object') {
+    return res.status(400).json({ success: false, message: 'Invalid portfolio item.' });
+  }
+  try {
+    const [result] = await db.query(
+      `INSERT INTO student_portfolio_items (student_id, item_type, payload_json)
+       VALUES (?, ?, ?)`,
+      [req.user.id, itemType, JSON.stringify(req.body)]
+    );
+    return res.status(201).json({ success: true, data: { id: result.insertId, ...req.body, status: 'pending' } });
+  } catch (error) {
+    console.error('Create portfolio item error:', error);
+    return res.status(500).json({ success: false, message: 'Failed to save portfolio item.' });
+  }
+}
+
+async function getSkills(req, res) {
+  try {
+    const [rows] = await db.query(
+      `SELECT id, skill_category AS category, skill_name AS name, avg_score AS score,
+              CASE WHEN avg_score >= 80 THEN 'Advanced' WHEN avg_score >= 60 THEN 'Intermediate' ELSE 'Foundational' END AS level
+       FROM skill_proficiency WHERE student_id = ? ORDER BY skill_name`,
+      [req.user.id]
+    );
+    return res.json({ success: true, data: rows });
+  } catch (error) {
+    console.error('Get skills error:', error);
+    return res.status(500).json({ success: false, message: 'Failed to retrieve skills.' });
+  }
+}
+
+async function createSkill(req, res) {
+  const { category, name } = req.body || {};
+  if (!category || !name) return res.status(400).json({ success: false, message: 'Skill category and name are required.' });
+  try {
+    const [result] = await db.query(
+      `INSERT INTO skill_proficiency (student_id, skill_category, skill_name)
+       VALUES (?, ?, ?)
+       ON DUPLICATE KEY UPDATE skill_category = VALUES(skill_category)`,
+      [req.user.id, category.trim(), name.trim()]
+    );
+    return res.status(201).json({ success: true, data: { id: result.insertId, category: category.trim(), name: name.trim(), score: 0, level: 'Foundational' } });
+  } catch (error) {
+    console.error('Create skill error:', error);
+    return res.status(500).json({ success: false, message: 'Failed to save skill.' });
   }
 }
 

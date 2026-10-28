@@ -9,9 +9,8 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [role, setRole] = useState('student');
-  const [emailOrId, setEmailOrId] = useState('aisha.khan@edupredict.local');
-  const [password, setPassword] = useState('testpass123');
+  const [emailOrId, setEmailOrId] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -21,25 +20,9 @@ export default function LoginPage() {
   useEffect(() => {
     if (location.state?.prefillEmail) {
       setEmailOrId(location.state.prefillEmail);
-      if (location.state.role) setRole(location.state.role);
       setRegisteredSuccess('Account verified and ready! Please sign in below.');
     }
   }, [location.state]);
-
-  const handleRoleChange = (newRole) => {
-    setRole(newRole);
-    setError('');
-    if (newRole === 'student') {
-      setEmailOrId('aisha.khan@edupredict.local');
-      setPassword('testpass123');
-    } else if (newRole === 'teacher') {
-      setEmailOrId('sharma@edupredict.local');
-      setPassword('testpass123');
-    } else if (newRole === 'admin') {
-      setEmailOrId('admin@edupredict.local');
-      setPassword('testpass123');
-    }
-  };
 
   const signIn = async (email, secret) => {
     setLoading(true); setError('');
@@ -50,7 +33,6 @@ export default function LoginPage() {
     } catch(err) { setError(err.message || 'Unable to sign in.'); }
     finally { setLoading(false); }
   };
-  const handleQuickLogin = (targetRole,email,secret) => signIn(email,secret);
   const handleSubmit = e => {e.preventDefault();return signIn(emailOrId,password);};
 
   return (
@@ -141,41 +123,6 @@ export default function LoginPage() {
               {loading ? 'Authenticating...' : 'Sign In to Portal'}
             </Button>
           </form>
-
-          {/* 1-Click Fast Demo Fill Buttons */}
-          <div className="pt-2 border-t border-outline-variant/20 space-y-2">
-            <span className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider block text-center">
-              ⚡ 1-Click Fast Demo Logins
-            </span>
-            <div className="grid grid-cols-3 gap-2">
-              <button
-                type="button"
-                onClick={() => handleQuickLogin('student', 'aisha.khan@edupredict.local', 'testpass123')}
-                className="p-2.5 rounded-xl bg-surface-container hover:bg-surface-container-high border border-outline-variant/40 text-center transition-all cursor-pointer hover:shadow-sm active:scale-95 group"
-              >
-                <span className="block text-xs font-bold text-primary group-hover:scale-105 transition-transform">🎓 Student</span>
-                <span className="block text-[10px] text-on-surface-variant font-medium mt-0.5">Auto-Login</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleQuickLogin('teacher', 'sharma@edupredict.local', 'testpass123')}
-                className="p-2.5 rounded-xl bg-surface-container hover:bg-surface-container-high border border-outline-variant/40 text-center transition-all cursor-pointer hover:shadow-sm active:scale-95 group"
-              >
-                <span className="block text-xs font-bold text-secondary group-hover:scale-105 transition-transform">👨‍🏫 Faculty</span>
-                <span className="block text-[10px] text-on-surface-variant font-medium mt-0.5">Auto-Login</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleQuickLogin('admin', 'admin@edupredict.local', 'testpass123')}
-                className="p-2.5 rounded-xl bg-surface-container hover:bg-surface-container-high border border-outline-variant/40 text-center transition-all cursor-pointer hover:shadow-sm active:scale-95 group"
-              >
-                <span className="block text-xs font-bold text-purple-700 dark:text-purple-400 group-hover:scale-105 transition-transform">🛡️ Admin</span>
-                <span className="block text-[10px] text-on-surface-variant font-medium mt-0.5">Auto-Login</span>
-              </button>
-            </div>
-          </div>
 
           <div className="text-center text-xs text-on-surface-variant">
             Don't have an account?{' '}
