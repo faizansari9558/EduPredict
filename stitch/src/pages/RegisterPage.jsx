@@ -24,7 +24,7 @@ export default function RegisterPage() {
 
   // Step 2 OTP State
   const [otp, setOtp] = useState('');
-  const [generatedDemoOtp, setGeneratedDemoOtp] = useState('482910');
+  const [verificationToken, setVerificationToken] = useState('');
   const [otpCountdown, setOtpCountdown] = useState(60);
   const [canResend, setCanResend] = useState(false);
 
@@ -93,9 +93,6 @@ export default function RegisterPage() {
         role: currentRole
       });
 
-      if (res?.debugOtp) {
-        setGeneratedDemoOtp(res.debugOtp);
-      }
       setSuccessMsg('University record validated! Verification code sent to your official email.');
       setOtpCountdown(60);
       setCanResend(false);
@@ -119,9 +116,6 @@ export default function RegisterPage() {
         fullName: fullName.trim(),
         role
       });
-      if (res?.debugOtp) {
-        setGeneratedDemoOtp(res.debugOtp);
-      }
       setSuccessMsg('A new OTP has been sent to your email.');
       setOtpCountdown(60);
       setCanResend(false);
@@ -150,6 +144,7 @@ export default function RegisterPage() {
       });
 
       if (res?.success) {
+        setVerificationToken(res.verificationToken);
         setSuccessMsg('Email verified successfully! Now set your secure account password.');
         setCurrentStep(3);
       } else {
@@ -167,8 +162,8 @@ export default function RegisterPage() {
     e.preventDefault();
     setError('');
 
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters long.');
+    if (password.length < 8) {
+      setError('Password must be at least 8 characters long.');
       return;
     }
 
@@ -185,7 +180,7 @@ export default function RegisterPage() {
         userIdNumber: userIdNumber.trim(),
         department,
         password,
-        role
+        verificationToken
       });
 
       setSuccessMsg('Account activated successfully!');
@@ -445,26 +440,6 @@ export default function RegisterPage() {
                 </p>
                 <p className="text-xs font-bold text-secondary">{email}</p>
               </div>
-
-              {/* Demo Auto-Fill Banner for Instant Testing */}
-              {generatedDemoOtp && (
-                <div className="p-3 bg-surface-container-low border border-secondary/20 rounded-2xl flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-2">
-                    <span className="material-symbols-outlined text-secondary text-[18px]">key</span>
-                    <span className="text-on-surface-variant">Generated OTP Code:</span>
-                    <span className="font-mono font-bold text-primary tracking-widest text-sm">
-                      {generatedDemoOtp}
-                    </span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setOtp(generatedDemoOtp)}
-                    className="px-2.5 py-1 rounded-lg bg-secondary text-white text-[11px] font-bold hover:bg-secondary/90 transition-colors"
-                  >
-                    Auto-Fill
-                  </button>
-                </div>
-              )}
 
               <form onSubmit={handleStep2Submit} className="space-y-5">
                 <div>

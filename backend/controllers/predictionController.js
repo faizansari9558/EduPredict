@@ -18,6 +18,7 @@ async function getStudentFeatureVector(studentId) {
       s.tenth_percentage,
       s.twelfth_percentage,
       s.graduation_percentage,
+      s.backlogs_count,
       sm.overall_score,
       sm.aptitude_score,
       sm.coding_score,
@@ -43,24 +44,30 @@ async function getStudentFeatureVector(studentId) {
 
   // Query documents / projects count
   const [docRows] = await pool.query(
-    'SELECT COUNT(*) as count FROM documents WHERE user_id = ?',
+    `SELECT COUNT(*) as count FROM documents
+     WHERE user_id = ? AND verification_status = 'verified'`,
     [studentId]
   );
   const numDocs = docRows[0]?.count || 0;
 
+  const required = ['cgpa', 'tenth_percentage', 'twelfth_percentage', 'backlogs_count', 'aptitude_score', 'coding_score'];
+  if (required.some(field => s[field] === null || s[field] === undefined)) {
+    return { missing: required.filter(field => s[field] === null || s[field] === undefined) };
+  }
+
   return {
     student_id: s.user_id,
-    cgpa: Number(s.cgpa) || 7.2,
-    tenth_percentage: Number(s.tenth_percentage) || 75.0,
-    twelfth_percentage: Number(s.twelfth_percentage) || 75.0,
-    backlogs_count: 0,
-    aptitude_score: Number(s.aptitude_score) || (s.overall_score ? Number(s.overall_score) : 70.0),
-    coding_score: Number(s.coding_score) || (s.overall_score ? Number(s.overall_score) : 70.0),
-    num_skills: numSkills || 4,
-    num_projects: Math.min(numDocs, 3) || 1,
-    num_certifications: 1,
+    cgpa: Number(s.cgpa),
+    tenth_percentage: Number(s.tenth_percentage),
+    twelfth_percentage: Number(s.twelfth_percentage),
+    backlogs_count: Number(s.backlogs_count),
+    aptitude_score: Number(s.aptitude_score),
+    coding_score: Number(s.coding_score),
+    num_skills: Number(numSkills),
+    num_projects: Math.min(Number(numDocs), 3),
+    num_certifications: 0,
     num_internships: 0,
-    profile_completion_pct: Number(s.profile_completion_pct) || 80.0
+    profile_completion_pct: s.profile_completion_pct === null ? 0 : Number(s.profile_completion_pct)
   };
 }
 
@@ -75,6 +82,9 @@ exports.getStudentPlacementPrediction = async (req, res) => {
     const features = await getStudentFeatureVector(studentId);
     if (!features) {
       return res.status(404).json({ success: false, message: 'Student record not found.' });
+    }
+    if (features.missing) {
+      return res.status(422).json({ success: false, message: 'Verified academic and assessment records are incomplete.', missing: features.missing });
     }
 
     const predictionPayload = await mlService.predictAndExplain(features);
@@ -148,19 +158,7 @@ exports.getBatchPlacementForecast = async (req, res) => {
 exports.getModelMetadata = async (req, res) => {
   try {
     const info = await mlService.getModelInfo();
-    if (!info) {
-      return res.json({
-        success: true,
-        data: {
-          model_name: 'Gradient Boosting Placement Estimator (Ensemble)',
-          accuracy: 0.912,
-          roc_auc: 0.948,
-          precision: 0.905,
-          recall: 0.920,
-          status: 'Active'
-        }
-      });
-    }
+    if (!info) return res.status(503).json({ success: false, message: 'ML model metadata is unavailable.' });
 
     res.json({ success: true, data: info });
   } catch (error) {

@@ -19,7 +19,9 @@ export function setAuthToken(token) {
 
 export async function apiClient(endpoint, { body, ...customConfig } = {}) {
   const token = getAuthToken();
-  const headers = { 'Content-Type': 'application/json' };
+  const headers = {};
+  const isFormData = typeof FormData !== 'undefined' && body instanceof FormData;
+  if (!isFormData) headers['Content-Type'] = 'application/json';
 
   if (token) {
     headers.Authorization = `Bearer ${token}`;
@@ -34,8 +36,10 @@ export async function apiClient(endpoint, { body, ...customConfig } = {}) {
     },
   };
 
-  if (body && typeof body === 'object') {
+  if (body && typeof body === 'object' && !isFormData) {
     config.body = JSON.stringify(body);
+  } else if (isFormData) {
+    config.body = body;
   }
 
   try {
@@ -56,6 +60,7 @@ export const authApi = {
   verifyOtp: body => apiClient('/auth/verify-otp', {body}),
   login: async (email,password) => { const res=await apiClient('/auth/login',{body:{email,password}}); setAuthToken(res.token); return res; },
   register: async body => { const res=await apiClient('/auth/register',{body}); setAuthToken(res.token); return res; },
+  requestPasswordReset: email => apiClient('/auth/forgot-password', { body: { email } }),
   getMe: () => apiClient('/auth/me'),
   logout: () => setAuthToken(null)
 };

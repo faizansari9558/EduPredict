@@ -9,6 +9,7 @@ import MainLayout from './layouts/MainLayout';
 import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import AboutPage from './pages/public/AboutPage';
 import ContactPage from './pages/public/ContactPage';
 import HelpPage from './pages/public/HelpPage';
@@ -60,6 +61,7 @@ export default function App() {
           <Route path="/terms" element={<TermsPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
 
           {/* Student Portal Routes */}
           <Route path="/student" element={<MainLayout role="student" />}>

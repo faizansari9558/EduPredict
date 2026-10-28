@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import PageHeader from '../../components/PageHeader';
 import StatusBadge from '../../components/StatusBadge';
 import Button from '../../components/Button';
 import Modal from '../../components/Modal';
-import { mockAssessmentsList, mockCodingChallenges } from '../../data/mockAssessments';
+import apiClient from '../../services/api';
 
 /**
  * Stitch Official Assessments Hub Screen
@@ -17,6 +17,20 @@ export default function StudentAssessments() {
   const [userCode, setUserCode] = useState('');
   const [executionResult, setExecutionResult] = useState(null);
   const [isRunning, setIsRunning] = useState(false);
+  const [assessments, setAssessments] = useState([]);
+  const [codingChallenges, setCodingChallenges] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
+
+  useEffect(() => {
+    Promise.all([apiClient('/student/assessments'), apiClient('/coding/challenges')])
+      .then(([assessmentResponse, codingResponse]) => {
+        setAssessments(assessmentResponse.data || []);
+        setCodingChallenges(codingResponse.data || []);
+      })
+      .catch((error) => setLoadError(error.message || 'Unable to load assessments.'))
+      .finally(() => setLoading(false));
+  }, []);
 
   const starterCodeTemplates = {
     python: `def solve(nums, target):\n    # Write your solution here\n    lookup = {}\n    for i, num in enumerate(nums):\n        diff = target - num\n        if diff in lookup:\n            return [lookup[diff], i]\n        lookup[num] = i\n    return []\n\n# Test input\nprint(solve([2, 7, 11, 15], 9))`,
@@ -37,26 +51,33 @@ export default function StudentAssessments() {
     setExecutionResult(null);
   };
 
-  const handleRunCode = () => {
+  const handleRunCode = async () => {
     setIsRunning(true);
     setExecutionResult(null);
-    setTimeout(() => {
-      setIsRunning(false);
-      setExecutionResult({
-        status: 'Passed',
-        passedCount: 4,
-        totalCount: 4,
-        runtime: '42 ms',
-        memory: '14.2 MB',
-        output: '[0, 1]\nAll 4 test cases passed successfully.'
+    try {
+      const response = await apiClient(`/coding/${activeCodingProblem.id}/run`, {
+        body: { code: userCode, language: codeLanguage }
       });
-    }, 800);
+      const result = response.data;
+      setExecutionResult({
+        status: result.allPassed ? 'Passed' : 'Failed',
+        passedCount: result.passedTests,
+        totalCount: result.totalTests,
+        runtime: result.results?.[0]?.executionTimeMs ? `${result.results[0].executionTimeMs} ms` : 'Unavailable',
+        memory: result.results?.[0]?.memoryUsedMb ? `${result.results[0].memoryUsedMb} MB` : 'Unavailable',
+        output: result.results?.map(item => item.errorMessage || item.actualOutput || '').join('\n') || 'No execution output.'
+      });
+    } catch (error) {
+      setExecutionResult({ status: 'Unavailable', passedCount: 0, totalCount: 0, runtime: 'Unavailable', memory: 'Unavailable', output: error.message });
+    } finally {
+      setIsRunning(false);
+    }
   };
 
-  const filteredAssessments = mockAssessmentsList.filter((item) => {
-    if (activeFilter === 'coding') return item.category.includes('Coding');
-    if (activeFilter === 'aptitude') return item.category.includes('Aptitude');
-    if (activeFilter === 'domain') return item.category.includes('Domain');
+  const filteredAssessments = assessments.filter((item) => {
+    if (activeFilter === 'coding') return item.assessment_type === 'coding';
+    if (activeFilter === 'aptitude') return item.assessment_type === 'aptitude';
+    if (activeFilter === 'domain') return item.assessment_type === 'general';
     return true;
   });
 
@@ -68,6 +89,8 @@ export default function StudentAssessments() {
         subtitle="Standardized aptitude benchmarks, core subject quizzes, and sandboxed coding challenges."
         icon="assignment"
       />
+      {loading && <p className="text-sm text-on-surface-variant">Loading assessments...</p>}
+      {loadError && <p className="p-3 rounded-xl bg-red-50 text-red-700 text-sm">{loadError}</p>}
 
       {/* Filter Tabs */}
       <div className="flex items-center gap-2 border-b border-outline-variant/30 pb-2">
@@ -88,6 +111,7 @@ export default function StudentAssessments() {
 
       {/* Assessments Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        {!loading && !filteredAssessments.length && <p className="text-sm text-on-surface-variant">No published assessments are available.</p>}
         {filteredAssessments.map((test) => (
           <div
             key={test.id}
@@ -96,11 +120,11 @@ export default function StudentAssessments() {
             <div className="space-y-3">
               <div className="flex justify-between items-start">
                 <span className="text-[11px] font-bold uppercase tracking-wider text-secondary bg-secondary-fixed/50 px-2 py-0.5 rounded">
-                  {test.category}
+                  {test.assessment_type}
                 </span>
                 <StatusBadge
-                  status={test.status === 'Completed' ? 'completed' : 'pending'}
-                  label={test.status}
+                  status="pending"
+                  label="Available"
                 />
               </div>
 
@@ -109,21 +133,21 @@ export default function StudentAssessments() {
               </h3>
 
               <div className="grid grid-cols-2 gap-2 text-xs text-on-surface-variant py-2 border-y border-outline-variant/20">
-                <div>Duration: <strong className="text-on-surface">{test.duration_minutes} Mins</strong></div>
-                <div>Questions: <strong className="text-on-surface">{test.total_questions}</strong></div>
-                <div>Passing Score: <strong className="text-on-surface">{test.passing_score}%</strong></div>
-                <div>Difficulty: <strong className="text-on-surface">{test.difficulty}</strong></div>
+                <div>Published: <strong className="text-on-surface">{new Date(test.published_at).toLocaleDateString()}</strong></div>
+                <div>Questions: <strong className="text-on-surface">{test.question_count || '—'}</strong></div>
+                <div>Duration: <strong className="text-on-surface">{test.duration || '—'} minutes</strong></div>
+                <div>Type: <strong className="text-on-surface">{test.assessment_type}</strong></div>
               </div>
             </div>
 
             <Button
-              variant={test.status === 'Completed' ? 'outline' : 'primary'}
+              variant="primary"
               size="sm"
               className="w-full"
-              icon={test.status === 'Completed' ? 'visibility' : 'play_arrow'}
+              icon="play_arrow"
               onClick={() => setSelectedAssessment(test)}
             >
-              {test.status === 'Completed' ? 'Review Submission' : 'Start Assessment'}
+              Start Assessment
             </Button>
           </div>
         ))}
@@ -144,7 +168,8 @@ export default function StudentAssessments() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {mockCodingChallenges.map((prob) => (
+          {!codingChallenges.length && <p className="text-sm text-on-surface-variant">No published coding challenges are available.</p>}
+          {codingChallenges.map((prob) => (
             <div
               key={prob.id}
               className="p-4 rounded-xl bg-surface-container-low border border-outline-variant/30 flex items-center justify-between gap-3 hover:bg-surface-container transition-colors"
@@ -163,12 +188,12 @@ export default function StudentAssessments() {
               </div>
 
               <Button
-                variant={prob.solved ? 'outline' : 'primary'}
+                variant={prob.solve_status === 'solved' ? 'outline' : 'primary'}
                 size="sm"
-                icon={prob.solved ? 'check' : 'code'}
+                icon={prob.solve_status === 'solved' ? 'check' : 'code'}
                 onClick={() => openCodingArena(prob)}
               >
-                {prob.solved ? 'Review Code' : 'Open IDE'}
+                {prob.solve_status === 'solved' ? 'Review Code' : 'Open IDE'}
               </Button>
             </div>
           ))}
@@ -202,16 +227,16 @@ export default function StudentAssessments() {
 
               <div className="flex items-center gap-2">
                 <span className="text-xs text-on-surface-variant font-mono">
-                  Points: <strong>{activeCodingProblem.points}</strong>
+                  Tests: <strong>{activeCodingProblem.testcase_count || '—'}</strong>
                 </span>
-                <StatusBadge status="info" label={activeCodingProblem.difficulty} />
+                <StatusBadge status="info" label={activeCodingProblem.difficulty_level} />
               </div>
             </div>
 
             {/* Problem Statement Snippet */}
             <div className="p-3 bg-surface-container-low rounded-xl text-xs text-on-surface-variant border border-outline-variant/20">
               <strong className="text-on-surface block mb-1">Problem Description:</strong>
-              Given an array of integers <code className="bg-surface px-1.5 py-0.5 rounded text-primary">nums</code> and an integer <code className="bg-surface px-1.5 py-0.5 rounded text-primary">target</code>, return indices of the two numbers such that they add up to target. You may assume that each input would have exactly one solution.
+              {activeCodingProblem.description}
             </div>
 
             {/* Simulated Monaco/CodeMirror Dark Textarea Editor */}
@@ -235,7 +260,7 @@ export default function StudentAssessments() {
                 <div className="flex items-center justify-between">
                   <span className="font-bold text-green-400 flex items-center gap-1.5">
                     <span className="material-symbols-outlined text-[16px]">check_circle</span>
-                    {executionResult.status} ({executionResult.passedCount}/{executionResult.totalCount} Testcases)
+                    {executionResult.status} ({executionResult.passedCount}/{executionResult.totalCount} test cases)
                   </span>
                   <span className="text-slate-400 text-[11px]">
                     Runtime: {executionResult.runtime} • Memory: {executionResult.memory}
@@ -266,9 +291,13 @@ export default function StudentAssessments() {
                   variant="primary"
                   size="sm"
                   icon="cloud_upload"
-                  onClick={() => {
-                    alert('Solution submitted! Score: 100/100 points recorded to your student profile.');
-                    setActiveCodingProblem(null);
+                  onClick={async () => {
+                    try {
+                      await apiClient(`/coding/${activeCodingProblem.id}/submit`, { body: { code: userCode, language: codeLanguage } });
+                      setExecutionResult({ status: 'Submitted', passedCount: 0, totalCount: 0, runtime: 'Recorded by server', memory: 'Recorded by server', output: 'Submission recorded. Results are available after grading.' });
+                    } catch (error) {
+                      setExecutionResult({ status: 'Unavailable', passedCount: 0, totalCount: 0, runtime: 'Unavailable', memory: 'Unavailable', output: error.message });
+                    }
                   }}
                 >
                   Submit Final Code
@@ -293,9 +322,14 @@ export default function StudentAssessments() {
               <Button
                 variant="primary"
                 size="sm"
-                onClick={() => {
-                  alert(`Starting ${selectedAssessment.title}...`);
-                  setSelectedAssessment(null);
+                onClick={async () => {
+                  try {
+                    const response = await apiClient(`/student/assessments/${selectedAssessment.id}/start`, { body: {} });
+                    setSelectedAssessment(null);
+                    window.alert(`Assessment started. It must be submitted before ${new Date(response.data.expires_at).toLocaleString()}.`);
+                  } catch (error) {
+                    setLoadError(error.message || 'Unable to start assessment.');
+                  }
                 }}
               >
                 Proceed to Test Interface
@@ -305,13 +339,13 @@ export default function StudentAssessments() {
         >
           <div className="space-y-4 text-sm text-on-surface">
             <p>
-              You are about to launch a proctored assessment for <strong>{selectedAssessment.title}</strong>.
+              You are about to launch <strong>{selectedAssessment.title}</strong>.
             </p>
             <div className="p-4 rounded-xl bg-surface-container-low space-y-2 text-xs">
-              <div><strong>Time Limit:</strong> {selectedAssessment.duration_minutes} Minutes</div>
-              <div><strong>Format:</strong> {selectedAssessment.type} ({selectedAssessment.total_questions} Items)</div>
-              <div><strong>Passing Threshold:</strong> {selectedAssessment.passing_score}% Score</div>
-              <div><strong>Rules:</strong> Fullscreen mode is enforced. Tab switching is recorded.</div>
+              <div><strong>Time Limit:</strong> {selectedAssessment.duration || '—'} Minutes</div>
+              <div><strong>Format:</strong> {selectedAssessment.assessment_type}</div>
+              <div><strong>Questions:</strong> {selectedAssessment.question_count || '—'}</div>
+              <div><strong>Rules:</strong> The server enforces the attempt time limit.</div>
             </div>
           </div>
         </Modal>

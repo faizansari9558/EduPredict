@@ -1,40 +1,14 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import PageHeader from '../../components/PageHeader';
 import Button from '../../components/Button';
 import StatusBadge from '../../components/StatusBadge';
 import Modal from '../../components/Modal';
+import { studentApi } from '../../services/studentApi';
 
 export default function StudentInternships() {
-  const [internships, setInternships] = useState([
-    {
-      id: 1,
-      company: 'Microsoft India (R&D)',
-      role: 'Software Engineering Intern',
-      location: 'Hyderabad, India (Hybrid)',
-      duration: 'May 2024 – Jul 2024 (3 Months)',
-      type: 'Summer Internship',
-      stipend: '₹1,25,000 / mo',
-      status: 'verified',
-      verifiedBy: 'Dr. Robert Vance (Head of TPO)',
-      description: 'Worked on Azure Cognitive Services SDK. Optimized JSON deserialization pipeline reducing latency by 18% in high-frequency batch requests.',
-      skills: ['C#', '.NET Core', 'Azure', 'Distributed Systems'],
-      certificateUrl: 'https://example.com/certificate.pdf'
-    },
-    {
-      id: 2,
-      company: 'Razorpay Payments',
-      role: 'Backend Engineering Intern',
-      location: 'Bengaluru, India (On-site)',
-      duration: 'Dec 2023 – Jan 2024 (2 Months)',
-      type: 'Winter Internship',
-      stipend: '₹45,000 / mo',
-      status: 'verified',
-      verifiedBy: 'Prof. Sarah Jenkins',
-      description: 'Built idempotent webhook delivery worker queue processing 50k transaction notifications daily with Redis & Go.',
-      skills: ['Go', 'Redis', 'PostgreSQL', 'Docker'],
-      certificateUrl: 'https://example.com/certificate2.pdf'
-    }
-  ]);
+  const [internships, setInternships] = useState([]);
+  const [error, setError] = useState('');
+  useEffect(() => { studentApi.getPortfolio('internship').then(setInternships).catch((err) => setError(err.message)); }, []);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newInternship, setNewInternship] = useState({
@@ -65,9 +39,11 @@ export default function StudentInternships() {
       skills: newInternship.skills.split(',').map(s => s.trim()).filter(Boolean),
       certificateUrl: ''
     };
-    setInternships([item, ...internships]);
-    setIsModalOpen(false);
-    setNewInternship({ company: '', role: '', duration: '', type: 'Summer Internship', stipend: '', location: '', description: '', skills: '' });
+    studentApi.addPortfolioItem('internship', item).then((saved) => {
+      setInternships([saved, ...internships]);
+      setIsModalOpen(false);
+      setNewInternship({ company: '', role: '', duration: '', type: 'Summer Internship', stipend: '', location: '', description: '', skills: '' });
+    }).catch((err) => setError(err.message));
   };
 
   return (
@@ -83,6 +59,7 @@ export default function StudentInternships() {
         }
       />
 
+      {error && <p className="p-3 rounded-xl bg-red-50 text-red-700 text-sm">{error}</p>}
       <div className="space-y-4">
         {internships.map((intern) => (
           <div

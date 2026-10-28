@@ -1,52 +1,14 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import PageHeader from '../../components/PageHeader';
 import Button from '../../components/Button';
 import StatusBadge from '../../components/StatusBadge';
 import Modal from '../../components/Modal';
-import { mockStudentProjects } from '../../data/mockStudentData';
+import { studentApi } from '../../services/studentApi';
 
 export default function StudentProjects() {
-  const [projects, setProjects] = useState(mockStudentProjects || [
-    {
-      id: 1,
-      title: 'EduPredict — AI Academic Predictor',
-      description: 'Full-stack machine learning web application predicting student placement and academic trajectories with XGBoost & SHAP explainability.',
-      role: 'Full Stack Lead & ML Engineer',
-      technologies: ['React', 'Tailwind CSS', 'FastAPI', 'XGBoost', 'MySQL'],
-      githubUrl: 'https://github.com/example/edupredict',
-      liveUrl: 'https://edupredict.ai',
-      status: 'verified',
-      verifiedBy: 'Dr. Robert Vance',
-      completionDate: 'Aug 2024',
-      featured: true
-    },
-    {
-      id: 2,
-      title: 'CloudScale Distributed Microservices',
-      description: 'High-throughput event-driven microservices architecture handling 15,000 req/sec with Apache Kafka and Redis caching layer.',
-      role: 'Backend Developer',
-      technologies: ['Node.js', 'Docker', 'Kubernetes', 'Apache Kafka', 'Redis'],
-      githubUrl: 'https://github.com/example/cloudscale',
-      liveUrl: '',
-      status: 'verified',
-      verifiedBy: 'Prof. Sarah Jenkins',
-      completionDate: 'May 2024',
-      featured: false
-    },
-    {
-      id: 3,
-      title: 'CryptoSentinel Security Audit Toolkit',
-      description: 'Automated static code analyzer detecting smart contract re-entrancy and integer overflow vulnerabilities using AST parsing.',
-      role: 'Security Researcher',
-      technologies: ['Python', 'Solidity', 'AST', 'Web3.py'],
-      githubUrl: 'https://github.com/example/cryptosentinel',
-      liveUrl: '',
-      status: 'pending',
-      verifiedBy: 'Pending Faculty Review',
-      completionDate: 'Jul 2024',
-      featured: false
-    }
-  ]);
+  const [projects, setProjects] = useState([]);
+  const [error, setError] = useState('');
+  useEffect(() => { studentApi.getProjects().then(setProjects).catch((err) => setError(err.message)); }, []);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newProject, setNewProject] = useState({
@@ -62,7 +24,6 @@ export default function StudentProjects() {
     e.preventDefault();
     if (!newProject.title) return;
     const created = {
-      id: Date.now(),
       title: newProject.title,
       role: newProject.role || 'Contributor',
       description: newProject.description,
@@ -74,9 +35,11 @@ export default function StudentProjects() {
       completionDate: 'Current',
       featured: false
     };
-    setProjects([created, ...projects]);
-    setIsModalOpen(false);
-    setNewProject({ title: '', role: '', technologies: '', githubUrl: '', liveUrl: '', description: '' });
+    studentApi.addPortfolioItem('project', created).then((saved) => {
+      setProjects([saved, ...projects]);
+      setIsModalOpen(false);
+      setNewProject({ title: '', role: '', technologies: '', githubUrl: '', liveUrl: '', description: '' });
+    }).catch((err) => setError(err.message));
   };
 
   return (
@@ -92,6 +55,7 @@ export default function StudentProjects() {
         }
       />
 
+      {error && <p className="p-3 rounded-xl bg-red-50 text-red-700 text-sm">{error}</p>}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {projects.map((proj) => (
           <div

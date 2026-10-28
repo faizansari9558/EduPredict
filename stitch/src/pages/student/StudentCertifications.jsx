@@ -1,49 +1,14 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import PageHeader from '../../components/PageHeader';
 import Button from '../../components/Button';
 import StatusBadge from '../../components/StatusBadge';
 import Modal from '../../components/Modal';
-import { mockStudentCertifications } from '../../data/mockStudentData';
+import { studentApi } from '../../services/studentApi';
 
 export default function StudentCertifications() {
-  const [certifications, setCertifications] = useState(mockStudentCertifications || [
-    {
-      id: 1,
-      title: 'AWS Certified Solutions Architect – Associate',
-      issuer: 'Amazon Web Services',
-      issueDate: 'Jun 2024',
-      expiryDate: 'Jun 2027',
-      credentialId: 'AWS-SAA-8849201',
-      status: 'verified',
-      verifiedBy: 'Dr. Robert Vance',
-      skills: ['Cloud Architecture', 'S3', 'EC2', 'IAM', 'DynamoDB'],
-      url: 'https://aws.amazon.com/verification'
-    },
-    {
-      id: 2,
-      title: 'Deep Learning Specialization',
-      issuer: 'DeepLearning.AI / Coursera',
-      issueDate: 'Mar 2024',
-      expiryDate: 'No Expiration',
-      credentialId: 'COURSERA-DL-99382',
-      status: 'verified',
-      verifiedBy: 'Prof. Sarah Jenkins',
-      skills: ['Neural Networks', 'PyTorch', 'TensorFlow', 'Transformers'],
-      url: 'https://coursera.org/verify/COURSERA-DL-99382'
-    },
-    {
-      id: 3,
-      title: 'Meta Certified Front-End Developer',
-      issuer: 'Meta',
-      issueDate: 'Jul 2024',
-      expiryDate: 'No Expiration',
-      credentialId: 'META-FE-10294',
-      status: 'pending',
-      verifiedBy: 'Pending Faculty Review',
-      skills: ['React', 'JavaScript (ES6+)', 'UI/UX', 'Jest'],
-      url: 'https://coursera.org/verify/META-FE-10294'
-    }
-  ]);
+  const [certifications, setCertifications] = useState([]);
+  const [error, setError] = useState('');
+  useEffect(() => { studentApi.getCertifications().then(setCertifications).catch((err) => setError(err.message)); }, []);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newCert, setNewCert] = useState({
@@ -70,9 +35,11 @@ export default function StudentCertifications() {
       skills: newCert.skills.split(',').map(s => s.trim()).filter(Boolean),
       url: newCert.url
     };
-    setCertifications([item, ...certifications]);
-    setIsModalOpen(false);
-    setNewCert({ title: '', issuer: '', credentialId: '', issueDate: '', skills: '', url: '' });
+    studentApi.addPortfolioItem('certification', item).then((saved) => {
+      setCertifications([saved, ...certifications]);
+      setIsModalOpen(false);
+      setNewCert({ title: '', issuer: '', credentialId: '', issueDate: '', skills: '', url: '' });
+    }).catch((err) => setError(err.message));
   };
 
   return (
@@ -88,6 +55,7 @@ export default function StudentCertifications() {
         }
       />
 
+      {error && <p className="p-3 rounded-xl bg-red-50 text-red-700 text-sm">{error}</p>}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {certifications.map((cert) => (
           <div
