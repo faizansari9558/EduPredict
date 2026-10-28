@@ -1,0 +1,23 @@
+{
+  "name": "edupredict",
+  "version": "1.0.0",
+  "description": "EduPredict Full Stack System",
+  "scripts": {
+    "start": "start.bat",
+    "start:stitch": "start-stitch.bat",
+    "stop": "stop.bat",
+    "backend": "node backend/server.js",
+    "frontend": "npm.cmd --prefix stitch run dev",
+    "stitch": "npm.cmd --prefix stitch run dev",
+    "ml": ".venv/Scripts/python.exe -m uvicorn ml.app:app --host 127.0.0.1 --port 8000"
+  },
+  "keywords": [
+    "edupredict",
+    "fastapi",
+    "express",
+    "react",
+    "vite"
+  ],
+  "author": "",
+  "license": "ISC"
+}

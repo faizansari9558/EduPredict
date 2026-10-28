@@ -1,11 +1,12 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useTheme } from '../context/ThemeContext';
 
 /**
- * Stitch-Exact EduPredict Vector Logo Component
+ * Stitch-Exact EduPredict Vector Logo Component (100% Theme-Reactive)
  * @param {Object} props
  * @param {'sm' | 'md' | 'lg' | 'xl'} [props.size='md']
- * @param {'light' | 'dark'} [props.theme='light']
+ * @param {'light' | 'dark'} [props.theme]
  * @param {boolean} [props.markOnly=false]
  * @param {string} [props.className='']
  * @param {string} [props.linkTo] Optional link destination
@@ -18,12 +19,25 @@ export default function Logo({
   className = '',
   linkTo
 }) {
-  const activeTheme = theme || variant || 'light';
-  const isDark = activeTheme === 'dark';
+  let contextIsDark = false;
+  try {
+    const themeContext = useTheme();
+    contextIsDark = themeContext.isDark;
+  } catch (e) {
+    contextIsDark = false;
+  }
+
+  // If explicitly specified 'dark' or 'light', use it; otherwise follow active theme context
+  const hasExplicitDark = theme === 'dark' || variant === 'dark';
+  const hasExplicitLight = theme === 'light' || variant === 'light';
+
+  // By default, dynamic context takes precedence if no theme prop is passed
+  const isDark = (theme || variant) ? hasExplicitDark : contextIsDark;
+
   const capColor = isDark ? '#FFFFFF' : '#00152A';
   const textFill = isDark ? '#FFFFFF' : '#00152A';
   const accentFill = isDark ? '#38BDF8' : '#0051d5';
-  const tagFill = isDark ? '#CBD5E1' : '#475569';
+  const tagFill = isDark ? '#94A3B8' : '#475569';
   const arrowFill = '#10B981';
 
   const sizeClasses = {

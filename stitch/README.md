@@ -1,4 +1,4 @@
-# EduPredict — Stitch MCP Frontend
+    # EduPredict — Stitch MCP Frontend
 
 **EduPredict — Smart Student Academic & Placement Prediction System**
 

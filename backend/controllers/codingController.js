@@ -1,5 +1,5 @@
 const vm = require('vm');
-const db = require('../config/database');
+const db = require('../config/db');
 
 // Helper: Normalize output strings for comparison
 function normalizeOutput(str) {
@@ -115,67 +115,7 @@ function executeJavascriptInSandbox(code, inputData, timeLimitSeconds = 2) {
 
 // Helper: General multi-language execution handler (sandbox + intelligent evaluator)
 function executeCode(language, code, inputData, expectedOutput, timeLimitSeconds = 5) {
-  const lang = (language || 'javascript').toLowerCase();
-
-  if (lang === 'javascript' || lang === 'js' || lang === 'node') {
-    const res = executeJavascriptInSandbox(code, inputData, timeLimitSeconds);
-    const passed = !res.errorMessage && compareOutputs(res.output, expectedOutput);
-    return {
-      passed,
-      output: res.output || (res.errorMessage ? `Error: ${res.errorMessage}` : ''),
-      logs: res.logs,
-      errorMessage: res.errorMessage,
-      executionTimeMs: res.executionTimeMs || 12,
-      memoryUsedMb: res.memoryUsedMb || 16.4
-    };
-  }
-
-  // Multi-language execution evaluator (Python, C++, Java, etc.)
-  const normalizedCode = (code || '').toLowerCase();
-  let output = '';
-  let errorMessage = null;
-  let passed = false;
-
-  if (lang === 'python' || lang === 'py') {
-    if (code.includes('def ') || code.includes('print(') || code.includes('return ')) {
-      output = expectedOutput || 'Output generated';
-      passed = true;
-    } else {
-      errorMessage = 'IndentationError or missing function definition';
-      output = '';
-    }
-  } else if (lang === 'cpp' || lang === 'c++') {
-    if (code.includes('#include') || code.includes('class Solution') || code.includes('int main')) {
-      output = expectedOutput || 'Output generated';
-      passed = true;
-    } else {
-      errorMessage = 'Compilation Error: missing header or solution class';
-      output = '';
-    }
-  } else if (lang === 'java') {
-    if (code.includes('class ') || code.includes('public static void main') || code.includes('public ')) {
-      output = expectedOutput || 'Output generated';
-      passed = true;
-    } else {
-      errorMessage = 'Compilation Error: class expected';
-      output = '';
-    }
-  } else {
-    output = expectedOutput || '';
-    passed = true;
-  }
-
-  const executionTimeMs = Math.floor(Math.random() * 25) + 15;
-  const memoryUsedMb = Math.round((Math.random() * 5 + 12) * 10) / 10;
-
-  return {
-    passed,
-    output: passed ? (expectedOutput || 'Execution completed') : 'Output mismatch',
-    logs: passed ? `Runtime: ${executionTimeMs}ms` : errorMessage,
-    errorMessage: passed ? null : errorMessage,
-    executionTimeMs,
-    memoryUsedMb
-  };
+  return {passed:false, output:'', logs:'', errorMessage:'Secure code execution service is not configured. Submission cannot be graded.', executionTimeMs:0, memoryUsedMb:0};
 }
 
 // Default Starter Code Templates
@@ -784,6 +724,7 @@ const getStudentChallenges = async (req, res) => {
 
 // Interactive test run (Runs against sample test cases or custom input without final submission)
 const runCode = async (req, res) => {
+  return res.status(503).json({success:false,message:'Secure code execution service is not configured.'});
   try {
     const { problemId } = req.params;
     const { code, language, customInput } = req.body;
@@ -880,6 +821,7 @@ const runCode = async (req, res) => {
 
 // Full submission and autograding (Evaluates against ALL test cases including hidden ones)
 const submitCode = async (req, res) => {
+  return res.status(503).json({success:false,message:'Secure code execution service is not configured.'});
   try {
     const { problemId } = req.params;
     const { code, language } = req.body;
@@ -1114,6 +1056,7 @@ const getAllProblemSubmissions = async (req, res) => {
 
 // Teacher: Autograde or Regrade submission
 const autogradeSubmission = async (req, res) => {
+  return res.status(503).json({success:false,message:'Secure code execution service is not configured.'});
   try {
     const { problemId } = req.params;
     const { submissionId } = req.body;

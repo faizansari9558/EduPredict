@@ -1,5 +1,6 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { ThemeProvider } from './context/ThemeContext';
 
 // Layout
 import MainLayout from './layouts/MainLayout';
@@ -47,61 +48,63 @@ import AdminNotifications from './pages/admin/AdminNotifications';
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        {/* Public Landing, Info & Authentication */}
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/about" element={<AboutPage />} />
-        <Route path="/contact" element={<ContactPage />} />
-        <Route path="/help" element={<HelpPage />} />
-        <Route path="/privacy" element={<PrivacyPage />} />
-        <Route path="/terms" element={<TermsPage />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
+    <ThemeProvider>
+      <BrowserRouter>
+        <Routes>
+          {/* Public Landing, Info & Authentication */}
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/about" element={<AboutPage />} />
+          <Route path="/contact" element={<ContactPage />} />
+          <Route path="/help" element={<HelpPage />} />
+          <Route path="/privacy" element={<PrivacyPage />} />
+          <Route path="/terms" element={<TermsPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
 
-        {/* Student Portal Routes */}
-        <Route path="/student" element={<MainLayout role="student" />}>
-          <Route index element={<Navigate to="/student/dashboard" replace />} />
-          <Route path="dashboard" element={<StudentDashboard />} />
-          <Route path="profile" element={<StudentProfile />} />
-          <Route path="academic-records" element={<AcademicRecords />} />
-          <Route path="skills" element={<StudentSkills />} />
-          <Route path="projects" element={<StudentProjects />} />
-          <Route path="certifications" element={<StudentCertifications />} />
-          <Route path="internships" element={<StudentInternships />} />
-          <Route path="resume" element={<StudentResume />} />
-          <Route path="assessments" element={<StudentAssessments />} />
-          <Route path="results" element={<StudentResults />} />
-          <Route path="placement-analysis" element={<PlacementAnalysis />} />
-          <Route path="notifications" element={<StudentNotifications />} />
-        </Route>
+          {/* Student Portal Routes */}
+          <Route path="/student" element={<MainLayout role="student" />}>
+            <Route index element={<Navigate to="/student/dashboard" replace />} />
+            <Route path="dashboard" element={<StudentDashboard />} />
+            <Route path="profile" element={<StudentProfile />} />
+            <Route path="academic-records" element={<AcademicRecords />} />
+            <Route path="skills" element={<StudentSkills />} />
+            <Route path="projects" element={<StudentProjects />} />
+            <Route path="certifications" element={<StudentCertifications />} />
+            <Route path="internships" element={<StudentInternships />} />
+            <Route path="resume" element={<StudentResume />} />
+            <Route path="assessments" element={<StudentAssessments />} />
+            <Route path="results" element={<StudentResults />} />
+            <Route path="placement-analysis" element={<PlacementAnalysis />} />
+            <Route path="notifications" element={<StudentNotifications />} />
+          </Route>
 
-        {/* Teacher Portal Routes */}
-        <Route path="/teacher" element={<MainLayout role="teacher" />}>
-          <Route index element={<Navigate to="/teacher/dashboard" replace />} />
-          <Route path="dashboard" element={<TeacherDashboard />} />
-          <Route path="students" element={<AssignedStudents />} />
-          <Route path="verification" element={<DocumentVerification />} />
-          <Route path="assessments" element={<TeacherAssessments />} />
-          <Route path="results" element={<TeacherResults />} />
-          <Route path="analytics" element={<TeacherAnalytics />} />
-          <Route path="notifications" element={<TeacherNotifications />} />
-        </Route>
+          {/* Teacher Portal Routes */}
+          <Route path="/teacher" element={<MainLayout role="teacher" />}>
+            <Route index element={<Navigate to="/teacher/dashboard" replace />} />
+            <Route path="dashboard" element={<TeacherDashboard />} />
+            <Route path="students" element={<AssignedStudents />} />
+            <Route path="verification" element={<DocumentVerification />} />
+            <Route path="assessments" element={<TeacherAssessments />} />
+            <Route path="results" element={<TeacherResults />} />
+            <Route path="analytics" element={<TeacherAnalytics />} />
+            <Route path="notifications" element={<TeacherNotifications />} />
+          </Route>
 
-        {/* Admin Portal Routes */}
-        <Route path="/admin" element={<MainLayout role="admin" />}>
-          <Route index element={<Navigate to="/admin/dashboard" replace />} />
-          <Route path="dashboard" element={<AdminDashboard />} />
-          <Route path="users" element={<UserManagement />} />
-          <Route path="departments" element={<DepartmentManagement />} />
-          <Route path="analytics" element={<InstitutionalAnalytics />} />
-          <Route path="reports" element={<AdminReports />} />
-          <Route path="notifications" element={<AdminNotifications />} />
-        </Route>
+          {/* Admin Portal Routes */}
+          <Route path="/admin" element={<MainLayout role="admin" />}>
+            <Route index element={<Navigate to="/admin/dashboard" replace />} />
+            <Route path="dashboard" element={<AdminDashboard />} />
+            <Route path="users" element={<UserManagement />} />
+            <Route path="departments" element={<DepartmentManagement />} />
+            <Route path="analytics" element={<InstitutionalAnalytics />} />
+            <Route path="reports" element={<AdminReports />} />
+            <Route path="notifications" element={<AdminNotifications />} />
+          </Route>
 
-        {/* Catch-all 404 Redirect */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </BrowserRouter>
+          {/* Catch-all 404 Redirect */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </BrowserRouter>
+    </ThemeProvider>
   );
 }

@@ -5,9 +5,9 @@ Provides high-performance inference, explainability, and batch forecasting endpo
 
 import os
 import sys
+import json
 from typing import List, Optional, Dict, Any
-from datetime import datetime
-import joblib
+from datetime import datetime, timezone
 import pandas as pd
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -16,7 +16,8 @@ from pydantic import BaseModel, Field
 # Ensure root is accessible
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from ml.models.explainability import explain_prediction
-from ml.preprocessing.pipeline import FEATURE_COLUMNS
+from ml.preprocessing.pipeline import PlacementFeaturePipeline, FEATURE_COLUMNS, ALL_FEATURE_COLUMNS
+from ml.models.train import PlacementPredictor, train_and_evaluate_models
 
 app = FastAPI(
     title="EduPredict ML Prediction API",
@@ -32,18 +33,32 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-MODEL_PATH = os.path.join(os.path.dirname(__file__), 'saved_models', 'placement_model.joblib')
+JSON_MODEL_PATH = os.path.join(os.path.dirname(__file__), 'saved_models', 'placement_model.json')
 model_bundle = None
 
 
 def get_model():
     global model_bundle
     if model_bundle is None:
-        if os.path.exists(MODEL_PATH):
-            model_bundle = joblib.load(MODEL_PATH)
+        if os.path.exists(JSON_MODEL_PATH):
+            try:
+                with open(JSON_MODEL_PATH, 'r') as f:
+                    data = json.load(f)
+                model_bundle = {
+                    "model": PlacementPredictor.from_dict(data["predictor"]),
+                    "pipeline": PlacementFeaturePipeline.from_dict(data["pipeline"]),
+                    "model_name": data.get("model_name", "Logistic Regression (High-Speed Engine)"),
+                    "feature_columns": data.get("feature_columns", FEATURE_COLUMNS),
+                    "all_feature_columns": data.get("all_feature_columns", ALL_FEATURE_COLUMNS),
+                    "feature_importances": data.get("feature_importances", {}),
+                    "metrics": data.get("metrics", {}),
+                    "all_model_benchmarks": data.get("all_model_benchmarks", {}),
+                    "trained_at": data.get("trained_at")
+                }
+            except Exception as e:
+                print(f"Warning: Failed loading JSON model ({e}), retraining...")
+                model_bundle = train_and_evaluate_models()
         else:
-            # Auto-train if model doesn't exist yet
-            from ml.models.train import train_and_evaluate_models
             model_bundle = train_and_evaluate_models()
     return model_bundle
 
@@ -84,7 +99,7 @@ def health_check():
         "service": "EduPredict ML API",
         "model_loaded": mb is not None,
         "model_name": mb.get("model_name") if mb else None,
-        "timestamp": datetime.utcnow().isoformat()
+        "timestamp": datetime.now(timezone.utc).isoformat()
     }
 
 

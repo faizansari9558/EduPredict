@@ -25,7 +25,7 @@ async function getStudentFeatureVector(studentId) {
       sm.assessment_attempts
     FROM students s
     LEFT JOIN student_metrics sm ON s.user_id = sm.student_id
-    WHERE s.user_id = ?
+    WHERE s.user_id = ? AND s.verification_status = 'verified'
   `, [studentId]);
 
   if (stuRows.length === 0) {

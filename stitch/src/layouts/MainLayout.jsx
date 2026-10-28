@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { Outlet, useLocation } from 'react-router-dom';
+import { authApi } from '../services/api';
+import React, { useState, useEffect } from 'react';
+import { Outlet, useLocation, Navigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import Navbar from '../components/Navbar';
 
@@ -9,6 +10,8 @@ import Navbar from '../components/Navbar';
  */
 export default function MainLayout() {
   const location = useLocation();
+  const [session, setSession] = useState(undefined);
+  useEffect(() => { authApi.getMe().then(r => setSession(r.user)).catch(() => setSession(null)); }, []);
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -21,6 +24,9 @@ export default function MainLayout() {
 
   const currentRole = getRole();
 
+  if (session === undefined) return <p role="status">Checking session…</p>;
+  if (!session) return <Navigate to="/login" replace />;
+  if (session.role !== currentRole) return <Navigate to={`/${session.role}/dashboard`} replace />;
   return (
     <div className="min-h-screen bg-background text-on-surface">
       {/* Sidebar Navigation */}

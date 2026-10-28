@@ -1,4 +1,4 @@
-const db = require('../config/database');
+const db = require('../config/db');
 
 // Create assessment
 const createAssessment = async (req, res) => {

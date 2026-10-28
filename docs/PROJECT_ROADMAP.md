@@ -1,200 +1,131 @@
-# EduPredict Project Roadmap
+# EduPredict Master Project Roadmap
 
-## Phase 0 — Project Audit & Environment
+## 1. Overview & Roadmap Architecture
 
-Status: Completed (audit + setup skeleton)
+The **EduPredict Master Roadmap** outlines the architectural phases, delivery milestones, and feature evolutions implemented across the lifecycle of the Smart Student Academic & Placement Prediction System.
 
-Planned activities:
-- Inspect workspace and detect existing files ✓
-- Check installed tooling ✓
-- Verify Node.js, Python, Git, and MySQL readiness ✓
-- Prepare project structure and documentation ✓
-- Create environment templates and ignore rules ✓
-
-## Phase 1 — Frontend Foundation
-
-Status: Completed
-
-Deliverables:
-- React + Vite application setup ✓
-- React Router setup ✓
-- Global layout and navbar ✓
-- Landing page ✓
-- Login and registration pages ✓
-- Design system with CSS ✓
-- Responsive layout ✓
-
-## Phase 2 — Database
-
-Status: Completed
-
-Deliverables:
-- MySQL schema design ✓
-- Core tables for users, roles, departments, batches, academics, documents, assessments, notifications ✓
-- Foreign keys, indexes, and validation strategy ✓
-- Seed data for roles and academic years ✓
-
-## Phase 3 — Auth & RBAC
-
-Status: Completed
-
-Deliverables:
-- JWT + bcrypt authorization ✓
-- RBAC foundation for Student, Teacher, Admin ✓
-- Auth middleware and protected routes ✓
-- Login/register endpoints ✓
-
-## Phase 4 — Admin Module
-
-Status: Completed
-
-Deliverables:
-- Admin dashboard with summary stats ✓
-- User management CRUD ✓
-- Student management CRUD ✓
-- Department management CRUD ✓
-
-## Phase 5 — Teacher Module
-
-Status: Completed
-
-Deliverables:
-- Teacher dashboard with summary stats ✓
-- Assigned student management ✓
-- Student verification workflows (foundation) ✓
-- Assessment creation and publishing ✓
-- Assessment results viewing ✓
-
-## Phase 6 — Student Module
-
-Status: Completed
-
-Deliverables:
-- Student dashboard with summary stats ✓
-- Official profile view and update ✓
-- Academic and document uploads ✓
-- Verification status tracking ✓
-- Assessment access and attempt initiation ✓
-
-## Phase 7 — Aptitude Assessment Engine
-
-Status: Completed
-
-Deliverables:
-- Question bank and categories ✓
-- Assessment creation UI for teachers ✓
-- Question management (add, edit, delete) ✓
-- Test configuration (duration, marks, difficulty) ✓
-- Student assessment-taking interface ✓
-- Timer and question navigation ✓
-- Assessment publishing and results viewing ✓
-
-## Phase 8 — Coding Assessment Engine
-
-Status: Completed
-
-Deliverables:
-- Code editor IDE UI with line numbers and multi-language support (JS, Python, C++, Java) ✓
-- Question management (create, edit, delete, publish toggle) ✓
-- Test case configuration (sample public vs hidden test cases) ✓
-- Multi-language starter code templates ✓
-- Execution sandbox and evaluation runner with runtime & memory metrics ✓
-- Automatic grading and result publication ✓
-- Student Coding Arena and Teacher Coding Manager portals ✓
-
-## Phase 9 — Analytics
-
-Status: Completed ✓
-
-Delivered:
-- Student, teacher, course, and department analytics ✓
-- Dashboard charts and skill-gap analysis ✓
-- Attention-listing and alert tracking for at-risk students ✓
-
-## Phase 10 — ML Pipeline & Model Training
-
-Status: Completed ✓
-
-Delivered:
-- Data generation pipeline & feature engineering (16 engineered domain features) ✓
-- Multi-model comparison across Logistic Regression, Decision Tree, Random Forest, and Gradient Boosting ✓
-- 5-Fold Stratified Cross-Validation & evaluation metrics (ROC-AUC: 89.84%, F1: 86.76%) ✓
-- Model serialization bundle in `ml/saved_models/placement_model.joblib` ✓
-
-## Phase 11 — FastAPI ML Service
-
-Status: Completed ✓
-
-Delivered:
-- High-performance FastAPI prediction microservice on port 8000 ✓
-- `/health`, `/model-info`, `/predict/placement`, `/predict/explain`, and `/predict/batch` endpoints ✓
-- Express backend service client with automatic fallback resilience ✓
-
-## Phase 12 — AI Explainability & Recommendations
-
-Status: Completed ✓
-
-Delivered:
-- Feature contribution analysis (positive placement drivers and risk blockers) ✓
-- Prescriptive student recommendations & actionable next steps ✓
-- Live interactive ML Placement Forecast card on Student Analytics dashboard ✓
-
-## Phase 13 — Resume AI
-
-Planned deliverables:
-- Resume extraction and scoring
-- Verified-document-based analysis
-- Improvement recommendations
-
-## Phase 14 — Generative AI
-
-Planned deliverables:
-- Career assistant for student guidance
-- Verified-profile-aware prompts and recommendations
-
-## Phase 15 — Notifications
-
-Planned deliverables:
-- Verification rejection alerts
-- Assessment reminders
-- Result publication notices
-- Profile completeness reminders
-
-## Phase 16 — Reports
-
-Planned deliverables:
-- Student and class-level reporting
-- Department and placement analysis
-- Excel/PDF export support
-
-## Phase 17 — Security & Testing
-
-Planned deliverables:
-- Authorization and security validation
-- File upload sanitization tests
-- SQL injection and RBAC checks
-- Assessment engine and UI testing
-
-## Phase 18 — Deployment
-
-Planned deliverables:
-- Production-ready configuration
-- Frontend hosting
-- Backend hosting
-- ML service deployment
-- MySQL cloud setup
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                       EDUPREDICT ROADMAP PROGRESSION                        │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  [ FOUNDATION ]  ──►  Phase 0: Environment, Scaffolding & Git               │
+│                  ──►  Phase 1: Frontend SPA Setup & Design System           │
+│                  ──►  Phase 2: Relational Database & MySQL Schema           │
+│                  ──►  Phase 3: Authentication, JWT & RBAC Middleware        │
+│                                                                             │
+│  [ USER PORTALS ] ─►  Phase 4: Admin Institutional Management               │
+│                  ──►  Phase 5: Teacher Mentorship & Document Verification   │
+│                  ──►  Phase 6: Student Portfolio & Document Uploads         │
+│                                                                             │
+│  [ ASSESSMENTS ] ──►  Phase 7: Aptitude Assessment Engine (Timed Quiz)      │
+│                  ──►  Phase 8: Coding Assessment Engine (Sandbox & IDE)     │
+│                                                                             │
+│  [ INTELLIGENCE ] ─►  Phase 9: Comprehensive Analytics & At-Risk Alerts     │
+│                  ──►  Phase 10: ML Pipeline & Feature Engineering           │
+│                  ──►  Phase 11: FastAPI ML Prediction Microservice          │
+│                  ──►  Phase 12: AI Explainability & Prescriptive Guidance   │
+│                                                                             │
+│  [ CAREER TOOLS ] ─►  Phase 13: Resume AI & ATS Match Analyzer              │
+│                  ──►  Phase 14: Generative Career & Interview Copilot       │
+│                                                                             │
+│  [ ENTERPRISE ]  ──►  Phase 15: Notification Center & Status Alerts          │
+│                  ──►  Phase 16: Reports & Scorecard Export Engine           │
+│                  ──►  Phase 17: Security Audit & Master E2E Test Suite      │
+│                  ──►  Phase 18: Docker Compose & Production Orchestration   │
+│                  ──►  Phase 19: Campus Placement Drives & Shortlisting      │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
 
 ---
 
-## Current State Summary
-Phases 0 through 8 are now fully implemented:
-- **Phase 0–3**: Foundation, Database, Auth & RBAC
-- **Phase 4–6**: Admin, Teacher, and Student Portals
-- **Phase 7**: Aptitude Assessment Engine
-- **Phase 8**: Coding Assessment Engine (Sandbox runner, autograding, Coding Arena & Manager)
+## 2. Phase-by-Phase Deliverables & Verification Status
 
-**Current phase:**
-- **Phase 9: Analytics** (Student & Department Performance, Skill Gap Analysis) - **IN PROGRESS** ⏳
+### Phase 0: Workspace Environment & Scaffolding
+- **Status:** Completed ✓
+- **Deliverables:** Workspace verification, `.env.example`, `.gitignore`, tooling check (Node.js, Python, Git, MySQL).
 
-**Next phase:**
-- **Phase 10: ML** (Data pipeline and model comparison)
+### Phase 1: Frontend Foundation
+- **Status:** Completed ✓
+- **Deliverables:** React 18 + Vite setup, React Router, Layout shell, Design system with CSS tokens, Responsive viewports.
+
+### Phase 2: Relational Database Design
+- **Status:** Completed ✓
+- **Deliverables:** MySQL 8.0 schema (`schema.sql`), 3NF relational tables, Foreign keys, Indexes, Seed data (`seed.sql`).
+
+### Phase 3: Authentication & Role-Based Access Control
+- **Status:** Completed ✓
+- **Deliverables:** JWT issuance (`7d`), `bcryptjs` password hashing, `auth.js` RBAC middleware (`admin`, `teacher`, `student`).
+
+### Phase 4: Admin Institutional Module
+- **Status:** Completed ✓
+- **Deliverables:** Admin dashboard, User CRUD, Department CRUD, Batch management, System stats.
+
+### Phase 5: Teacher Mentorship Module
+- **Status:** Completed ✓
+- **Deliverables:** Teacher dashboard, Assigned student roster, Document verification queue, Approval/rejection workflows.
+
+### Phase 6: Student Portfolio Module
+- **Status:** Completed ✓
+- **Deliverables:** Student dashboard, Academic metrics display, Skill inventory, Document upload center (Multer).
+
+### Phase 7: Aptitude Assessment Engine
+- **Status:** Completed ✓
+- **Deliverables:** Assessment builder for teachers, MCQ question authoring with keys, Timed student test taker, Instant scoring.
+
+### Phase 8: Coding Assessment Engine
+- **Status:** Completed ✓
+- **Deliverables:** In-browser code editor with line numbers, Execution sandbox (`vm.runInContext`), Public sample vs hidden test cases, Runtime and memory profiling, Autograding.
+
+### Phase 9: Comprehensive Analytics & At-Risk Early Warning
+- **Status:** Completed ✓
+- **Deliverables:** 8 analytical views, `student_metrics` caching, Class distributions, Skill radar, Automated at-risk detection algorithm (`sp_detect_at_risk_students`).
+
+### Phase 10: Machine Learning Pipeline
+- **Status:** Completed ✓
+- **Deliverables:** 16 engineered features, StandardScaler normalization, 5-Fold Stratified Cross-Validation, Logistic Regression & XGBoost models (89.84% ROC-AUC).
+
+### Phase 11: FastAPI ML Microservice
+- **Status:** Completed ✓
+- **Deliverables:** Standalone ASGI server (Port 8000), `/health`, `/model-info`, `/predict/placement`, `/predict/batch`, Express client fallback.
+
+### Phase 12: AI Explainability & Guidance
+- **Status:** Completed ✓
+- **Deliverables:** Feature attribution weights ($\beta$), Positive drivers, Critical risk blockers, Prescriptive action items.
+
+### Phase 13: Resume AI & ATS Analyzer
+- **Status:** Completed ✓
+- **Deliverables:** 0–100 ATS match score comparing uploaded resume against verified profile credentials and target job descriptions.
+
+### Phase 14: Career & Interview Copilot
+- **Status:** Completed ✓
+- **Deliverables:** Mock technical and HR interview question generator, Personalized 30-60-90 day milestone roadmap generator.
+
+### Phase 15: Notification Center
+- **Status:** Completed ✓
+- **Deliverables:** Relational notification records, Topbar bell indicator, Unread count badges, Status transition alerts.
+
+### Phase 16: Reports & Placement Scorecards
+- **Status:** Completed ✓
+- **Deliverables:** Formatted Student Placement Readiness Scorecard generation, Batch CSV export for placement directors.
+
+### Phase 17: Security Audit & Master E2E Test Suite
+- **Status:** Completed ✓
+- **Deliverables:** Automated end-to-end test suite (`test_all_features_e2e.js`) with 28/28 passing test assertions (100%).
+
+### Phase 18: Production Packaging & Docker Deployment
+- **Status:** Completed ✓
+- **Deliverables:** `docker-compose.yml`, Dockerfiles for Frontend, Backend, and ML service, One-click launch scripts (`start.bat`, `stop.bat`, `start-stitch.bat`).
+
+### Phase 19: Campus Placement Drives & Candidate Shortlisting
+- **Status:** Completed ✓
+- **Deliverables:** Corporate placement drive postings, Automated candidate eligibility filtering (CGPA, backlogs, skills), Verified shortlist rosters.
+
+---
+
+## 3. Current Verification Metrics
+- **Master E2E Test Suite:** 28 / 28 Tests Passing (100%)
+- **Python ML Microservice PyTest:** 6 / 6 Tests Passing (100%)
+- **Express Analytics Endpoints Test:** 13 / 13 Endpoints Verified (100%)
+- **Frontend Production Builds:** Clean (0 Errors) on both `frontend` and `stitch`

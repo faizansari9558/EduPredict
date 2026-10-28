@@ -72,4 +72,7 @@ router.get(
   getAssessmentResults
 );
 
+const review = require('../controllers/documentReviewController');
+router.get('/verifications',authenticateToken,authorizeRoles('teacher'),review.list);
+router.put('/verifications/:itemId',authenticateToken,authorizeRoles('teacher'),review.review);
 module.exports = router;

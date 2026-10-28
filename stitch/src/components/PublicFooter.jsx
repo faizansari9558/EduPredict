@@ -16,14 +16,7 @@ export default function PublicFooter() {
             <p className="text-xs text-slate-400 max-w-sm leading-relaxed">
               EduPredict is an AI-powered academic progress and placement prediction intelligence system engineered for higher education institutions, faculty mentors, and aspiring students.
             </p>
-            <div className="flex items-center gap-3 pt-0.5 text-slate-400 text-xs">
-              <span className="flex items-center gap-1.5 font-semibold text-emerald-400">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                System Operational
-              </span>
-              <span>•</span>
-              <span className="text-slate-400 font-mono">v2.4 LTS</span>
-            </div>
+
           </div>
 
           {/* 2. Far-Right Link Columns (Platform, Resources, Security & Policies) */}

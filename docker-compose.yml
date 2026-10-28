@@ -45,7 +45,7 @@ services:
       - DB_PASSWORD=root
       - DB_NAME=edupredict
       - ML_SERVICE_URL=http://ml-service:8000
-      - JWT_SECRET=production_secret_key_edupredict_2026
+      - JWT_SECRET=${JWT_SECRET:?Set JWT_SECRET}
     ports:
       - "5000:5000"
     depends_on:
@@ -57,7 +57,7 @@ services:
   # React Frontend (Vite)
   frontend:
     build:
-      context: ./frontend
+      context: ./stitch
       dockerfile: Dockerfile
     container_name: edupredict-frontend
     restart: always

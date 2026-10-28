@@ -134,7 +134,7 @@ async function updateStudentProfile(req, res) {
       });
     }
 
-    query += updates.join(', ') + ' WHERE user_id = ?';
+    query += updates.join(', ') + " WHERE user_id = ? AND verification_status <> 'verified'";
     params.push(userId);
 
     const [result] = await db.query(query, params);

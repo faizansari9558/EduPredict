@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-@theme {
+:root {
   --color-primary: #00152a;
   --color-primary-container: #102a43;
   --color-on-primary: #ffffff;
@@ -53,6 +53,105 @@
   --spacing-gutter: 1.5rem;
 }
 
+/* Dark Theme Palette */
+.dark, [data-theme="dark"] {
+  --color-primary: #f0f6fc;
+  --color-primary-container: #1e293b;
+  --color-on-primary: #0b1320;
+  --color-on-primary-container: #94a3b8;
+  --color-primary-fixed: #1e3a5f;
+  --color-primary-fixed-dim: #172a44;
+
+  --color-secondary: #3b82f6;
+  --color-secondary-container: #1d4ed8;
+  --color-secondary-fixed: #1e3a8a;
+  --color-secondary-fixed-dim: #172554;
+  --color-on-secondary: #ffffff;
+  --color-on-secondary-fixed-variant: #93c5fd;
+
+  --color-tertiary: #10b981;
+  --color-tertiary-container: #064e3b;
+  --color-tertiary-fixed: #047857;
+  --color-tertiary-fixed-dim: #065f46;
+  --color-on-tertiary: #ffffff;
+  --color-on-tertiary-fixed: #a7f3d0;
+  --color-on-tertiary-container: #6ee7b7;
+
+  --color-background: #030712;
+  --color-on-background: #f1f5f9;
+
+  --color-surface: #070d1e;
+  --color-surface-dim: #02050e;
+  --color-surface-bright: #0f1a30;
+  --color-surface-container-lowest: #050a17;
+  --color-surface-container-low: #0a1324;
+  --color-surface-container: #0e1a32;
+  --color-surface-container-high: #203456;
+  --color-surface-container-highest: #2a436e;
+
+  --color-on-surface: #f1f5f9;
+  --color-on-surface-variant: #94a3b8;
+  --color-outline: #64748b;
+  --color-outline-variant: #1e293b;
+
+  --color-error: #ef4444;
+  --color-error-container: #7f1d1d;
+  --color-on-error: #ffffff;
+}
+
+@theme {
+  --color-primary: var(--color-primary);
+  --color-primary-container: var(--color-primary-container);
+  --color-on-primary: var(--color-on-primary);
+  --color-on-primary-container: var(--color-on-primary-container);
+  --color-primary-fixed: var(--color-primary-fixed);
+  --color-primary-fixed-dim: var(--color-primary-fixed-dim);
+
+  --color-secondary: var(--color-secondary);
+  --color-secondary-container: var(--color-secondary-container);
+  --color-secondary-fixed: var(--color-secondary-fixed);
+  --color-secondary-fixed-dim: var(--color-secondary-fixed-dim);
+  --color-on-secondary: var(--color-on-secondary);
+  --color-on-secondary-fixed-variant: var(--color-on-secondary-fixed-variant);
+
+  --color-tertiary: var(--color-tertiary);
+  --color-tertiary-container: var(--color-tertiary-container);
+  --color-tertiary-fixed: var(--color-tertiary-fixed);
+  --color-tertiary-fixed-dim: var(--color-tertiary-fixed-dim);
+  --color-on-tertiary: var(--color-on-tertiary);
+  --color-on-tertiary-fixed: var(--color-on-tertiary-fixed);
+  --color-on-tertiary-container: var(--color-on-tertiary-container);
+
+  --color-background: var(--color-background);
+  --color-on-background: var(--color-on-background);
+
+  --color-surface: var(--color-surface);
+  --color-surface-dim: var(--color-surface-dim);
+  --color-surface-bright: var(--color-surface-bright);
+  --color-surface-container-lowest: var(--color-surface-container-lowest);
+  --color-surface-container-low: var(--color-surface-container-low);
+  --color-surface-container: var(--color-surface-container);
+  --color-surface-container-high: var(--color-surface-container-high);
+  --color-surface-container-highest: var(--color-surface-container-highest);
+
+  --color-on-surface: var(--color-on-surface);
+  --color-on-surface-variant: var(--color-on-surface-variant);
+  --color-outline: var(--color-outline);
+  --color-outline-variant: var(--color-outline-variant);
+
+  --color-error: var(--color-error);
+  --color-error-container: var(--color-error-container);
+  --color-on-error: var(--color-on-error);
+
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-heading: 'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif;
+
+  --spacing-sidebar-expanded: 16rem;
+  --spacing-sidebar-collapsed: 4.5rem;
+  --spacing-header-height: 4.25rem;
+  --spacing-gutter: 1.5rem;
+}
+
 /* Custom Base Utility Overrides */
 @layer base {
   body {
@@ -60,6 +159,7 @@
     color: var(--color-on-surface);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
+    transition: background-color 0.2s ease, color 0.2s ease;
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -84,10 +184,123 @@ button, a {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: #94a3b8;
   border-radius: 9999px;
 }
 
+.dark ::-webkit-scrollbar-thumb {
+  background: #334155;
+}
+
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: #64748b;
+}
+
+/* =========================================================================
+   ANIMATED ELECTRIC BLUE BACKGROUND GLOWS (LIGHT & DARK MODE)
+   ========================================================================= */
+
+/* Hero Glow Center */
+.electric-glow-center {
+  background: radial-gradient(ellipse 90% 65% at 50% 25%, rgba(59, 130, 246, 0.35) 0%, rgba(147, 197, 253, 0.28) 35%, rgba(219, 234, 254, 0.18) 60%, transparent 80%);
+}
+
+.dark .electric-glow-center,
+[data-theme="dark"] .electric-glow-center {
+  background: radial-gradient(ellipse 95% 70% at 50% 20%, rgba(37, 99, 235, 0.8) 0%, rgba(29, 78, 216, 0.6) 30%, rgba(2, 132, 199, 0.4) 55%, transparent 80%);
+}
+
+/* Floating Orb Left */
+.electric-orb-left {
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.32) 0%, rgba(147, 197, 253, 0.18) 50%, transparent 75%);
+}
+
+.dark .electric-orb-left,
+[data-theme="dark"] .electric-orb-left {
+  background: radial-gradient(circle, rgba(37, 99, 235, 0.7) 0%, rgba(30, 64, 175, 0.5) 45%, transparent 75%);
+}
+
+/* Floating Orb Right */
+.electric-orb-right {
+  background: radial-gradient(circle, rgba(14, 165, 233, 0.32) 0%, rgba(186, 230, 253, 0.18) 50%, transparent 75%);
+}
+
+.dark .electric-orb-right,
+[data-theme="dark"] .electric-orb-right {
+  background: radial-gradient(circle, rgba(6, 182, 212, 0.65) 0%, rgba(2, 132, 199, 0.45) 45%, transparent 75%);
+}
+
+/* Lower Ambient Glow */
+.electric-glow-bottom {
+  background: radial-gradient(ellipse at center, rgba(147, 197, 253, 0.28) 0%, rgba(224, 242, 254, 0.14) 50%, transparent 75%);
+}
+
+.dark .electric-glow-bottom,
+[data-theme="dark"] .electric-glow-bottom {
+  background: radial-gradient(ellipse at center, rgba(30, 58, 138, 0.55) 0%, rgba(30, 64, 175, 0.35) 45%, transparent 75%);
+}
+
+/* Atmospheric Dot Grid */
+.electric-dot-grid {
+  background-image: radial-gradient(#94a3b8 1.2px, transparent 1.2px);
+  background-size: 28px 28px;
+  mask-image: radial-gradient(ellipse 75% 65% at 50% 35%, #000 25%, transparent 100%);
+  -webkit-mask-image: radial-gradient(ellipse 75% 65% at 50% 35%, #000 25%, transparent 100%);
+}
+
+.dark .electric-dot-grid,
+[data-theme="dark"] .electric-dot-grid {
+  background-image: radial-gradient(#38bdf8 1.2px, transparent 1.2px);
+}
+
+@keyframes electric-glow-pulse {
+  0%, 100% {
+    transform: translate(-50%, 0) scale(1);
+    opacity: 0.88;
+  }
+  50% {
+    transform: translate(-50%, -20px) scale(1.12);
+    opacity: 1;
+  }
+}
+
+@keyframes electric-orb-drift-1 {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(50px, -30px) scale(1.1);
+  }
+}
+
+@keyframes electric-orb-drift-2 {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(-50px, 30px) scale(1.15);
+  }
+}
+
+.animate-electric-pulse {
+  animation: electric-glow-pulse 9s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+.animate-electric-drift-1 {
+  animation: electric-orb-drift-1 14s ease-in-out infinite alternate;
+  will-change: transform;
+}
+
+.animate-electric-drift-2 {
+  animation: electric-orb-drift-2 18s ease-in-out infinite alternate;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-electric-pulse,
+  .animate-electric-drift-1,
+  .animate-electric-drift-2 {
+    animation: none !important;
+  }
 }

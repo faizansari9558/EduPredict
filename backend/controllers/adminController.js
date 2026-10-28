@@ -1,4 +1,5 @@
 const db = require('../config/db');
+const { hashPassword } = require('../utils/password');
 
 async function getDashboardOverview(req, res) {
   const overview = {
@@ -398,10 +399,119 @@ async function updateDepartment(req, res) {
   }
 }
 
+async function createUser(req, res) {
+  try {
+    const { fullName, email, userIdNumber, role = 'student', department, phoneNumber, status = 'active' } = req.body;
+    if (!fullName || !email || !userIdNumber) {
+      return res.status(400).json({
+        success: false,
+        message: 'Full name, email, and user ID number are required.'
+      });
+    }
+
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanId = userIdNumber.trim();
+    const cleanRole = role.toLowerCase();
+
+    const [roleRows] = await db.query('SELECT id FROM roles WHERE name = ?', [cleanRole]);
+    const roleId = roleRows.length ? roleRows[0].id : (cleanRole === 'admin' ? 1 : cleanRole === 'teacher' ? 2 : 3);
+
+    const defaultPassHash = await hashPassword('password123');
+
+    const [result] = await db.query(
+      `INSERT INTO users (role_id, email, password_hash, user_id_number, full_name, phone_number, status)
+       VALUES (?, ?, ?, ?, ?, ?, ?)
+       ON DUPLICATE KEY UPDATE full_name = VALUES(full_name), user_id_number = VALUES(user_id_number), status = VALUES(status)`,
+      [roleId, cleanEmail, defaultPassHash, cleanId, fullName.trim(), phoneNumber || null, status]
+    );
+
+    if (cleanRole === 'student') {
+      try {
+        const [deptRows] = await db.query('SELECT id FROM departments WHERE name LIKE ? LIMIT 1', [`%${department || 'Computer'}%`]);
+        const deptId = deptRows.length ? deptRows[0].id : 1;
+        await db.query(
+          `INSERT IGNORE INTO students (user_id, roll_number, department_id, batch_id, academic_year_id)
+           VALUES (?, ?, ?, 1, 1)`,
+          [result.insertId || 1, cleanId, deptId]
+        );
+      } catch (err) {
+        console.warn('Student detail insert warning:', err.message);
+      }
+    }
+
+    return res.status(201).json({
+      success: true,
+      message: 'User record provisioned successfully.',
+      data: {
+        id: result.insertId,
+        email: cleanEmail,
+        fullName: fullName.trim(),
+        userIdNumber: cleanId,
+        role: cleanRole,
+        status
+      }
+    });
+  } catch (error) {
+    console.error('Create user error:', error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || 'Failed to create user.'
+    });
+  }
+}
+
+async function bulkImportUsers(req, res) {
+  try {
+    const { users } = req.body;
+    if (!Array.isArray(users) || !users.length) {
+      return res.status(400).json({
+        success: false,
+        message: 'A list of user records is required for bulk import.'
+      });
+    }
+
+    const defaultPassHash = await hashPassword('password123');
+    let imported = 0;
+
+    for (const u of users) {
+      if (!u.email || !u.userIdNumber || !u.fullName) continue;
+      const cleanEmail = u.email.trim().toLowerCase();
+      const cleanId = u.userIdNumber.trim();
+      const cleanRole = (u.role || 'student').toLowerCase();
+      const cleanStatus = u.status || 'active';
+
+      const [roleRows] = await db.query('SELECT id FROM roles WHERE name = ?', [cleanRole]);
+      const roleId = roleRows.length ? roleRows[0].id : (cleanRole === 'admin' ? 1 : cleanRole === 'teacher' ? 2 : 3);
+
+      await db.query(
+        `INSERT INTO users (role_id, email, password_hash, user_id_number, full_name, phone_number, status)
+         VALUES (?, ?, ?, ?, ?, ?, ?)
+         ON DUPLICATE KEY UPDATE full_name = VALUES(full_name), user_id_number = VALUES(user_id_number), status = VALUES(status)`,
+        [roleId, cleanEmail, defaultPassHash, cleanId, u.fullName.trim(), u.phoneNumber || null, cleanStatus]
+      );
+      imported++;
+    }
+
+    return res.json({
+      success: true,
+      message: `Successfully imported ${imported} user records.`,
+      importedCount: imported
+    });
+  } catch (error) {
+    console.error('Bulk import error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to complete bulk import.'
+    });
+  }
+}
+
 module.exports = {
   getDashboardOverview,
   getAllUsers,
   getUserById,
+  createUser,
+  bulkImportUsers,
   updateUserStatus,
   deleteUser,
   getAllStudents,

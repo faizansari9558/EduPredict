@@ -12,52 +12,52 @@ export default function HelpPage() {
     {
       id: 1,
       category: 'student',
-      question: 'How does EduPredict predict my placement probability?',
-      answer: 'EduPredict analyzes 16 distinct academic and skill features including longitudinal CGPA velocity, performance in proctored coding assessments, verified industrial internships, cloud certifications, and attendance records using a calibrated dual XGBoost & Logistic Regression ensemble.'
+      question: 'How does EduPredict calculate my placement prediction?',
+      answer: 'The system uses machine learning classification models trained on academic features (CGPA, 10th and 12th percentages, active backlogs), performance in Coding Tests 1 & 2, Aptitude scores, verified projects, and certifications to determine your placement readiness and probability percentage.'
     },
     {
       id: 2,
       category: 'student',
-      question: 'How do I submit projects and internships for faculty verification?',
-      answer: 'Navigate to your Student Dashboard → Technical Projects or Internships section. Click "Add Project" or "Add Internship", enter your repository URL or proof certificate, and submit. Your assigned faculty mentor will review and approve it within 48 hours.'
+      question: 'How do I submit marksheets and certificates for teacher verification?',
+      answer: 'Log in to the Student Portal, go to Academic Records, Certifications, or Projects, and upload your marksheets or completion certificates. Your assigned faculty teacher will review the document and mark it as Verified or Rejected with specific feedback.'
     },
     {
       id: 3,
       category: 'student',
-      question: 'What is the Smart ATS Resume Studio?',
-      answer: 'The ATS Resume Studio scans your academic profile, verified skills, and project accomplishments against thousands of Tier-1 job descriptions to give you a match score, suggest missing keywords, and export a clean single-column PDF resume.'
+      question: 'When can I see my placement prediction results?',
+      answer: 'Placement predictions are generated once your assigned teacher verifies your academic records and publishes your assessment scores. You can then view your readiness tier (Standard, Dream, Super Dream), strengths, and recommended improvements.'
     },
     {
       id: 4,
       category: 'teacher',
-      question: 'How do faculty mentors review student submissions?',
-      answer: 'Faculty mentors can access the Teacher Portal → Verification Queue to inspect student GitHub links, certificate PDFs, and marksheets. Mentors can approve with 1-click or reject with constructive feedback notes.'
+      question: 'How do teachers verify student documents?',
+      answer: 'Teachers can open the Teacher Portal → Document Verification section to review pending student submissions. Teachers can approve verified documents or reject invalid submissions with feedback notes.'
     },
     {
       id: 5,
       category: 'teacher',
-      question: 'Can teachers author custom technical assessments and coding questions?',
-      answer: 'Yes. In Teacher Portal → Assessment Management, faculty can create MCQ quizzes or sandboxed coding problems specifying testcases, memory bounds, time limits, and passing thresholds.'
+      question: 'How are assessments created and published by teachers?',
+      answer: 'In Teacher Portal → Assessments, faculty can set up Coding Test 1, Coding Test 2, and Aptitude tests with scoring criteria. Once evaluation is complete, teachers publish the results for students to view.'
     },
     {
       id: 6,
       category: 'admin',
-      question: 'How do administrators export NAAC / NIRF accreditation reports?',
-      answer: 'Institutional Administrators can visit the Admin Portal → Reports & Compliance section to generate and download Criterion 2.6 attainment spreadsheets, TPO placement dossiers, and historical batch trends in PDF or XLSX format.'
+      question: 'How do administrators manage departments, courses, and batches?',
+      answer: 'Administrators use the Admin Portal → Department & Batch Management section to set up academic years, configure departments (CSE, ECE, ME, etc.), assign teachers to student cohorts, and export placement readiness reports in CSV format.'
     }
   ];
 
   const filtered = faqs.filter(f => activeCategory === 'all' || f.category === activeCategory);
 
   return (
-    <div className="min-h-screen bg-background font-body text-on-surface flex flex-col">
+    <div className="min-h-screen bg-background font-body text-on-surface flex flex-col transition-colors duration-200">
       <PublicHeader />
 
       <main className="w-full pt-20 flex-1">
         <section className="max-w-5xl mx-auto px-6 pt-12 pb-14 text-center space-y-4">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-surface-container-high border border-outline-variant/30 text-secondary text-xs font-bold uppercase tracking-wider">
             <span className="material-symbols-outlined text-[16px]">help</span>
-            <span>Support & Documentation</span>
+            <span>Support &amp; FAQ</span>
           </div>
 
           <h1 className="font-headline text-3xl sm:text-4xl lg:text-5xl font-black text-primary tracking-tight">
@@ -65,16 +65,16 @@ export default function HelpPage() {
           </h1>
 
           <p className="text-base text-on-surface-variant max-w-2xl mx-auto leading-relaxed">
-            Find answers to common questions about predictive modeling, document verification, assessments, and campus governance.
+            Find simple answers to common questions about student profiles, teacher document verification, assessments, and placement predictions.
           </p>
 
           {/* Filter Pills */}
           <div className="flex justify-center gap-2 pt-4">
             {[
-              { id: 'all', label: 'All Topics' },
+              { id: 'all', label: 'All Questions' },
               { id: 'student', label: 'For Students' },
-              { id: 'teacher', label: 'For Faculty' },
-              { id: 'admin', label: 'For Leadership' }
+              { id: 'teacher', label: 'For Teachers' },
+              { id: 'admin', label: 'For Administrators' }
             ].map(tab => (
               <button
                 key={tab.id}
@@ -82,7 +82,7 @@ export default function HelpPage() {
                 className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
                   activeCategory === tab.id
                     ? 'bg-secondary text-on-secondary shadow-sm'
-                    : 'bg-surface-container text-on-surface-variant hover:bg-surface-container-high'
+                    : 'bg-surface-container-low text-on-surface-variant hover:bg-surface-container'
                 }`}
               >
                 {tab.label}
@@ -122,16 +122,14 @@ export default function HelpPage() {
         {/* Still Need Help Box */}
         <section className="max-w-4xl mx-auto px-6 pb-20 text-center">
           <div className="bg-surface-container-low p-8 rounded-3xl border border-outline-variant/30 space-y-3">
-            <h3 className="font-headline font-bold text-xl text-primary">Still have questions?</h3>
+            <h3 className="font-headline font-bold text-xl text-primary">Need more help?</h3>
             <p className="text-xs text-on-surface-variant max-w-md mx-auto">
-              Our campus academic support coordinators are standing by to assist students, professors, and administrative staff.
+              Contact our college coordinator team for assistance with login, verification, or assessment issues.
             </p>
             <div className="pt-2">
-              <Link to="/contact">
-                <Button variant="primary" size="sm" icon="mail">
-                  Contact Campus Support
-                </Button>
-              </Link>
+              <Button to="/contact" variant="primary" size="sm" icon="mail">
+                Contact Support
+              </Button>
             </div>
           </div>
         </section>

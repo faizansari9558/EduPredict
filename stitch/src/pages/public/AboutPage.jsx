@@ -6,7 +6,7 @@ import Button from '../../components/Button';
 
 export default function AboutPage() {
   return (
-    <div className="min-h-screen bg-background font-body text-on-surface flex flex-col">
+    <div className="min-h-screen bg-background font-body text-on-surface flex flex-col transition-colors duration-200">
       <PublicHeader />
 
       <main className="w-full pt-20 flex-1">
@@ -18,12 +18,12 @@ export default function AboutPage() {
           </div>
 
           <h1 className="font-headline text-3xl sm:text-4xl lg:text-5xl font-black text-primary tracking-tight">
-            Pioneering Explainable AI in <br />
-            <span className="text-secondary">Higher Education & Campus Hiring</span>
+            Smart Student Academic &amp; <br />
+            <span className="text-secondary">Placement Prediction System</span>
           </h1>
 
           <p className="text-base text-on-surface-variant max-w-3xl mx-auto leading-relaxed">
-            EduPredict was founded to replace guesswork and fragmented spreadsheets with rigorous machine learning, real-time proctored evaluation, and transparent academic analytics for modern universities.
+            EduPredict was built for universities and colleges to manage student academic information, validate documents, carry out assessments, analyze performance, and estimate placement readiness using machine learning.
           </p>
         </section>
 
@@ -33,29 +33,29 @@ export default function AboutPage() {
             <div className="w-12 h-12 rounded-2xl bg-secondary/10 text-secondary flex items-center justify-center">
               <span className="material-symbols-outlined text-[28px]">psychology</span>
             </div>
-            <h3 className="font-headline font-bold text-xl text-primary">Explainable Intelligence</h3>
+            <h3 className="font-headline font-bold text-xl text-primary">Machine Learning Prediction</h3>
             <p className="text-xs text-on-surface-variant leading-relaxed">
-              We leverage SHAP (SHapley Additive exPlanations) and dual XGBoost/Logistic Regression pipelines so students understand exactly which skills boost their placement probability.
+              Trained classification models analyze CGPA, 10th/12th percentages, test scores, backlogs, and projects to give clear placement probability and readiness scores.
             </p>
           </div>
 
           <div className="bg-surface-container-lowest p-8 rounded-3xl border border-outline-variant/30 shadow-sm space-y-4">
-            <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center">
+            <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center">
               <span className="material-symbols-outlined text-[28px]">verified_user</span>
             </div>
-            <h3 className="font-headline font-bold text-xl text-primary">Verified Trust</h3>
+            <h3 className="font-headline font-bold text-xl text-primary">Faculty Verification</h3>
             <p className="text-xs text-on-surface-variant leading-relaxed">
-              Faculty mentors audit 10th/12th marksheets, semester SGPA/CGPA transcripts, GitHub projects, and corporate internships with cryptographically signed digital seals.
+              Teachers verify student marksheets, semester results, projects, and certifications so placement predictions are based only on verified academic records.
             </p>
           </div>
 
           <div className="bg-surface-container-lowest p-8 rounded-3xl border border-outline-variant/30 shadow-sm space-y-4">
-            <div className="w-12 h-12 rounded-2xl bg-purple-50 text-purple-700 flex items-center justify-center">
+            <div className="w-12 h-12 rounded-2xl bg-purple-500/10 text-purple-600 flex items-center justify-center">
               <span className="material-symbols-outlined text-[28px]">trending_up</span>
             </div>
-            <h3 className="font-headline font-bold text-xl text-primary">Early Remediation</h3>
+            <h3 className="font-headline font-bold text-xl text-primary">Actionable Recommendations</h3>
             <p className="text-xs text-on-surface-variant leading-relaxed">
-              Automated early warning algorithms flag students with academic slippage or missing skill benchmarks months before campus recruitment drives commence.
+              Provides students with specific areas to focus on—such as coding challenge practice, aptitude preparation, or clearing backlogs—to boost placement success.
             </p>
           </div>
         </section>
@@ -65,29 +65,29 @@ export default function AboutPage() {
           <div className="max-w-5xl mx-auto px-6 space-y-8">
             <div className="text-center space-y-2">
               <h2 className="font-headline font-bold text-2xl sm:text-3xl text-primary">
-                Built for Institutional Excellence
+                Core System Components
               </h2>
-              <p className="text-xs text-on-surface-variant">Three core pillars that power the EduPredict platform</p>
+              <p className="text-xs text-on-surface-variant">Key techniques powering the EduPredict platform</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs text-on-surface-variant">
-              <div className="p-6 bg-surface rounded-2xl border border-outline-variant/30 space-y-2">
+              <div className="p-6 bg-surface-container-lowest rounded-2xl border border-outline-variant/30 space-y-2">
                 <h4 className="font-bold text-sm text-primary flex items-center gap-2">
                   <span className="material-symbols-outlined text-secondary">database</span>
-                  Institutional SIS Sync
+                  Centralized MySQL Database
                 </h4>
                 <p className="leading-relaxed">
-                  Seamlessly connects with existing Student Information Systems (SIS) and relational databases (MySQL, MariaDB) to sync student records without manual overhead.
+                  Stores academic profiles, department structures (CSE, ECE, ME, etc.), assessment submissions, and verification logs in an organized relational database.
                 </p>
               </div>
 
-              <div className="p-6 bg-surface rounded-2xl border border-outline-variant/30 space-y-2">
+              <div className="p-6 bg-surface-container-lowest rounded-2xl border border-outline-variant/30 space-y-2">
                 <h4 className="font-bold text-sm text-primary flex items-center gap-2">
                   <span className="material-symbols-outlined text-secondary">terminal</span>
-                  Sandboxed Autograding Arena
+                  Coding &amp; Aptitude Assessment Engine
                 </h4>
                 <p className="leading-relaxed">
-                  Multi-language code execution engine evaluating syntax correctness, algorithmic time complexity, and edge cases across Python, JavaScript, C++, and Java.
+                  Allows faculty to create and evaluate coding challenges and aptitude tests with automated scoring and published marksheets.
                 </p>
               </div>
             </div>
@@ -97,22 +97,18 @@ export default function AboutPage() {
         {/* Call to Action */}
         <section className="max-w-4xl mx-auto px-6 py-20 text-center space-y-6">
           <h2 className="font-headline font-bold text-2xl sm:text-3xl text-primary">
-            Ready to experience EduPredict?
+            Ready to explore EduPredict?
           </h2>
           <p className="text-sm text-on-surface-variant">
-            Sign in with your university credentials or register a new student or faculty account.
+            Sign in with your university account or register a new student or teacher account.
           </p>
           <div className="flex justify-center gap-4">
-            <Link to="/login">
-              <Button variant="primary" size="md" icon="login">
-                Sign In to Portal
-              </Button>
-            </Link>
-            <Link to="/register">
-              <Button variant="outline" size="md" icon="person_add">
-                Register Account
-              </Button>
-            </Link>
+            <Button to="/login" variant="primary" size="md" icon="login">
+              Sign In to Portal
+            </Button>
+            <Button to="/register" variant="outline" size="md" icon="person_add">
+              Register Account
+            </Button>
           </div>
         </section>
       </main>

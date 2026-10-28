@@ -1,54 +1,63 @@
 {
   "best_model": "Logistic Regression (Baseline)",
   "metrics": {
-    "accuracy": 0.826,
-    "precision": 0.8457,
-    "recall": 0.8906,
-    "f1_score": 0.8676,
-    "roc_auc": 0.8984,
-    "cv_roc_auc_mean": 0.8956,
-    "cv_roc_auc_std": 0.013
+    "accuracy": 0.828,
+    "precision": 0.8445,
+    "recall": 0.8878,
+    "f1_score": 0.8656,
+    "roc_auc": 0.9058,
+    "cv_roc_auc_mean": 0.9008,
+    "cv_roc_auc_std": 0.012
   },
-  "feature_importances": {},
+  "feature_importances": {
+    "technical_index": 0.1351,
+    "coding_score": 0.1273,
+    "academic_index": 0.0975,
+    "holistic_readiness": 0.0955,
+    "cgpa": 0.0846,
+    "num_internships": 0.0804,
+    "aptitude_score": 0.0661,
+    "num_projects": 0.0657
+  },
   "all_models": {
     "Logistic Regression (Baseline)": {
-      "accuracy": 0.826,
-      "precision": 0.8457,
-      "recall": 0.8906,
-      "f1_score": 0.8676,
-      "roc_auc": 0.8984,
-      "cv_roc_auc_mean": 0.8956,
-      "cv_roc_auc_std": 0.013
+      "accuracy": 0.828,
+      "precision": 0.8445,
+      "recall": 0.8878,
+      "f1_score": 0.8656,
+      "roc_auc": 0.9058,
+      "cv_roc_auc_mean": 0.9008,
+      "cv_roc_auc_std": 0.012
     },
     "Decision Tree Classifier": {
-      "accuracy": 0.788,
-      "precision": 0.8282,
-      "recall": 0.8438,
-      "f1_score": 0.8359,
-      "roc_auc": 0.8302,
-      "cv_roc_auc_mean": 0.8346,
-      "cv_roc_auc_std": 0.018
+      "accuracy": 0.798,
+      "precision": 0.831,
+      "recall": 0.849,
+      "f1_score": 0.84,
+      "roc_auc": 0.842,
+      "cv_roc_auc_mean": 0.839,
+      "cv_roc_auc_std": 0.016
     },
     "Random Forest Classifier": {
-      "accuracy": 0.822,
-      "precision": 0.8532,
-      "recall": 0.8719,
-      "f1_score": 0.8624,
-      "roc_auc": 0.8813,
-      "cv_roc_auc_mean": 0.8899,
-      "cv_roc_auc_std": 0.0105
+      "accuracy": 0.828,
+      "precision": 0.856,
+      "recall": 0.878,
+      "f1_score": 0.867,
+      "roc_auc": 0.892,
+      "cv_roc_auc_mean": 0.891,
+      "cv_roc_auc_std": 0.01
     },
     "Gradient Boosting Classifier": {
-      "accuracy": 0.82,
-      "precision": 0.8485,
-      "recall": 0.875,
-      "f1_score": 0.8615,
-      "roc_auc": 0.8835,
-      "cv_roc_auc_mean": 0.8867,
-      "cv_roc_auc_std": 0.0105
+      "accuracy": 0.824,
+      "precision": 0.851,
+      "recall": 0.88,
+      "f1_score": 0.865,
+      "roc_auc": 0.895,
+      "cv_roc_auc_mean": 0.892,
+      "cv_roc_auc_std": 0.01
     }
   },
-  "trained_at": "2026-09-01T06:52:51.945994",
+  "trained_at": "2026-09-16T07:52:45.099314",
   "samples_count": 2500,
   "features_count": 16
 }

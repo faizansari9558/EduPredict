@@ -1,0 +1,170 @@
+{
+  "model_name": "Logistic Regression (Baseline)",
+  "predictor": {
+    "model_name": "Logistic Regression (Baseline)",
+    "weights": [
+      0.4165874394619514,
+      0.15061464813636027,
+      0.1707196659473175,
+      -0.20920635276983565,
+      0.3254255961092762,
+      0.6273236067671993,
+      -0.07221092366598438,
+      0.3236687513094901,
+      0.17719306502584825,
+      0.3958855924257657,
+      0.12176029224066515,
+      0.48022748510706925,
+      0.665809485712943,
+      0.11047486173341572,
+      -0.20920635276983557,
+      0.47044175751310424
+    ],
+    "bias": 1.0943975278718727,
+    "feature_importances": [
+      0.08455613590120072,
+      0.030570755260835893,
+      0.03465153748632742,
+      0.042463308108972475,
+      0.06605271384534488,
+      0.12732995554630355,
+      0.014656890958926473,
+      0.06569612122258146,
+      0.03596546479276256,
+      0.08035421326604295,
+      0.024714090831372586,
+      0.09747336728791102,
+      0.13514156219151707,
+      0.02242344952709559,
+      0.042463308108972454,
+      0.09548712566383294
+    ]
+  },
+  "pipeline": {
+    "mean": [
+      7.440435,
+      77.814875,
+      74.753735,
+      0.4675,
+      72.90733,
+      70.89672,
+      5.047,
+      2.134,
+      1.526,
+      0.721,
+      81.8602,
+      75.3443275,
+      71.8014945,
+      62.4475,
+      7.0125,
+      63.9810455
+    ],
+    "scale": [
+      1.0666253141450375,
+      9.30749233598261,
+      10.570789478547711,
+      0.879172195875188,
+      9.494578609453924,
+      13.3426853197398,
+      2.2587144573849964,
+      1.3334331629294363,
+      1.2305787256409075,
+      0.7975957622756028,
+      11.20030517262811,
+      6.295631173003526,
+      9.002575734697807,
+      27.344053169747898,
+      13.18758293812782,
+      15.44738069809263
+    ]
+  },
+  "feature_columns": [
+    "cgpa",
+    "tenth_percentage",
+    "twelfth_percentage",
+    "backlogs_count",
+    "aptitude_score",
+    "coding_score",
+    "num_skills",
+    "num_projects",
+    "num_certifications",
+    "num_internships",
+    "profile_completion_pct"
+  ],
+  "all_feature_columns": [
+    "cgpa",
+    "tenth_percentage",
+    "twelfth_percentage",
+    "backlogs_count",
+    "aptitude_score",
+    "coding_score",
+    "num_skills",
+    "num_projects",
+    "num_certifications",
+    "num_internships",
+    "profile_completion_pct",
+    "academic_index",
+    "technical_index",
+    "experience_score",
+    "backlog_penalty",
+    "holistic_readiness"
+  ],
+  "feature_importances": {
+    "technical_index": 0.1351,
+    "coding_score": 0.1273,
+    "academic_index": 0.0975,
+    "holistic_readiness": 0.0955,
+    "cgpa": 0.0846,
+    "num_internships": 0.0804,
+    "aptitude_score": 0.0661,
+    "num_projects": 0.0657
+  },
+  "metrics": {
+    "accuracy": 0.828,
+    "precision": 0.8445,
+    "recall": 0.8878,
+    "f1_score": 0.8656,
+    "roc_auc": 0.9058,
+    "cv_roc_auc_mean": 0.9008,
+    "cv_roc_auc_std": 0.012
+  },
+  "all_model_benchmarks": {
+    "Logistic Regression (Baseline)": {
+      "accuracy": 0.828,
+      "precision": 0.8445,
+      "recall": 0.8878,
+      "f1_score": 0.8656,
+      "roc_auc": 0.9058,
+      "cv_roc_auc_mean": 0.9008,
+      "cv_roc_auc_std": 0.012
+    },
+    "Decision Tree Classifier": {
+      "accuracy": 0.798,
+      "precision": 0.831,
+      "recall": 0.849,
+      "f1_score": 0.84,
+      "roc_auc": 0.842,
+      "cv_roc_auc_mean": 0.839,
+      "cv_roc_auc_std": 0.016
+    },
+    "Random Forest Classifier": {
+      "accuracy": 0.828,
+      "precision": 0.856,
+      "recall": 0.878,
+      "f1_score": 0.867,
+      "roc_auc": 0.892,
+      "cv_roc_auc_mean": 0.891,
+      "cv_roc_auc_std": 0.01
+    },
+    "Gradient Boosting Classifier": {
+      "accuracy": 0.824,
+      "precision": 0.851,
+      "recall": 0.88,
+      "f1_score": 0.865,
+      "roc_auc": 0.895,
+      "cv_roc_auc_mean": 0.892,
+      "cv_roc_auc_std": 0.01
+    }
+  },
+  "trained_at": "2026-09-16T07:52:45.097547"
+}

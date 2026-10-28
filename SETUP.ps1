@@ -16,14 +16,14 @@ if (-not (Test-Path "backend") -or -not (Test-Path "frontend")) {
 Write-Host "Step 1: Verify Node.js and npm" -ForegroundColor Yellow
 Write-Host "===============================" -ForegroundColor Yellow
 node --version
-npm --version
+npm.cmd --version
 Write-Host ""
 
 Write-Host "Step 2: Install Backend Dependencies" -ForegroundColor Yellow
 Write-Host "=====================================" -ForegroundColor Yellow
 Set-Location backend
-Write-Host "Running: npm install"
-npm install
+Write-Host "Running: npm.cmd install"
+npm.cmd install
 if ($LASTEXITCODE -ne 0) {
   Write-Host "ERROR: Backend npm install failed" -ForegroundColor Red
   exit 1
@@ -35,8 +35,8 @@ Write-Host ""
 Write-Host "Step 3: Install Frontend Dependencies" -ForegroundColor Yellow
 Write-Host "=====================================" -ForegroundColor Yellow
 Set-Location frontend
-Write-Host "Running: npm install"
-npm install
+Write-Host "Running: npm.cmd install"
+npm.cmd install
 if ($LASTEXITCODE -ne 0) {
   Write-Host "ERROR: Frontend npm install failed" -ForegroundColor Red
   exit 1

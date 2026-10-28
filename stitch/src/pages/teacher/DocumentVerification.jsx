@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import { teacherApi } from '../../services/teacherApi';
+import React, { useState, useEffect } from 'react';
 import PageHeader from '../../components/PageHeader';
 import DataTable from '../../components/DataTable';
 import StatusBadge from '../../components/StatusBadge';
@@ -6,67 +7,17 @@ import Button from '../../components/Button';
 import Modal from '../../components/Modal';
 
 export default function DocumentVerification() {
-  const [items, setItems] = useState([
-    {
-      id: 1,
-      studentName: 'Faizan Ansari',
-      rollNo: '21CS042',
-      type: 'Technical Project',
-      title: 'EduPredict — AI Academic Predictor',
-      proofUrl: 'https://github.com/example/edupredict',
-      submittedDate: 'Sep 05, 2024',
-      details: 'Full stack ML application with XGBoost engine and responsive frontend interface.',
-      status: 'pending'
-    },
-    {
-      id: 2,
-      studentName: 'Aarav Sharma',
-      rollNo: '21CS018',
-      type: 'Industrial Internship',
-      title: 'Microsoft India Summer Intern',
-      proofUrl: 'https://example.com/certificate.pdf',
-      submittedDate: 'Sep 04, 2024',
-      details: '3-month summer internship in Azure Cognitive Services team.',
-      status: 'pending'
-    },
-    {
-      id: 3,
-      studentName: 'Sneha Patel',
-      rollNo: '21CS089',
-      type: 'Certification',
-      title: 'AWS Certified Solutions Architect',
-      proofUrl: 'https://aws.amazon.com/verify/102938',
-      submittedDate: 'Sep 03, 2024',
-      details: 'Associate level certification credential ID: AWS-SAA-8849201.',
-      status: 'pending'
-    },
-    {
-      id: 4,
-      studentName: 'Rohan Verma',
-      rollNo: '21CS104',
-      type: 'Technical Project',
-      title: 'Blockchain Voting Portal',
-      proofUrl: 'https://github.com/rohan/voting',
-      submittedDate: 'Aug 29, 2024',
-      details: 'Smart contract based voting system.',
-      status: 'rejected',
-      feedback: 'Incomplete GitHub repository. Missing README and deployment instructions.'
-    }
-  ]);
-
-  const [selectedItem, setSelectedItem] = useState(null);
-  const [feedback, setFeedback] = useState('');
-
-  const handleApprove = (id) => {
-    setItems(items.map(item => item.id === id ? { ...item, status: 'verified' } : item));
-    setSelectedItem(null);
+  const [items,setItems]=useState([]);
+  const [error,setError]=useState('');
+  const [selectedItem,setSelectedItem]=useState(null);
+  const [feedback,setFeedback]=useState('');
+  useEffect(()=>{teacherApi.getPendingVerifications().then(r=>setItems(r.data)).catch(e=>setError(e.message));},[]);
+  const review=async(id,status)=>{
+    try { await teacherApi.verifyItem(id,status,feedback);setItems(current=>current.map(item=>item.id===id?{...item,status}:item));setSelectedItem(null);setFeedback('');setError(''); }
+    catch(e){setError(e.message);}
   };
-
-  const handleReject = (id) => {
-    setItems(items.map(item => item.id === id ? { ...item, status: 'rejected', feedback } : item));
-    setSelectedItem(null);
-    setFeedback('');
-  };
+  const handleApprove=id=>review(id,'verified');
+  const handleReject=id=>review(id,'rejected');
 
   const columns = [
     {
@@ -139,6 +90,7 @@ export default function DocumentVerification() {
         subtitle="Review, approve, or provide revision feedback for student-submitted projects, internships, and certifications"
       />
 
+      <p role="alert">{error}</p>
       <DataTable
         columns={columns}
         data={items}

@@ -3,7 +3,7 @@
  * Communicates with Node.js/Express backend (port 5000)
  */
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 export function getAuthToken() {
   return localStorage.getItem('edupredict_jwt') || null;
@@ -47,45 +47,30 @@ export async function apiClient(endpoint, { body, ...customConfig } = {}) {
     return await response.json();
   } catch (err) {
     console.warn(`[EduPredict API fallback] ${endpoint}:`, err.message);
-    return null;
+    throw err;
   }
 }
 
 export const authApi = {
-  login: async (email, password) => {
-    try {
-      const res = await apiClient('/auth/login', { body: { email, password } });
-      if (res && res.token) {
-        setAuthToken(res.token);
-        return res;
-      }
-    } catch (err) {
-      console.warn('Backend login fallback active');
-    }
-    // Demo fallback session
-    const mockUser = {
-      token: 'mock-jwt-token',
-      user: {
-        email,
-        name: email.split('@')[0],
-        role: email.includes('faculty') || email.includes('teacher') ? 'teacher' : email.includes('admin') ? 'admin' : 'student'
-      }
-    };
-    setAuthToken(mockUser.token);
-    return mockUser;
-  },
+  checkUniversityRecord: body => apiClient('/auth/check-record', {body}),
+  verifyOtp: body => apiClient('/auth/verify-otp', {body}),
+  login: async (email,password) => { const res=await apiClient('/auth/login',{body:{email,password}}); setAuthToken(res.token); return res; },
+  register: async body => { const res=await apiClient('/auth/register',{body}); setAuthToken(res.token); return res; },
+  getMe: () => apiClient('/auth/me'),
+  logout: () => setAuthToken(null)
+};
 
-  register: async (userData) => {
-    const res = await apiClient('/auth/register', { body: userData });
-    return res;
+export const adminApi = {
+  getUsers: async (params = {}) => {
+    const query = new URLSearchParams(params).toString();
+    const endpoint = `/admin/users${query ? `?${query}` : ''}`;
+    return await apiClient(endpoint);
   },
-
-  getMe: async () => {
-    return await apiClient('/auth/me');
+  createUser: async (userData) => {
+    return await apiClient('/admin/users', { body: userData });
   },
-
-  logout: () => {
-    setAuthToken(null);
+  bulkImportUsers: async (users) => {
+    return await apiClient('/admin/users/bulk', { body: { users } });
   }
 };
 

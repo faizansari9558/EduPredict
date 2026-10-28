@@ -1,12 +1,11 @@
 """
-Feature Engineering and Preprocessing Pipeline
+Feature Engineering and Preprocessing Pipeline (Pure NumPy / Zero Sklearn Dependency)
 """
 
 import os
-import joblib
+import json
 import numpy as np
 import pandas as pd
-from sklearn.preprocessing import StandardScaler
 
 FEATURE_COLUMNS = [
     'cgpa',
@@ -72,29 +71,34 @@ def compute_engineered_features(df: pd.DataFrame) -> pd.DataFrame:
 
 
 class PlacementFeaturePipeline:
-    def __init__(self):
-        self.scaler = StandardScaler()
-        self.is_fitted = False
+    def __init__(self, mean=None, scale=None):
+        self.mean_ = np.array(mean, dtype=float) if mean is not None else None
+        self.scale_ = np.array(scale, dtype=float) if scale is not None else None
+        self.is_fitted = (self.mean_ is not None and self.scale_ is not None)
 
     def fit(self, X: pd.DataFrame):
-        X_eng = compute_engineered_features(X)
-        self.scaler.fit(X_eng)
+        X_eng = compute_engineered_features(X).values
+        self.mean_ = np.mean(X_eng, axis=0)
+        self.scale_ = np.std(X_eng, axis=0)
+        self.scale_[self.scale_ == 0] = 1.0
         self.is_fitted = True
         return self
 
     def transform(self, X: pd.DataFrame) -> np.ndarray:
         if not self.is_fitted:
             raise ValueError("Pipeline has not been fitted yet.")
-        X_eng = compute_engineered_features(X)
-        return self.scaler.transform(X_eng)
+        X_eng = compute_engineered_features(X).values
+        return (X_eng - self.mean_) / self.scale_
 
     def fit_transform(self, X: pd.DataFrame) -> np.ndarray:
         return self.fit(X).transform(X)
 
-    def save(self, filepath: str):
-        os.makedirs(os.path.dirname(filepath), exist_ok=True)
-        joblib.dump(self, filepath)
+    def to_dict(self):
+        return {
+            'mean': self.mean_.tolist() if self.mean_ is not None else None,
+            'scale': self.scale_.tolist() if self.scale_ is not None else None
+        }
 
     @classmethod
-    def load(cls, filepath: str) -> "PlacementFeaturePipeline":
-        return joblib.load(filepath)
+    def from_dict(cls, data: dict) -> "PlacementFeaturePipeline":
+        return cls(mean=data.get('mean'), scale=data.get('scale'))

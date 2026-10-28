@@ -3,6 +3,8 @@ const {
   getDashboardOverview,
   getAllUsers,
   getUserById,
+  createUser,
+  bulkImportUsers,
   updateUserStatus,
   deleteUser,
   getAllStudents,
@@ -31,6 +33,20 @@ router.get(
   authenticateToken,
   authorizeRoles('admin'),
   getAllUsers
+);
+
+router.post(
+  '/users',
+  authenticateToken,
+  authorizeRoles('admin'),
+  createUser
+);
+
+router.post(
+  '/users/bulk',
+  authenticateToken,
+  authorizeRoles('admin'),
+  bulkImportUsers
 );
 
 router.get(

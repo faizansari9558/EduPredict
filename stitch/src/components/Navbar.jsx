@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import ThemeToggle from './ThemeToggle';
 
 /**
  * Stitch Official Topbar Header
@@ -95,6 +96,9 @@ export default function Navbar({
             </div>
           )}
         </div>
+
+        {/* Dark / Light Theme Toggle */}
+        <ThemeToggle />
 
         {/* Notifications Icon */}
         <button
