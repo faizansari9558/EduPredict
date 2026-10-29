@@ -25,7 +25,11 @@ export const analyticsApi = {
 
   getDepartmentAnalytics: async (deptId) => {
     return await apiClient(`/analytics/department/${deptId}`);
-  }
+  },
+  getSystemOverview: () => apiClient('/analytics/admin/system-overview'),
+  getDepartmentComparison: () => apiClient('/analytics/admin/departments'),
+  getPlacementReadiness: () => apiClient('/analytics/admin/placement-readiness'),
+  getCompensationTiers: () => apiClient('/analytics/admin/compensation-tiers')
 };
 
 export default { adminApi, analyticsApi };

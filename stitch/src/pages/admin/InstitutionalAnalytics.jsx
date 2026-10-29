@@ -1,122 +1,29 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import PageHeader from '../../components/PageHeader';
 import ChartCard from '../../components/ChartCard';
-import StatCard from '../../components/StatCard';
-import {
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  CartesianGrid,
-  LineChart,
-  Line,
-  Legend
-} from 'recharts';
+import { analyticsApi } from '../../services/adminApi';
+import { ResponsiveContainer, BarChart, Bar, LineChart, Line, AreaChart, Area, RadarChart, PolarGrid, PolarAngleAxis, Radar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 
 export default function InstitutionalAnalytics() {
-  const yoyPlacementTrend = [
-    { year: '2021', placedRate: 74.2, avgPackage: 6.8 },
-    { year: '2022', placedRate: 78.5, avgPackage: 7.4 },
-    { year: '2023', placedRate: 81.9, avgPackage: 8.2 },
-    { year: '2024', placedRate: 84.7, avgPackage: 9.4 },
-    { year: '2025 (Pred)', placedRate: 89.2, avgPackage: 10.8 }
-  ];
+  const [state, setState] = useState({ loading: true, error: '', departments: [], readiness: [] });
+  useEffect(() => {
+    Promise.all([analyticsApi.getDepartmentComparison(), analyticsApi.getPlacementReadiness()])
+      .then(([departments, readiness]) => setState({ loading: false, error: '', departments: departments.data?.departments || [], readiness: readiness.data?.placement_readiness || [] }))
+      .catch((error) => setState({ loading: false, error: error.message || 'Analytics are unavailable.', departments: [], readiness: [] }));
+  }, []);
 
-  const branchComparisons = [
-    { branch: 'CSE', codingAvg: 91, aptitudeAvg: 88, placementProb: 92.1 },
-    { branch: 'IT', codingAvg: 88, aptitudeAvg: 85, placementProb: 89.5 },
-    { branch: 'ECE', codingAvg: 79, aptitudeAvg: 84, placementProb: 83.7 },
-    { branch: 'EEE', codingAvg: 72, aptitudeAvg: 80, placementProb: 75.0 },
-    { branch: 'MECH', codingAvg: 68, aptitudeAvg: 78, placementProb: 72.7 }
-  ];
-
+  const departments = state.departments.map((item) => ({ name: item.name, students: Number(item.student_count || 0), score: Number(item.avg_score || 0), placement: Number(item.placement_ready_pct || 0) }));
+  const readiness = state.readiness.map((item) => ({ name: item.department, ready: Number(item.ready_pct || 0), borderline: item.total_students ? Number(item.borderline_count || 0) / item.total_students * 100 : 0, notReady: item.total_students ? Number(item.not_ready_count || 0) / item.total_students * 100 : 0 }));
   return (
     <div className="space-y-6">
-      <PageHeader
-        eyebrow="Enterprise Intelligence"
-        title="Campus Institutional Analytics"
-        subtitle="Cross-departmental comparisons, historical YoY hiring trends, and compensation distributions"
-      />
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard
-          title="Overall Placement Rate"
-          value="84.7%"
-          trend="+3.8% YoY"
-          trendType="up"
-          icon="trending_up"
-          iconBgColor="bg-emerald-100 text-emerald-800"
-        />
-        <StatCard
-          title="Average CTC"
-          value="₹9.4 LPA"
-          trend="+14.6% vs 2023"
-          trendType="up"
-          icon="paid"
-          iconBgColor="bg-blue-100 text-blue-800"
-        />
-        <StatCard
-          title="Partner Companies"
-          value="184"
-          trend="42 Tier-1 Dream"
-          trendType="up"
-          icon="corporate_fare"
-          iconBgColor="bg-purple-100 text-purple-800"
-        />
-        <StatCard
-          title="Offers Made"
-          value="1,220"
-          trend="1.18 offers / student"
-          trendType="up"
-          icon="workspace_premium"
-          iconBgColor="bg-amber-100 text-amber-800"
-        />
-      </div>
-
+      <PageHeader eyebrow="Institutional Intelligence" title="Campus Institutional Analytics" subtitle="Evidence-based comparisons from registered students and stored assessment metrics" />
+      {state.error && <div className="rounded-lg bg-red-50 p-4 text-sm text-red-700">{state.error}</div>}
+      {!state.loading && !departments.length && <div className="rounded-lg border border-dashed p-6 text-sm text-on-surface-variant">No analytics data is available yet.</div>}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <ChartCard
-          title="Year-over-Year Placement & CTC Progression"
-          subtitle="Placement percentage and average compensation growth over 5 years"
-        >
-          <div className="h-72 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={yoyPlacementTrend} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
-                <XAxis dataKey="year" stroke="#64748B" fontSize={11} tickLine={false} />
-                <YAxis stroke="#64748B" fontSize={11} tickLine={false} />
-                <Tooltip
-                  contentStyle={{ backgroundColor: '#0D233A', color: '#fff', borderRadius: '8px', border: 'none' }}
-                />
-                <Legend verticalAlign="top" height={36} />
-                <Line type="monotone" dataKey="placedRate" name="Placement Rate (%)" stroke="#0051d5" strokeWidth={3} dot={{ r: 5 }} />
-                <Line type="monotone" dataKey="avgPackage" name="Avg CTC (LPA)" stroke="#10B981" strokeWidth={3} dot={{ r: 5 }} />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </ChartCard>
-
-        <ChartCard
-          title="Department Technical Competency Benchmark"
-          subtitle="Coding proficiency vs aptitude scores by engineering branch"
-        >
-          <div className="h-72 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={branchComparisons} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
-                <XAxis dataKey="branch" stroke="#64748B" fontSize={11} tickLine={false} />
-                <YAxis domain={[50, 100]} stroke="#64748B" fontSize={11} tickLine={false} />
-                <Tooltip
-                  contentStyle={{ backgroundColor: '#0D233A', color: '#fff', borderRadius: '8px', border: 'none' }}
-                />
-                <Legend verticalAlign="top" height={36} />
-                <Bar dataKey="codingAvg" name="Coding Score (%)" fill="#0051d5" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="aptitudeAvg" name="Aptitude Score (%)" fill="#102a43" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </ChartCard>
+        <ChartCard title="Department Placement Readiness" subtitle="Comparison of readiness percentages"><div className="h-80"><ResponsiveContainer><BarChart data={departments}><CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="name" fontSize={10} /><YAxis domain={[0, 100]} /><Tooltip /><Bar dataKey="placement" name="Ready %" fill="#0051d5" /></BarChart></ResponsiveContainer></div></ChartCard>
+        <ChartCard title="Average Assessment Score" subtitle="Stored student metric averages by department"><div className="h-80"><ResponsiveContainer><LineChart data={departments}><CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="name" fontSize={10} /><YAxis domain={[0, 100]} /><Tooltip /><Line type="monotone" dataKey="score" name="Average score" stroke="#10B981" strokeWidth={3} /></LineChart></ResponsiveContainer></div></ChartCard>
+        <ChartCard title="Readiness Composition" subtitle="Ready, borderline, and not-ready proportions"><div className="h-80"><ResponsiveContainer><AreaChart data={readiness}><CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="name" fontSize={10} /><YAxis domain={[0, 100]} /><Tooltip /><Legend /><Area type="monotone" dataKey="ready" stackId="1" stroke="#10B981" fill="#10B981" name="Ready %" /><Area type="monotone" dataKey="borderline" stackId="1" stroke="#F59E0B" fill="#F59E0B" name="Borderline %" /><Area type="monotone" dataKey="notReady" stackId="1" stroke="#EF4444" fill="#EF4444" name="Not ready %" /></AreaChart></ResponsiveContainer></div></ChartCard>
+        <ChartCard title="Department Capability Profile" subtitle="Assessment score and readiness comparison"><div className="h-80"><ResponsiveContainer><RadarChart data={departments}><PolarGrid /><PolarAngleAxis dataKey="name" fontSize={10} /><Radar name="Assessment score" dataKey="score" stroke="#0051d5" fill="#0051d5" fillOpacity={0.45} /><Radar name="Placement readiness" dataKey="placement" stroke="#F59E0B" fill="#F59E0B" fillOpacity={0.25} /><Legend /><Tooltip /></RadarChart></ResponsiveContainer></div></ChartCard>
       </div>
     </div>
   );

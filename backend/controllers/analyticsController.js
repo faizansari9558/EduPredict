@@ -622,8 +622,8 @@ exports.getSystemOverview = async (req, res) => {
         COUNT(DISTINCT d.id) as total_departments,
         COUNT(DISTINCT a.id) as total_assessments,
         ROUND(AVG(sm.overall_score), 2) as system_avg_score,
-        ROUND(SUM(CASE WHEN sm.overall_score >= 60 THEN 1 ELSE 0 END) / COUNT(DISTINCT sm.student_id) * 100, 2) as system_pass_rate,
-        ROUND(SUM(CASE WHEN sm.placement_ready_score >= 60 THEN 1 ELSE 0 END), 0) as placement_ready_students
+        ROUND(COUNT(DISTINCT CASE WHEN sm.overall_score >= 60 THEN sm.student_id END) / NULLIF(COUNT(DISTINCT CASE WHEN r.name = 'student' THEN u.id END), 0) * 100, 2) as system_pass_rate,
+        COUNT(DISTINCT CASE WHEN sm.placement_ready_score >= 60 THEN sm.student_id END) as placement_ready_students
       FROM users u
       LEFT JOIN roles r ON u.role_id = r.id
       CROSS JOIN departments d
@@ -671,8 +671,8 @@ exports.getDepartmentComparison = async (req, res) => {
         d.name,
         COUNT(DISTINCT s.user_id) as student_count,
         ROUND(AVG(sm.overall_score), 2) as avg_score,
-        ROUND(SUM(CASE WHEN sm.overall_score >= 60 THEN 1 ELSE 0 END) / COUNT(DISTINCT s.user_id) * 100, 2) as pass_rate,
-        ROUND(SUM(CASE WHEN sm.placement_ready_score >= 60 THEN 1 ELSE 0 END) / COUNT(DISTINCT s.user_id) * 100, 2) as placement_ready_pct
+        ROUND(COUNT(DISTINCT CASE WHEN sm.overall_score >= 60 THEN s.user_id END) / NULLIF(COUNT(DISTINCT s.user_id), 0) * 100, 2) as pass_rate,
+        ROUND(COUNT(DISTINCT CASE WHEN sm.placement_ready_score >= 60 THEN s.user_id END) / NULLIF(COUNT(DISTINCT s.user_id), 0) * 100, 2) as placement_ready_pct
       FROM departments d
       LEFT JOIN students s ON d.id = s.department_id
       LEFT JOIN student_metrics sm ON s.user_id = sm.student_id
@@ -710,10 +710,10 @@ exports.getPlacementReadiness = async (req, res) => {
       SELECT 
         d.name as department_name,
         COUNT(DISTINCT s.user_id) as total_students,
-        ROUND(SUM(CASE WHEN sm.placement_ready_score >= 60 THEN 1 ELSE 0 END), 0) as ready_count,
-        ROUND(SUM(CASE WHEN sm.placement_ready_score >= 60 THEN 1 ELSE 0 END) / COUNT(DISTINCT s.user_id) * 100, 2) as ready_pct,
-        ROUND(SUM(CASE WHEN sm.placement_ready_score >= 40 AND sm.placement_ready_score < 60 THEN 1 ELSE 0 END), 0) as borderline_count,
-        ROUND(SUM(CASE WHEN sm.placement_ready_score < 40 THEN 1 ELSE 0 END), 0) as not_ready_count
+        COUNT(DISTINCT CASE WHEN sm.placement_ready_score >= 60 THEN s.user_id END) as ready_count,
+        ROUND(COUNT(DISTINCT CASE WHEN sm.placement_ready_score >= 60 THEN s.user_id END) / NULLIF(COUNT(DISTINCT s.user_id), 0) * 100, 2) as ready_pct,
+        COUNT(DISTINCT CASE WHEN sm.placement_ready_score >= 40 AND sm.placement_ready_score < 60 THEN s.user_id END) as borderline_count,
+        COUNT(DISTINCT CASE WHEN sm.placement_ready_score < 40 THEN s.user_id END) as not_ready_count
       FROM departments d
       LEFT JOIN students s ON d.id = s.department_id
       LEFT JOIN student_metrics sm ON s.user_id = sm.student_id
@@ -738,6 +738,29 @@ exports.getPlacementReadiness = async (req, res) => {
     });
   } catch (error) {
     console.error('Placement readiness error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+exports.getCompensationTiers = async (req, res) => {
+  try {
+    const [rows] = await pool.query(`
+      SELECT
+        CASE
+          WHEN jd.package_lpa > 12 THEN 'Tier 1 Dream (> 12 LPA)'
+          WHEN jd.package_lpa >= 6 THEN 'Tier 2 Core (6-12 LPA)'
+          ELSE 'Tier 3 Mass (< 6 LPA)'
+        END AS tier,
+        COUNT(DISTINCT ja.student_id) AS students
+      FROM job_applications ja
+      JOIN job_drives jd ON jd.id = ja.job_drive_id
+      WHERE ja.status = 'selected'
+      GROUP BY tier
+      ORDER BY tier
+    `);
+    res.json({ success: true, data: { tiers: rows } });
+  } catch (error) {
+    console.error('Compensation tier analytics error:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 };

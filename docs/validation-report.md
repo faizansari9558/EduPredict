@@ -25,6 +25,12 @@ implemented and tested.
 - Admin user provisioning now creates preauthorized student/teacher identity records
   rather than silently creating accounts with a shared default password. Bulk `.xlsx`,
   `.xls`, and `.csv` imports are supported through the protected admin endpoint.
+- Admin dashboard and institutional analytics charts now consume authenticated
+  department, readiness, compensation-tier, and audit APIs. Empty states are shown
+  when the database has no evidence. Department creation is persisted through the
+  admin API.
+- Placement percentages now count distinct students, preventing duplicate metric rows
+  from producing values above 100%.
 
 ## Files and migration
 
@@ -45,6 +51,8 @@ unavailable response; it does not simulate delivery.
 - `npm.cmd --prefix stitch run build` — passed; Vite reports an existing large-chunk warning.
 - `$env:PYTHONPATH='.'; pytest ml/tests` — 6 passed, one dependency deprecation warning.
 - `node --check` on changed backend controllers and routes — passed.
+- Browser smoke test with the local admin account — dashboard, institutional analytics,
+  department listing, and department insertion controls rendered from live API data.
 
 ## Remaining blockers
 
@@ -53,18 +61,20 @@ unavailable response; it does not simulate delivery.
   placement eligibility require database-backed execution tests.
 - Secure coding execution is intentionally disabled. Do not restore the old Node `vm`
   path; use a separately isolated worker/container with resource and network limits.
-- Some dashboard, academic-record, and placement-analysis screens still contain legacy
-  mock presentation data and require replacement with API-backed empty/loading states.
+- Some non-admin dashboard, academic-record, and placement-analysis screens still
+  contain legacy mock presentation data and require replacement with API-backed
+  empty/loading states.
+- The reports page still uses legacy table column properties and emits a React key
+  warning; this was not part of the analytics change.
 - Startup scripts, Docker/MySQL readiness checks, exports, notifications, and all routed
   pages require a dedicated browser/integration audit.
-- Admin panel browser testing is blocked until a valid active admin account is available;
-  the current seeded `admin@edupredict.local` / `testpass123` credentials returned 401
-  during browser testing. The protected admin users endpoint correctly returns 401
-  without a token.
+- The local admin browser account used for validation is
+  `admin@edupredict.local` / `Admin@12345`; this is development-only and must be
+  replaced through deployment secret management in production.
 
 ## Startup
 
 Apply the schemas and migration, configure the backend environment (including SMTP if
 onboarding is needed), then start FastAPI on `8000`, Express on `5000`, and Stitch/Vite
-on `3000`. Verify `/api` and FastAPI `/docs` before using the browser. Startup scripts
-still need occupied-port and MySQL-readiness hardening.
+on `3000`. Verify `/api` and FastAPI `/docs` before using the browser. The local
+services were verified listening on all three ports during this validation.

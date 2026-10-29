@@ -101,5 +101,6 @@ router.get('/admin/departments', authenticateToken, analyticsController.getDepar
  * Get placement readiness statistics by department (admin only)
  */
 router.get('/admin/placement-readiness', authenticateToken, analyticsController.getPlacementReadiness);
+router.get('/admin/compensation-tiers', authenticateToken, analyticsController.getCompensationTiers);
 
 module.exports = router;

@@ -29,6 +29,23 @@ async function getDashboardOverview(req, res) {
   return payload;
 }
 
+async function getRecentAudits(req, res) {
+  try {
+    const [rows] = await db.query(`
+      SELECT a.id, a.action, a.entity_type, a.entity_id, a.created_at,
+             COALESCE(u.full_name, 'System') AS actor
+      FROM audit_logs a
+      LEFT JOIN users u ON u.id = a.user_id
+      ORDER BY a.created_at DESC
+      LIMIT 20
+    `);
+    return res.json({ success: true, data: rows });
+  } catch (error) {
+    console.error('Get recent audits error:', error);
+    return res.status(500).json({ success: false, message: 'Failed to retrieve audit history.' });
+  }
+}
+
 // User Management
 async function getAllUsers(req, res) {
   try {
@@ -516,6 +533,7 @@ async function bulkImportUsers(req, res) {
 
 module.exports = {
   getDashboardOverview,
+  getRecentAudits,
   getAllUsers,
   getUserById,
   createUser,

@@ -1,6 +1,7 @@
 const express = require('express');
 const {
   getDashboardOverview,
+  getRecentAudits,
   getAllUsers,
   getUserById,
   createUser,
@@ -28,6 +29,8 @@ router.get(
   authorizeRoles('admin'),
   getDashboardOverview
 );
+
+router.get('/audits', authenticateToken, authorizeRoles('admin'), getRecentAudits);
 
 // User management
 router.get(
