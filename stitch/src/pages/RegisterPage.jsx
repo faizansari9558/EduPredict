@@ -17,9 +17,9 @@ export default function RegisterPage() {
   const [role, setRole] = useState('student');
 
   // Step 1 Form Data
-  const [fullName, setFullName] = useState('Faizan Ansari');
-  const [email, setEmail] = useState('faizan.ansari@university.edu');
-  const [userIdNumber, setUserIdNumber] = useState('21CS042');
+  const [fullName, setFullName] = useState('');
+  const [email, setEmail] = useState('');
+  const [userIdNumber, setUserIdNumber] = useState('');
   const [department, setDepartment] = useState('Computer Science & Engineering');
 
   // Step 2 OTP State

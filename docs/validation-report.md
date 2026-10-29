@@ -76,6 +76,10 @@ unavailable response; it does not simulate delivery.
 - Registration now distinguishes an existing active university identity from an
   unknown or unprovisioned identity and directs existing users to sign in instead
   of showing a misleading verification failure.
+- Registration fields are blank by default; the page no longer presents
+  unverified sample credentials as if they were a valid account. The configured
+  database currently has no unused institutional identity records, so first-time
+  registration requires Admin provisioning first.
 - A development-only analytics fixture was loaded from
   `database/seeds/analytics_demo.sql`. It links five existing students to
   `student_metrics`, five placement applications across three compensation tiers,
