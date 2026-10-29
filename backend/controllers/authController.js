@@ -59,6 +59,17 @@ async function checkUniversityRecord(req, res) {
 
   try {
     const normalizedEmail = email.trim().toLowerCase();
+    const [existingUsers] = await db.query(
+      `SELECT id FROM users
+       WHERE email = ? AND LOWER(user_id_number) = ?`,
+      [normalizedEmail, userIdNumber.trim().toLowerCase()]
+    );
+    if (existingUsers.length) {
+      return res.status(409).json({
+        success: false,
+        message: 'This university identity already has an account. Please sign in instead of registering again.'
+      });
+    }
     const [rows] = await db.query(
       `SELECT email, user_id_number, full_name, consumed_user_id
        FROM institutional_identity_records

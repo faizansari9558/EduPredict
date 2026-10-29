@@ -312,7 +312,12 @@ export default function RegisterPage() {
           {error && (
             <div className="p-3.5 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs rounded-2xl font-medium flex items-center gap-2">
               <span className="material-symbols-outlined text-[18px]">error</span>
-              <span>{error}</span>
+              <span>
+                {error}
+                {error.toLowerCase().includes('already has an account') && (
+                  <> <Link to="/login" className="font-bold underline">Go to sign in</Link></>
+                )}
+              </span>
             </div>
           )}
 

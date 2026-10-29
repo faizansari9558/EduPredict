@@ -73,6 +73,9 @@ unavailable response; it does not simulate delivery.
   replaced through deployment secret management in production.
 - Admin Reports now loads current department, placement-tier, and audit data from
   authenticated APIs and provides truthful CSV exports for each report section.
+- Registration now distinguishes an existing active university identity from an
+  unknown or unprovisioned identity and directs existing users to sign in instead
+  of showing a misleading verification failure.
 - A development-only analytics fixture was loaded from
   `database/seeds/analytics_demo.sql`. It links five existing students to
   `student_metrics`, five placement applications across three compensation tiers,
