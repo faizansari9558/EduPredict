@@ -45,6 +45,7 @@ export default function AdminDashboard() {
   const overview = state.overview || {};
   const departmentStats = state.departments.map((item) => ({
     department: item.name,
+    departmentLabel: item.code || item.name,
     rate: Number(item.placement_ready_pct || 0),
     students: Number(item.student_count || 0)
   }));
@@ -80,10 +81,10 @@ export default function AdminDashboard() {
       </div>
       {!state.loading && !hasData && <div className="rounded-lg border border-dashed p-6 text-sm text-on-surface-variant">No placement analytics are available yet. Add verified student metrics and selected applications to populate these charts.</div>}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2"><ChartCard title="Department Placement Conversion Rate (%)" subtitle="Readiness percentage calculated from stored student metrics"><div className="h-72"><ResponsiveContainer><BarChart data={departmentStats}><CartesianGrid strokeDasharray="3 3" vertical={false} /><XAxis dataKey="department" fontSize={10} /><YAxis domain={[0, 100]} /><Tooltip /><Bar dataKey="rate" name="Ready %" fill="#0051d5" radius={[6, 6, 0, 0]} /></BarChart></ResponsiveContainer></div></ChartCard></div>
+        <div className="lg:col-span-2"><ChartCard title="Department Placement Conversion Rate (%)" subtitle="Readiness percentage calculated from stored student metrics"><div className="h-80"><ResponsiveContainer><BarChart data={departmentStats} margin={{ top: 10, right: 12, left: 0, bottom: 58 }}><CartesianGrid strokeDasharray="3 3" vertical={false} /><XAxis dataKey="departmentLabel" interval={0} angle={-28} textAnchor="end" height={65} fontSize={10} /><YAxis domain={[0, 100]} /><Tooltip labelFormatter={(_, payload) => payload?.[0]?.payload?.department || ''} /><Bar dataKey="rate" name="Ready %" fill="#0051d5" radius={[6, 6, 0, 0]} /></BarChart></ResponsiveContainer></div></ChartCard></div>
         <ChartCard title="Campus Placement Tier Spread" subtitle="Selected applications grouped by configured package"><div className="h-72"><ResponsiveContainer><PieChart><Pie data={tierDistribution} dataKey="value" nameKey="name" innerRadius={50} outerRadius={75}>{tierDistribution.map((entry) => <Cell key={entry.name} fill={entry.color} />)}</Pie><Tooltip /><Legend /></PieChart></ResponsiveContainer></div></ChartCard>
       </div>
-      <ChartCard title="Readiness Composition by Department" subtitle="Ready, borderline, and not-ready proportions from stored metrics"><div className="h-72"><ResponsiveContainer><LineChart data={readinessTrend}><CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="department" fontSize={10} /><YAxis domain={[0, 100]} /><Tooltip /><Legend /><Line type="monotone" dataKey="ready" name="Ready %" stroke="#10B981" /><Line type="monotone" dataKey="borderline" name="Borderline %" stroke="#F59E0B" /><Line type="monotone" dataKey="notReady" name="Not ready %" stroke="#EF4444" /></LineChart></ResponsiveContainer></div></ChartCard>
+      <ChartCard title="Readiness Composition by Department" subtitle="Ready, borderline, and not-ready proportions from stored metrics"><div className="h-80"><ResponsiveContainer><LineChart data={readinessTrend} margin={{ top: 10, right: 12, left: 0, bottom: 58 }}><CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="department" interval={0} angle={-28} textAnchor="end" height={65} fontSize={10} /><YAxis domain={[0, 100]} /><Tooltip /><Legend /><Line type="monotone" dataKey="ready" name="Ready %" stroke="#10B981" /><Line type="monotone" dataKey="borderline" name="Borderline %" stroke="#F59E0B" /><Line type="monotone" dataKey="notReady" name="Not ready %" stroke="#EF4444" /></LineChart></ResponsiveContainer></div></ChartCard>
       <section><h4 className="font-headline font-bold text-base mb-3">Institutional Governance & Audit History</h4>{state.audits.length ? <DataTable columns={auditColumns} data={state.audits} keyExtractor={(row) => row.id} /> : <div className="rounded-lg border border-dashed p-6 text-sm text-on-surface-variant">No audit events have been recorded.</div>}</section>
     </div>
   );
