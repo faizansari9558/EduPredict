@@ -71,6 +71,8 @@ unavailable response; it does not simulate delivery.
 - The local admin browser account used for validation is
   `admin@edupredict.local` / `Admin@12345`; this is development-only and must be
   replaced through deployment secret management in production.
+- Admin Reports now loads current department, placement-tier, and audit data from
+  authenticated APIs and provides truthful CSV exports for each report section.
 - A development-only analytics fixture was loaded from
   `database/seeds/analytics_demo.sql`. It links five existing students to
   `student_metrics`, five placement applications across three compensation tiers,
