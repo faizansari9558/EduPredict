@@ -2,7 +2,7 @@ const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const db = require('../config/db');
 const { hashPassword, comparePassword } = require('../utils/password');
-const { sendOtp, sendPasswordResetLink } = require('../services/emailService');
+const { sendOtp, sendPasswordResetLink, demoEmailEnabled } = require('../services/emailService');
 
 const OTP_TTL_MINUTES = 10;
 const MAX_OTP_ATTEMPTS = 5;
@@ -48,7 +48,8 @@ async function issueOtp(email, purpose) {
      VALUES (?, ?, ?, ?)`,
     [email, purpose, hashToken(otp), expiresAt]
   );
-  await sendOtp({ to: email, otp, purpose });
+  const delivery = await sendOtp({ to: email, otp, purpose });
+  return delivery?.demo ? { otp } : null;
 }
 
 async function checkUniversityRecord(req, res) {
@@ -80,8 +81,12 @@ async function checkUniversityRecord(req, res) {
       return res.status(404).json({ success: false, message: 'The supplied institutional identity could not be verified.' });
     }
 
-    await issueOtp(normalizedEmail, 'onboarding');
-    return res.json({ success: true, message: 'A verification code was sent to the institutional email address.' });
+    const demo = await issueOtp(normalizedEmail, 'onboarding');
+    return res.json({
+      success: true,
+      message: 'A verification code was sent to the institutional email address.',
+      ...(demoEmailEnabled() && demo ? { demoOtp: demo.otp, demoOnly: true } : {})
+    });
   } catch (error) {
     return unavailableEmail(res, error);
   }
@@ -206,7 +211,15 @@ async function requestPasswordReset(req, res) {
          VALUES (?, ?, DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 30 MINUTE))`,
         [users[0].id, hashToken(token)]
       );
-      await sendPasswordResetLink({ to: users[0].email, token });
+      const delivery = await sendPasswordResetLink({ to: users[0].email, token });
+      if (demoEmailEnabled() && delivery?.demo) {
+        return res.json({
+          success: true,
+          message: 'Demo reset email generated for local development.',
+          demoResetUrl: delivery.resetUrl,
+          demoOnly: true
+        });
+      }
     }
     return res.json({ success: true, message: 'If the account exists, a reset link has been sent.' });
   } catch (error) {

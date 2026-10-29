@@ -14,7 +14,14 @@ function getTransporter() {
   });
 }
 
+function demoEmailEnabled() {
+  return process.env.NODE_ENV === 'development' && process.env.DEMO_EMAIL_DELIVERY === 'true';
+}
+
 async function sendOtp({ to, otp, purpose }) {
+  if (demoEmailEnabled()) {
+    return { demo: true, to, otp, purpose };
+  }
   const transporter = getTransporter();
   if (!transporter) {
     const error = new Error('Email delivery is not configured. Set SMTP_HOST, SMTP_PORT, SMTP_USER, and SMTP_PASS.');
@@ -31,6 +38,10 @@ async function sendOtp({ to, otp, purpose }) {
 }
 
 async function sendPasswordResetLink({ to, token }) {
+  if (demoEmailEnabled()) {
+    const baseUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    return { demo: true, to, resetUrl: `${baseUrl}/reset-password?token=${encodeURIComponent(token)}` };
+  }
   const transporter = getTransporter();
   if (!transporter) {
     const error = new Error('Email delivery is not configured. Set SMTP_HOST, SMTP_PORT, SMTP_USER, and SMTP_PASS.');
@@ -47,4 +58,4 @@ async function sendPasswordResetLink({ to, token }) {
   });
 }
 
-module.exports = { sendOtp, sendPasswordResetLink };
+module.exports = { sendOtp, sendPasswordResetLink, demoEmailEnabled };

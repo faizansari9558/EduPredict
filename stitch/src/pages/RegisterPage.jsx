@@ -38,6 +38,7 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
+  const [demoOtp, setDemoOtp] = useState('');
   const [redirectCountdown, setRedirectCountdown] = useState(4);
 
   // Timer for OTP Resend
@@ -93,7 +94,10 @@ export default function RegisterPage() {
         role: currentRole
       });
 
-      setSuccessMsg('University record validated! Verification code sent to your official email.');
+      setDemoOtp(res.demoOnly ? res.demoOtp : '');
+      setSuccessMsg(res.demoOnly
+        ? 'Development email preview: use the displayed demo OTP below.'
+        : 'University record validated! Verification code sent to your official email.');
       setOtpCountdown(60);
       setCanResend(false);
       setCurrentStep(2);
@@ -326,6 +330,12 @@ export default function RegisterPage() {
             <div className="p-3.5 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 text-xs rounded-2xl font-medium flex items-center gap-2">
               <span className="material-symbols-outlined text-[18px]">check_circle</span>
               <span>{successMsg}</span>
+            </div>
+          )}
+          {demoOtp && currentStep === 2 && (
+            <div className="p-3.5 bg-amber-50 border border-amber-200 text-amber-800 text-xs rounded-2xl font-medium">
+              Demo email OTP: <strong className="font-mono tracking-widest">{demoOtp}</strong>
+              <span className="block mt-1 text-[11px]">Development only. Configure SMTP before production.</span>
             </div>
           )}
 

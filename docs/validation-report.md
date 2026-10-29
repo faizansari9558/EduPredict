@@ -45,6 +45,11 @@ Required SMTP configuration:
 `FRONTEND_URL`. Without SMTP configuration, onboarding/reset returns an explicit
 unavailable response; it does not simulate delivery.
 
+For local development only, `DEMO_EMAIL_DELIVERY=true` with
+`NODE_ENV=development` enables an in-app email preview. It displays the generated
+OTP or reset link only in the local development UI. Keep it `false` in production;
+production requires real SMTP delivery and never returns OTPs or reset tokens.
+
 ## Tests run
 
 - `npm.cmd --prefix backend test` — 7 passed.
