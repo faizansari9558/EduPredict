@@ -1,6 +1,5 @@
 -- EduPredict Comprehensive Seed Data
--- Default password for all accounts: testpass123
--- Bcrypt hash: generated for testpass123
+-- Admin development password: Admin@12345
 
 USE EduPredict;
 
@@ -35,7 +34,7 @@ INSERT IGNORE INTO batches (name, department_id, academic_year_id) VALUES
 
 -- ===== USERS: ADMIN =====
 INSERT IGNORE INTO users (role_id, email, password_hash, user_id_number, full_name, phone_number, status) VALUES
-  ((SELECT id FROM roles WHERE name = 'admin'), 'admin@edupredict.local', '$2a$10$tQaX6Y1McIpiNkLJIVIize5M1SdxfFRxTakdvEicuIILLvdPJwIee', 'ADMIN001', 'Admin User', '9999999999', 'active');
+  ((SELECT id FROM roles WHERE name = 'admin'), 'admin@edupredict.local', '$2a$10$lz.lIJKuaoZZokHHzQfIuOyPBFfoSbCsdcZ.A8l0Rw9SfPfYk/ZIS', 'ADMIN001', 'Admin User', '9999999999', 'active');
 
 -- ===== USERS: TEACHERS =====
 INSERT IGNORE INTO users (role_id, email, password_hash, user_id_number, full_name, phone_number, status) VALUES

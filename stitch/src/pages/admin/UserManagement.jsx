@@ -178,8 +178,9 @@ Rohan Gupta,rohan.gupta@university.edu,21EC015,student,Electronics & Comm`
 
   const columns = [
     {
-      header: 'Full Name & Email',
-      accessor: (row) => (
+      key: 'name',
+      label: 'Full Name & Email',
+      render: (_, row) => (
         <div>
           <div className="font-semibold text-on-surface">{row.name}</div>
           <div className="text-xs text-on-surface-variant font-mono">{row.email}</div>
@@ -187,16 +188,18 @@ Rohan Gupta,rohan.gupta@university.edu,21EC015,student,Electronics & Comm`
       )
     },
     {
-      header: 'University User ID',
-      accessor: (row) => (
+      key: 'userIdNumber',
+      label: 'University User ID',
+      render: (_, row) => (
         <span className="font-mono text-xs font-bold text-primary px-2 py-1 bg-surface-container rounded-lg border border-outline-variant/40">
           {row.userIdNumber}
         </span>
       )
     },
     {
-      header: 'Assigned Role',
-      accessor: (row) => (
+      key: 'role',
+      label: 'Assigned Role',
+      render: (_, row) => (
         <span className={`px-2.5 py-1 rounded-lg text-xs font-bold uppercase tracking-wider ${
           row.role === 'admin' ? 'bg-purple-100 text-purple-800 dark:bg-purple-950/60 dark:text-purple-300' :
           row.role === 'teacher' ? 'bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300' :
@@ -207,12 +210,14 @@ Rohan Gupta,rohan.gupta@university.edu,21EC015,student,Electronics & Comm`
       )
     },
     {
-      header: 'Department',
-      accessor: (row) => <span className="text-xs text-on-surface font-medium">{row.department}</span>
+      key: 'department',
+      label: 'Department',
+      render: (_, row) => <span className="text-xs text-on-surface font-medium">{row.department || '—'}</span>
     },
     {
-      header: 'Account Status',
-      accessor: (row) => <StatusBadge status={row.status} />
+      key: 'status',
+      label: 'Account Status',
+      render: (_, row) => <StatusBadge status={row.status} />
     }
   ];
 
