@@ -56,9 +56,9 @@ export default function AdminDashboard() {
   }));
   const tierDistribution = state.tiers.map((item, index) => ({ name: item.tier, value: Number(item.students || 0), color: COLORS[index % COLORS.length] }));
   const auditColumns = [
-    { key: 'action', label: 'Operation / Event', render: (row) => <div><div className="font-semibold">{row.action}</div><div className="text-xs text-on-surface-variant">{row.entity_type}{row.entity_id ? ` #${row.entity_id}` : ''}</div></div> },
-    { key: 'actor', label: 'Triggered By', render: (row) => <span className="text-xs font-medium text-primary">{row.actor}</span> },
-    { key: 'created_at', label: 'Timestamp', render: (row) => <span className="text-xs text-on-surface-variant">{new Date(row.created_at).toLocaleString()}</span> },
+    { key: 'action', label: 'Operation / Event', render: (_, row) => <div><div className="font-semibold">{row.action}</div><div className="text-xs text-on-surface-variant">{row.entity_type}{row.entity_id ? ` #${row.entity_id}` : ''}</div></div> },
+    { key: 'actor', label: 'Triggered By', render: (value) => <span className="text-xs font-medium text-primary">{value}</span> },
+    { key: 'created_at', label: 'Timestamp', render: (value) => <span className="text-xs text-on-surface-variant">{new Date(value).toLocaleString()}</span> },
     { key: 'status', label: 'Status', render: () => <StatusBadge status="verified" /> }
   ];
 
