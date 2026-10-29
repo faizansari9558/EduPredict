@@ -227,7 +227,7 @@ Rohan Gupta,rohan.gupta@university.edu,21EC015,student,Electronics & Comm`
         eyebrow="System Directory &amp; Admission Records"
         title="University Identity &amp; User Governance"
         subtitle="Manage pre-authorized university records for students, faculty mentors, and administrators"
-        action={
+        actions={
           <div className="flex gap-2.5">
             <Button variant="outline" icon="upload_file" onClick={() => setIsBulkModalOpen(true)}>
               Bulk Upload Records
