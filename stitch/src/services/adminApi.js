@@ -29,6 +29,10 @@ export const analyticsApi = {
   getSystemOverview: () => apiClient('/analytics/admin/system-overview'),
   getDepartmentComparison: () => apiClient('/analytics/admin/departments'),
   getPlacementReadiness: () => apiClient('/analytics/admin/placement-readiness'),
+  getStudentPerformance: () => apiClient('/analytics/admin/student-performance'),
+  getAssessmentResults: () => apiClient('/analytics/admin/assessment-results'),
+  getAcademicTrends: () => apiClient('/analytics/admin/academic-trends'),
+  getSkillsComparison: () => apiClient('/analytics/admin/skills-comparison'),
   getCompensationTiers: () => apiClient('/analytics/admin/compensation-tiers')
 };
 

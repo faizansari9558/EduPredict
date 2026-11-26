@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import PageHeader from '../../components/PageHeader';
 import DataTable from '../../components/DataTable';
 import ChartCard from '../../components/ChartCard';
-import Button from '../../components/Button';
+import { teacherApi } from '../../services/teacherApi';
 import {
   ResponsiveContainer,
   BarChart,
@@ -13,54 +14,141 @@ import {
   CartesianGrid
 } from 'recharts';
 
+function percentage(result) {
+  if (result.score == null || result.total_marks == null) return null;
+  const maximum = Number(result.total_marks);
+  const score = Number(result.score);
+  return maximum > 0 && Number.isFinite(score) ? Math.max(0, Math.min(100, (score / maximum) * 100)) : null;
+}
+
+function formatValue(value, digits = 1) {
+  return value == null || !Number.isFinite(Number(value)) ? '—' : Number(value).toFixed(digits);
+}
+
 export default function TeacherResults() {
-  const [selectedAssessment, setSelectedAssessment] = useState('National Mock Placement Exam – Stage 2');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const requestedAssessment = searchParams.get('assessmentId') || '';
+  const [assessments, setAssessments] = useState([]);
+  const [results, setResults] = useState([]);
+  const [selectedAssessmentId, setSelectedAssessmentId] = useState(requestedAssessment);
+  const [loadingAssessments, setLoadingAssessments] = useState(true);
+  const [loadingResults, setLoadingResults] = useState(false);
+  const [error, setError] = useState('');
 
-  const scoreBrackets = [
-    { range: '90-100%', count: 38 },
-    { range: '80-89%', count: 64 },
-    { range: '70-79%', count: 32 },
-    { range: '60-69%', count: 18 },
-    { range: '< 60%', count: 8 }
-  ];
+  useEffect(() => {
+    let active = true;
+    teacherApi.getAssessments()
+      .then((response) => {
+        if (!active) return;
+        const rows = response.data || [];
+        setAssessments(rows);
+        const requestedExists = rows.some((row) => String(row.id) === requestedAssessment);
+        const nextId = requestedExists ? requestedAssessment : (rows[0] ? String(rows[0].id) : '');
+        setSelectedAssessmentId(nextId);
+        if (nextId !== requestedAssessment) {
+          setSearchParams(nextId ? { assessmentId: nextId } : {}, { replace: true });
+        }
+      })
+      .catch((requestError) => {
+        if (active) setError(requestError.message || 'Unable to load teacher assessments.');
+      })
+      .finally(() => {
+        if (active) setLoadingAssessments(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [requestedAssessment, setSearchParams]);
 
-  const studentResults = [
-    { id: 1, name: 'Faizan Ansari', rollNo: '21CS042', score: 92, percentile: '98.4th', rank: 1, timeTaken: '58 mins' },
-    { id: 2, name: 'Pooja Iyer', rollNo: '21CS065', score: 90, percentile: '97.2th', rank: 2, timeTaken: '62 mins' },
-    { id: 3, name: 'Aarav Sharma', rollNo: '21CS018', score: 86, percentile: '92.0th', rank: 5, timeTaken: '70 mins' },
-    { id: 4, name: 'Sneha Patel', rollNo: '21CS089', score: 78, percentile: '81.5th', rank: 14, timeTaken: '85 mins' },
-    { id: 5, name: 'Rohan Verma', rollNo: '21CS104', score: 62, percentile: '58.0th', rank: 45, timeTaken: '89 mins' }
-  ];
+  useEffect(() => {
+    if (!selectedAssessmentId) {
+      setResults([]);
+      return undefined;
+    }
 
+    let active = true;
+    setLoadingResults(true);
+    setError('');
+    teacherApi.getAssessmentResults(selectedAssessmentId)
+      .then((response) => {
+        if (active) setResults(response.data || []);
+      })
+      .catch((requestError) => {
+        if (active) {
+          setResults([]);
+          setError(requestError.message || 'Unable to load assessment results.');
+        }
+      })
+      .finally(() => {
+        if (active) setLoadingResults(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [selectedAssessmentId]);
+
+  const evaluatedResults = useMemo(() => results
+    .map((row, index) => ({ ...row, rank: index + 1, normalizedScore: percentage(row) }))
+    .filter((row) => row.status === 'evaluated' && row.normalizedScore != null), [results]);
+
+  const scoreBrackets = useMemo(() => {
+    const bands = [
+      { range: '0-39%', minimum: 0, maximum: 40, count: 0 },
+      { range: '40-59%', minimum: 40, maximum: 60, count: 0 },
+      { range: '60-79%', minimum: 60, maximum: 80, count: 0 },
+      { range: '80-100%', minimum: 80, maximum: 101, count: 0 }
+    ];
+    evaluatedResults.forEach((result) => {
+      const band = bands.find((item) => result.normalizedScore >= item.minimum && result.normalizedScore < item.maximum);
+      if (band) band.count += 1;
+    });
+    return bands;
+  }, [evaluatedResults]);
+
+  const metrics = useMemo(() => {
+    const scores = evaluatedResults.map((row) => row.normalizedScore);
+    if (!scores.length) return null;
+    const average = scores.reduce((sum, score) => sum + score, 0) / scores.length;
+    const variance = scores.reduce((sum, score) => sum + ((score - average) ** 2), 0) / scores.length;
+    return {
+      average,
+      highest: Math.max(...scores),
+      lowest: Math.min(...scores),
+      standardDeviation: Math.sqrt(variance)
+    };
+  }, [evaluatedResults]);
+
+  const selectedAssessment = assessments.find((row) => String(row.id) === selectedAssessmentId);
   const columns = [
     {
-      header: 'Rank',
-      accessor: (row) => <span className="font-mono font-bold text-xs text-primary">#{row.rank}</span>
+      key: 'rank',
+      label: 'Rank',
+      render: (value) => <span className="font-mono font-bold text-primary">#{value}</span>
     },
     {
-      header: 'Student Name',
-      accessor: (row) => (
+      key: 'student',
+      label: 'Student',
+      render: (_, row) => (
         <div>
-          <div className="font-semibold text-on-surface">{row.name}</div>
-          <div className="text-xs font-mono text-on-surface-variant">{row.rollNo}</div>
+          <div className="font-semibold text-on-surface">{row.full_name}</div>
+          <div className="text-xs font-mono text-on-surface-variant">{row.enrollment_number}</div>
         </div>
       )
     },
     {
-      header: 'Score',
-      accessor: (row) => <span className="font-mono font-bold text-xs text-on-surface">{row.score} / 100</span>
+      key: 'score',
+      label: 'Score',
+      render: (value, row) => `${formatValue(value, 2)} / ${formatValue(row.total_marks, 2)}`
     },
     {
-      header: 'Percentile',
-      accessor: (row) => (
-        <span className="font-mono font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded text-xs">
-          {row.percentile}
-        </span>
-      )
+      key: 'normalizedScore',
+      label: 'Percentage',
+      render: (value) => `${formatValue(value)}%`
     },
     {
-      header: 'Time Taken',
-      accessor: (row) => <span className="text-xs text-on-surface-variant">{row.timeTaken}</span>
+      key: 'submitted_at',
+      label: 'Submitted',
+      render: (value) => value ? new Date(value).toLocaleString() : '—'
     }
   ];
 
@@ -68,81 +156,109 @@ export default function TeacherResults() {
     <div className="space-y-6">
       <PageHeader
         eyebrow="Evaluation Matrix"
-        title="Assessment Scorecards & Analytics"
-        subtitle="Batch score distributions, percentile benchmarking, and ranking breakdowns"
-        action={
-          <Button variant="primary" icon="download">
-            Export Gradebook
-          </Button>
-        }
+        title="Assessment Results"
+        subtitle="Rankings and score distributions are calculated only from evaluated attempts by active students in your department."
       />
+
+      {error && (
+        <div role="alert" className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+          {error}
+        </div>
+      )}
+
+      <div className="rounded-2xl border border-outline-variant/30 bg-surface-container-lowest p-4">
+        <label htmlFor="teacher-assessment-select" className="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-2">
+          Assessment
+        </label>
+        <select
+          id="teacher-assessment-select"
+          value={selectedAssessmentId}
+          onChange={(event) => {
+            const nextId = event.target.value;
+            setSelectedAssessmentId(nextId);
+            setSearchParams(nextId ? { assessmentId: nextId } : {});
+          }}
+          disabled={loadingAssessments || !assessments.length}
+          className="w-full sm:max-w-xl rounded-xl border border-outline-variant/50 bg-surface px-4 py-2.5 text-sm"
+        >
+          <option value="">{loadingAssessments ? 'Loading assessments…' : 'No assessments available'}</option>
+          {assessments.map((assessment) => (
+            <option key={assessment.id} value={assessment.id}>{assessment.title}</option>
+          ))}
+        </select>
+        {selectedAssessment && (
+          <p className="mt-2 text-xs text-on-surface-variant">
+            {selectedAssessment.assessment_type} · {selectedAssessment.evaluated_attempts || 0} evaluated attempts
+          </p>
+        )}
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
           <ChartCard
-            title="Score Distribution Bell Curve"
-            subtitle="Student count categorized by performance brackets"
+            title="Evaluated Score Distribution"
+            subtitle="Student count grouped by normalized score percentage"
           >
-            <div className="h-64 w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={scoreBrackets} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
-                  <XAxis dataKey="range" stroke="#64748B" fontSize={11} tickLine={false} />
-                  <YAxis stroke="#64748B" fontSize={11} tickLine={false} />
-                  <Tooltip
-                    contentStyle={{ backgroundColor: '#0D233A', color: '#fff', borderRadius: '8px', border: 'none' }}
-                  />
-                  <Bar dataKey="count" fill="#0051d5" radius={[6, 6, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
+            {evaluatedResults.length ? (
+              <div className="h-64 w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={scoreBrackets} margin={{ top: 10, right: 12, left: -18, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
+                    <XAxis dataKey="range" stroke="#64748B" fontSize={11} tickLine={false} />
+                    <YAxis allowDecimals={false} stroke="#64748B" fontSize={11} tickLine={false} />
+                    <Tooltip />
+                    <Bar dataKey="count" name="Students" fill="#0051d5" radius={[6, 6, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            ) : (
+              <p className="py-12 text-center text-sm text-on-surface-variant">
+                {loadingResults ? 'Loading evaluated attempts…' : 'No evaluated attempts are available for this assessment.'}
+              </p>
+            )}
           </ChartCard>
         </div>
 
-        <div className="bg-surface border border-outline-variant/30 rounded-2xl p-6 flex flex-col justify-between">
-          <div>
-            <h4 className="font-headline font-bold text-base text-on-surface mb-3 flex items-center gap-2">
-              <span className="material-symbols-outlined text-secondary">analytics</span>
-              Assessment Metrics
-            </h4>
-            <div className="space-y-3 text-xs">
-              <div className="flex justify-between p-2.5 bg-surface-container rounded-xl">
-                <span className="text-on-surface-variant font-medium">Batch Average:</span>
-                <span className="font-bold text-on-surface">81.4%</span>
+        <section className="rounded-2xl border border-outline-variant/30 bg-surface-container-lowest p-5">
+          <h2 className="font-heading font-bold text-base text-on-surface mb-3">Assessment Metrics</h2>
+          {metrics ? (
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between rounded-xl bg-surface-container-low p-3">
+                <span className="text-on-surface-variant">Average</span>
+                <strong>{formatValue(metrics.average)}%</strong>
               </div>
-              <div className="flex justify-between p-2.5 bg-surface-container rounded-xl">
-                <span className="text-on-surface-variant font-medium">Highest Score:</span>
-                <span className="font-bold text-green-600">98 / 100</span>
+              <div className="flex justify-between rounded-xl bg-surface-container-low p-3">
+                <span className="text-on-surface-variant">Highest</span>
+                <strong className="text-emerald-700">{formatValue(metrics.highest)}%</strong>
               </div>
-              <div className="flex justify-between p-2.5 bg-surface-container rounded-xl">
-                <span className="text-on-surface-variant font-medium">Lowest Score:</span>
-                <span className="font-bold text-amber-700">44 / 100</span>
+              <div className="flex justify-between rounded-xl bg-surface-container-low p-3">
+                <span className="text-on-surface-variant">Lowest</span>
+                <strong className="text-amber-700">{formatValue(metrics.lowest)}%</strong>
               </div>
-              <div className="flex justify-between p-2.5 bg-surface-container rounded-xl">
-                <span className="text-on-surface-variant font-medium">Standard Deviation:</span>
-                <span className="font-mono font-bold text-on-surface">±8.2</span>
+              <div className="flex justify-between rounded-xl bg-surface-container-low p-3">
+                <span className="text-on-surface-variant">Standard deviation</span>
+                <strong>±{formatValue(metrics.standardDeviation)}</strong>
               </div>
             </div>
-          </div>
-
-          <div className="pt-4 border-t border-outline-variant/20 text-center">
-            <span className="text-[11px] text-on-surface-variant/70">
-              Total 160 Students Assessed
-            </span>
-          </div>
-        </div>
+          ) : (
+            <p className="py-8 text-center text-sm text-on-surface-variant">
+              {loadingResults ? 'Calculating results…' : 'Metrics appear after attempts have been evaluated.'}
+            </p>
+          )}
+          <p className="mt-4 border-t border-outline-variant/20 pt-3 text-center text-xs text-on-surface-variant">
+            {evaluatedResults.length} evaluated students
+          </p>
+        </section>
       </div>
 
-      <div>
-        <h4 className="font-headline font-bold text-base text-on-surface mb-4">
-          Individual Student Leaderboard
-        </h4>
+      <section>
+        <h2 className="font-heading font-bold text-lg text-on-surface mb-3">Student Leaderboard</h2>
         <DataTable
           columns={columns}
-          data={studentResults}
-          keyExtractor={(r) => r.id}
+          data={evaluatedResults}
+          emptyMessage={loadingResults ? 'Loading evaluated results…' : 'No evaluated results to rank.'}
         />
-      </div>
+      </section>
     </div>
   );
 }

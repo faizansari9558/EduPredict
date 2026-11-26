@@ -13,96 +13,121 @@ export default function UserManagement() {
   const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [notification, setNotification] = useState({ message: '', type: '' });
-
-  const [users, setUsers] = useState([
-    { id: 1, name: 'Admin User', email: 'admin@edupredict.local', userIdNumber: 'ADMIN001', role: 'admin', department: 'Institutional Administration', status: 'active', joined: 'Aug 2021' },
-    { id: 2, name: 'Dr. Sharma', email: 'sharma@edupredict.local', userIdNumber: 'PROF001', role: 'teacher', department: 'Computer Science', status: 'active', joined: 'Jan 2018' },
-    { id: 3, name: 'Prof. Patel', email: 'patel@edupredict.local', userIdNumber: 'PROF002', role: 'teacher', department: 'Information Tech', status: 'active', joined: 'Jul 2019' },
-    { id: 4, name: 'Prof. Gupta', email: 'gupta@edupredict.local', userIdNumber: 'PROF003', role: 'teacher', department: 'Electronics & Comm', status: 'active', joined: 'Sep 2020' },
-    { id: 5, name: 'Aisha Khan', email: 'aisha.khan@edupredict.local', userIdNumber: 'STU001', role: 'student', department: 'Computer Science', status: 'active', joined: 'Aug 2021' },
-    { id: 6, name: 'Raj Patel', email: 'raj.patel@edupredict.local', userIdNumber: 'STU002', role: 'student', department: 'Computer Science', status: 'active', joined: 'Aug 2021' },
-    { id: 7, name: 'Priya Sharma', email: 'priya.sharma@edupredict.local', userIdNumber: 'STU003', role: 'student', department: 'Information Tech', status: 'active', joined: 'Aug 2022' },
-    { id: 8, name: 'Arjun Gupta', email: 'arjun.gupta@edupredict.local', userIdNumber: 'STU004', role: 'student', department: 'Electronics & Comm', status: 'active', joined: 'Aug 2022' },
-    { id: 9, name: 'Neha Singh', email: 'neha.singh@edupredict.local', userIdNumber: 'STU005', role: 'student', department: 'Computer Science', status: 'active', joined: 'Aug 2023' }
-  ]);
+  const [users, setUsers] = useState([]);
+  const [departments, setDepartments] = useState([]);
+  const [batches, setBatches] = useState([]);
+  const [batchesLoading, setBatchesLoading] = useState(false);
+  const [directoryLoading, setDirectoryLoading] = useState(true);
 
   const [newUser, setNewUser] = useState({
     name: '',
     email: '',
     userIdNumber: '',
     role: 'student',
-    department: 'Computer Science',
-    phoneNumber: ''
+    departmentId: '',
+    batchId: ''
   });
 
-  const [bulkCsvText, setBulkCsvText] = useState(
-`Full Name,Official Email,University User ID,Role,Department
-Faizan Ansari,faizan.ansari@university.edu,21CS042,student,Computer Science
-Dr. Rajesh Sharma,faculty.sharma@university.edu,EMP-9021,teacher,Computer Science
-Ananya Roy,ananya.roy@university.edu,21IT089,student,Information Tech
-Prof. Meera Kulkarni,m.kulkarni@university.edu,EMP-7714,teacher,Information Tech
-Rohan Gupta,rohan.gupta@university.edu,21EC015,student,Electronics & Comm`
-  );
+  const [bulkCsvText, setBulkCsvText] = useState('');
   const [bulkFile, setBulkFile] = useState(null);
 
-  // Fetch users on load
   const loadUsers = async () => {
+    let loaded = false;
     try {
       const res = await adminApi.getUsers();
-      if (res && res.data && Array.isArray(res.data) && res.data.length > 0) {
-        const mapped = res.data.map(u => ({
-          id: u.id,
-          name: u.full_name || u.name || 'User',
-          email: u.email,
-          userIdNumber: u.user_id_number || u.userIdNumber || `ID-${u.id}`,
-          role: u.role || 'student',
-          department: u.department || 'Computer Science',
-          status: u.status || 'active',
-          joined: 'Active Record'
-        }));
-        setUsers(mapped);
-      }
+      const records = Array.isArray(res?.data) ? res.data : [];
+      setUsers(records.map((user) => ({
+        id: user.id,
+        name: user.full_name || user.name || 'User',
+        email: user.email,
+        userIdNumber: user.user_id_number || user.userIdNumber || `ID-${user.id}`,
+        role: user.role || 'student',
+        department: user.department || '—',
+        batch: user.batch || '',
+        status: user.status || 'unknown',
+        recordStatus: user.record_status,
+        joined: user.record_status === 'preauthorized' ? 'Awaiting registration' : 'Registered'
+      })));
+      loaded = true;
     } catch (err) {
-      console.warn('Using seeded user directory:', err.message);
+      setNotification({ message: `Unable to load university records: ${err.message}`, type: 'error' });
+    } finally {
+      setDirectoryLoading(false);
+    }
+    return loaded;
+  };
+
+  const loadDepartments = async () => {
+    try {
+      const response = await adminApi.getDepartments();
+      setDepartments(Array.isArray(response?.data) ? response.data : []);
+    } catch (err) {
+      setNotification({ message: `Unable to load departments: ${err.message}`, type: 'error' });
     }
   };
 
   useEffect(() => {
     loadUsers();
+    loadDepartments();
   }, []);
+
+  useEffect(() => {
+    if (newUser.role !== 'student' || !newUser.departmentId) {
+      setBatches([]);
+      setBatchesLoading(false);
+      return;
+    }
+
+    let active = true;
+    setBatchesLoading(true);
+    adminApi.getBatches(newUser.departmentId)
+      .then((response) => {
+        if (active) setBatches(Array.isArray(response?.data) ? response.data : []);
+      })
+      .catch((err) => {
+        if (active) {
+          setBatches([]);
+          setNotification({ message: `Unable to load batches: ${err.message}`, type: 'error' });
+        }
+      })
+      .finally(() => {
+        if (active) setBatchesLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [newUser.role, newUser.departmentId]);
 
   const handleAddUser = async (e) => {
     e.preventDefault();
-    if (!newUser.name || !newUser.email || !newUser.userIdNumber) return;
+    if (!newUser.name || !newUser.email || !newUser.userIdNumber || !newUser.departmentId ||
+        (newUser.role === 'student' && !newUser.batchId)) {
+      setNotification({ message: 'Complete the identity, department, and required batch fields.', type: 'error' });
+      return;
+    }
 
     setLoading(true);
     try {
-      await adminApi.createUser({
+      const response = await adminApi.createUser({
         fullName: newUser.name,
         email: newUser.email,
         userIdNumber: newUser.userIdNumber,
         role: newUser.role,
-        department: newUser.department,
-        phoneNumber: newUser.phoneNumber
+        departmentId: Number(newUser.departmentId),
+        batchId: newUser.role === 'student' ? Number(newUser.batchId) : null
       });
-
-      const user = {
-        id: Date.now(),
-        name: newUser.name,
-        email: newUser.email,
-        userIdNumber: newUser.userIdNumber,
-        role: newUser.role,
-        department: newUser.department,
-        status: 'active',
-        joined: 'Just now'
-      };
-
-      setUsers([user, ...users]);
+      const directoryLoaded = await loadUsers();
       setIsModalOpen(false);
-      setNewUser({ name: '', email: '', userIdNumber: '', role: 'student', department: 'Computer Science', phoneNumber: '' });
-      setNotification({ message: `Record created! ${newUser.name} (${newUser.userIdNumber}) is now eligible to register or login.`, type: 'success' });
+      setNewUser({ name: '', email: '', userIdNumber: '', role: 'student', departmentId: '', batchId: '' });
+      setNotification({
+        message: directoryLoaded
+          ? response.message || 'Official identity record created. The user can now complete email OTP registration.'
+          : 'Identity record created, but the directory could not refresh. Reload the page to confirm it.',
+        type: directoryLoaded ? 'success' : 'error'
+      });
     } catch (err) {
-      setNotification({ message: 'Failed to provision user: ' + err.message, type: 'error' });
+      setNotification({ message: `Failed to provision identity: ${err.message}`, type: 'error' });
     } finally {
       setLoading(false);
     }
@@ -110,55 +135,41 @@ Rohan Gupta,rohan.gupta@university.edu,21EC015,student,Electronics & Comm`
 
   const handleBulkImport = async (e) => {
     e.preventDefault();
-    if (!bulkCsvText.trim()) return;
+    if (!bulkFile && !bulkCsvText.trim()) {
+      setNotification({ message: 'Choose a CSV/XLSX file or paste identity rows first.', type: 'error' });
+      return;
+    }
 
     setLoading(true);
     try {
-      const lines = bulkCsvText.trim().split('\n');
       const parsedUsers = [];
-
-      for (let i = 0; i < lines.length; i++) {
-        const line = lines[i].trim();
-        if (!line || (i === 0 && line.toLowerCase().includes('email'))) continue; // skip header
-        const parts = line.split(',').map(s => s.trim());
-        if (parts.length >= 3) {
+      if (!bulkFile) {
+        const lines = bulkCsvText.trim().split(/\r?\n/);
+        for (const [index, line] of lines.entries()) {
+          if (!line.trim() || (index === 0 && line.toLowerCase().includes('email'))) continue;
+          const parts = line.split(',').map((part) => part.trim());
           parsedUsers.push({
             fullName: parts[0],
             email: parts[1],
             userIdNumber: parts[2],
-            role: parts[3] ? parts[3].toLowerCase() : 'student',
-            department: parts[4] || 'Computer Science'
+            role: parts[3] || 'student',
+            department: parts[4] || '',
+            batch: parts[5] || ''
           });
         }
       }
 
-      if (!parsedUsers.length) {
-        alert('No valid rows found in CSV data.');
-        setLoading(false);
-        return;
-      }
-
-      if (bulkFile) {
-        await adminApi.bulkImportUsers(bulkFile);
-      } else {
-        await adminApi.bulkImportUsers(parsedUsers);
-      }
-
-      const newRecords = parsedUsers.map((u, idx) => ({
-        id: Date.now() + idx,
-        name: u.fullName,
-        email: u.email,
-        userIdNumber: u.userIdNumber,
-        role: u.role,
-        department: u.department,
-        status: 'active',
-        joined: 'Imported Batch'
-      }));
-
-      setUsers([...newRecords, ...users]);
+      const result = await adminApi.bulkImportUsers(bulkFile || parsedUsers);
+      const directoryLoaded = await loadUsers();
       setIsBulkModalOpen(false);
       setBulkFile(null);
-      setNotification({ message: `Successfully imported ${parsedUsers.length} student and faculty admission records into the database!`, type: 'success' });
+      setBulkCsvText('');
+      const rejectedCount = result.rejected?.length || 0;
+      const firstRejection = result.rejected?.[0];
+      setNotification({
+        message: `${result.importedCount || 0} identity record(s) created; ${rejectedCount} row(s) rejected.${firstRejection ? ` First issue: row ${firstRejection.row}: ${firstRejection.reason}` : ''}${directoryLoaded ? '' : ' The directory could not refresh; reload the page to confirm.'}`,
+        type: directoryLoaded && result.importedCount ? 'success' : 'error'
+      });
     } catch (err) {
       setNotification({ message: 'Bulk import failed: ' + err.message, type: 'error' });
     } finally {
@@ -211,13 +222,20 @@ Rohan Gupta,rohan.gupta@university.edu,21EC015,student,Electronics & Comm`
     },
     {
       key: 'department',
-      label: 'Department',
-      render: (_, row) => <span className="text-xs text-on-surface font-medium">{row.department || '—'}</span>
+      label: 'Department / Batch',
+      render: (_, row) => (
+        <div className="text-xs text-on-surface font-medium">
+          <div>{row.department || '—'}</div>
+          {row.batch && <div className="text-on-surface-variant">{row.batch}</div>}
+        </div>
+      )
     },
     {
       key: 'status',
       label: 'Account Status',
-      render: (_, row) => <StatusBadge status={row.status} />
+      render: (_, row) => row.recordStatus === 'preauthorized'
+        ? <StatusBadge status="pending" label="Awaiting registration" />
+        : <StatusBadge status={row.status} />
     }
   ];
 
@@ -226,7 +244,7 @@ Rohan Gupta,rohan.gupta@university.edu,21EC015,student,Electronics & Comm`
       <PageHeader
         eyebrow="System Directory &amp; Admission Records"
         title="University Identity &amp; User Governance"
-        subtitle="Manage pre-authorized university records for students, faculty mentors, and administrators"
+        subtitle="Manage official student and faculty identity records used during account registration"
         actions={
           <div className="flex gap-2.5">
             <Button variant="outline" icon="upload_file" onClick={() => setIsBulkModalOpen(true)}>
@@ -288,11 +306,9 @@ Rohan Gupta,rohan.gupta@university.edu,21EC015,student,Electronics & Comm`
         </div>
       </div>
 
-      <DataTable
-        columns={columns}
-        data={filtered}
-        keyExtractor={(r) => r.id}
-      />
+      {directoryLoading
+        ? <div className="rounded-2xl border border-outline-variant/30 bg-surface p-8 text-center text-sm text-on-surface-variant">Loading university records…</div>
+        : <DataTable columns={columns} data={filtered} keyExtractor={(r) => r.id} />}
 
       {/* SINGLE RECORD MODAL */}
       <Modal
@@ -353,35 +369,59 @@ Rohan Gupta,rohan.gupta@university.edu,21EC015,student,Electronics & Comm`
               </label>
               <select
                 value={newUser.role}
-                onChange={(e) => setNewUser({ ...newUser, role: e.target.value })}
+                onChange={(e) => setNewUser({ ...newUser, role: e.target.value, batchId: '' })}
                 className="w-full px-4 py-2.5 rounded-xl border border-outline-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/20 text-xs bg-surface text-on-surface"
               >
                 <option value="student">Student</option>
                 <option value="teacher">Faculty Mentor</option>
-                <option value="admin">Administrator</option>
               </select>
             </div>
 
             <div>
               <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">
-                Department
+                Department *
               </label>
               <select
-                value={newUser.department}
-                onChange={(e) => setNewUser({ ...newUser, department: e.target.value })}
+                required
+                value={newUser.departmentId}
+                onChange={(e) => setNewUser({ ...newUser, departmentId: e.target.value, batchId: '' })}
                 className="w-full px-4 py-2.5 rounded-xl border border-outline-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/20 text-xs bg-surface text-on-surface"
               >
-                <option value="Computer Science">Computer Science</option>
-                <option value="Information Tech">Information Tech</option>
-                <option value="Electronics & Comm">Electronics &amp; Comm</option>
-                <option value="Electrical Engineering">Electrical Engineering</option>
-                <option value="Mechanical Engineering">Mechanical Engineering</option>
+                <option value="">Select department</option>
+                {departments.map((department) => (
+                  <option key={department.id} value={department.id}>{department.name}</option>
+                ))}
               </select>
             </div>
           </div>
 
+          {newUser.role === 'student' && (
+            <div>
+              <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">
+                Student Batch *
+              </label>
+              <select
+                required
+                value={newUser.batchId}
+                onChange={(e) => setNewUser({ ...newUser, batchId: e.target.value })}
+                disabled={!newUser.departmentId || batchesLoading || !batches.length}
+                className="w-full px-4 py-2.5 rounded-xl border border-outline-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/20 text-xs bg-surface text-on-surface disabled:opacity-60"
+              >
+                <option value="">
+                  {!newUser.departmentId ? 'Select a department first' : batchesLoading ? 'Loading batches…' : 'Select batch'}
+                </option>
+                {batches.map((batch) => (
+                  <option key={batch.id} value={batch.id}>{batch.name}</option>
+                ))}
+              </select>
+              {newUser.departmentId && !batchesLoading && !batches.length && (
+                <p className="mt-1 text-[11px] text-rose-600">No batches are configured for this department.</p>
+              )}
+            </div>
+          )}
+
           <div className="p-3 bg-surface-container rounded-xl border border-outline-variant/30 text-[11px] text-on-surface-variant">
-            💡 <strong>Note:</strong> Once provisioned, the user can verify their Official Email &amp; University ID on the <a href="/register" target="_blank" rel="noreferrer" className="text-primary font-bold underline">Registration Page</a> or sign in directly with their credentials.
+            <strong>Note:</strong> The person can use their official email and university ID to complete OTP registration after this record is provisioned. This does not create a login account or password.
           </div>
 
           <div className="flex justify-end gap-3 pt-4 border-t border-outline-variant/20">
@@ -402,7 +442,7 @@ Rohan Gupta,rohan.gupta@university.edu,21EC015,student,Electronics & Comm`
       >
         <form onSubmit={handleBulkImport} className="space-y-4">
           <p className="text-xs text-on-surface-variant">
-            Upload an Excel workbook (.xlsx) or CSV with columns: <code>Full Name, Official Email, University User ID, Role, Department</code>. You may also paste CSV rows below.
+            Upload an Excel workbook (.xlsx) or CSV with columns: <code>Full Name, Official Email, University User ID, Role, Department, Batch</code>. Students require a department and batch; teachers require a department. You may also paste CSV rows below.
           </p>
           <input
             type="file"
@@ -421,7 +461,7 @@ Rohan Gupta,rohan.gupta@university.edu,21EC015,student,Electronics & Comm`
           </div>
 
           <div className="p-3 bg-surface-container rounded-xl border border-outline-variant/30 text-[11px] text-on-surface-variant">
-            ✅ <strong>Direct Database Integration:</strong> All imported student and faculty records are immediately registered in MySQL and enabled for Phase 1 verification (Email + ID &rarr; OTP &rarr; Password).
+            <strong>Import behavior:</strong> Each row creates a validated institutional identity record. Existing or invalid rows are reported without overwriting existing records.
           </div>
 
           <div className="flex justify-end gap-3 pt-4 border-t border-outline-variant/20">

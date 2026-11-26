@@ -10,20 +10,14 @@ const mlService = require('../services/mlService');
  * Helper to build feature vector for a student from DB
  */
 async function getStudentFeatureVector(studentId) {
-  // Query student profile and metrics
   const [stuRows] = await pool.query(`
     SELECT 
       s.user_id,
       s.cgpa,
       s.tenth_percentage,
       s.twelfth_percentage,
-      s.graduation_percentage,
       s.backlogs_count,
-      sm.overall_score,
-      sm.aptitude_score,
-      sm.coding_score,
-      sm.profile_completion_pct,
-      sm.assessment_attempts
+      sm.profile_completion_pct
     FROM students s
     LEFT JOIN student_metrics sm ON s.user_id = sm.student_id
     WHERE s.user_id = ? AND s.verification_status = 'verified'
@@ -35,39 +29,86 @@ async function getStudentFeatureVector(studentId) {
 
   const s = stuRows[0];
 
-  // Query skills count
   const [skillRows] = await pool.query(
     'SELECT COUNT(*) as count FROM skill_proficiency WHERE student_id = ?',
     [studentId]
   );
-  const numSkills = skillRows[0]?.count || 0;
-
-  // Query documents / projects count
-  const [docRows] = await pool.query(
-    `SELECT COUNT(*) as count FROM documents
-     WHERE user_id = ? AND verification_status = 'verified'`,
+  const [portfolioRows] = await pool.query(
+    `SELECT
+       SUM(item_type = 'project') AS num_projects,
+       SUM(item_type = 'certification') AS num_certifications,
+       SUM(item_type = 'internship') AS num_internships
+     FROM student_portfolio_items
+     WHERE student_id = ? AND verification_status = 'verified'`,
     [studentId]
   );
-  const numDocs = docRows[0]?.count || 0;
+  const [aptitudeRows] = await pool.query(
+    `SELECT AVG(aa.score * 100 / NULLIF(COALESCE(NULLIF(a.total_marks, 0), (
+              SELECT SUM(q.marks) FROM assessment_questions q WHERE q.assessment_id = a.id
+            ), 0), 0)) AS aptitude_score,
+            COUNT(aa.score * 100 / NULLIF(COALESCE(NULLIF(a.total_marks, 0), (
+              SELECT SUM(q.marks) FROM assessment_questions q WHERE q.assessment_id = a.id
+            ), 0), 0)) AS completed_assessments
+     FROM assessment_attempts aa
+     JOIN assessments a ON a.id = aa.assessment_id
+     WHERE aa.student_user_id = ? AND a.assessment_type = 'aptitude'
+       AND aa.status = 'evaluated' AND aa.submitted_at IS NOT NULL AND aa.score IS NOT NULL`,
+    [studentId]
+  );
+  const [codingRows] = await pool.query(
+    `SELECT AVG(scored.score) AS coding_score, COUNT(scored.score) AS completed_assessments
+     FROM (
+       SELECT aa.score * 100 / NULLIF(COALESCE(NULLIF(a.total_marks, 0), (
+                SELECT SUM(q.marks) FROM assessment_questions q WHERE q.assessment_id = a.id
+              ), 0), 0) AS score
+       FROM assessment_attempts aa
+       JOIN assessments a ON a.id = aa.assessment_id
+       WHERE aa.student_user_id = ? AND a.assessment_type = 'coding'
+         AND aa.status = 'evaluated' AND aa.submitted_at IS NOT NULL AND aa.score IS NOT NULL
+       UNION ALL
+       SELECT cs.score
+       FROM coding_submissions cs
+       WHERE cs.student_user_id = ? AND cs.status = 'graded' AND cs.score IS NOT NULL
+     ) AS scored`,
+    [studentId, studentId]
+  );
 
-  const required = ['cgpa', 'tenth_percentage', 'twelfth_percentage', 'backlogs_count', 'aptitude_score', 'coding_score'];
-  if (required.some(field => s[field] === null || s[field] === undefined)) {
-    return { missing: required.filter(field => s[field] === null || s[field] === undefined) };
+  const student = stuRows[0];
+  const requiredAcademicFields = [
+    ['cgpa', 'verified CGPA'],
+    ['tenth_percentage', 'verified 10th percentage'],
+    ['twelfth_percentage', 'verified 12th percentage'],
+    ['backlogs_count', 'backlog information']
+  ];
+  const missing = requiredAcademicFields
+    .filter(([field]) => student[field] === null || student[field] === undefined)
+    .map(([, label]) => label);
+  if (Number(aptitudeRows[0]?.completed_assessments || 0) === 0) {
+    missing.push('a completed aptitude assessment');
   }
+  if (Number(codingRows[0]?.completed_assessments || 0) === 0) {
+    missing.push('a graded coding assessment');
+  }
+  if (missing.length) return { missing };
+
+  const portfolio = portfolioRows[0] || {};
+  const numSkills = Number(skillRows[0]?.count) || 0;
 
   return {
-    student_id: s.user_id,
-    cgpa: Number(s.cgpa),
-    tenth_percentage: Number(s.tenth_percentage),
-    twelfth_percentage: Number(s.twelfth_percentage),
-    backlogs_count: Number(s.backlogs_count),
-    aptitude_score: Number(s.aptitude_score),
-    coding_score: Number(s.coding_score),
-    num_skills: Number(numSkills),
-    num_projects: Math.min(Number(numDocs), 3),
-    num_certifications: 0,
-    num_internships: 0,
-    profile_completion_pct: s.profile_completion_pct === null ? 0 : Number(s.profile_completion_pct)
+    student_id: student.user_id,
+    cgpa: Number(student.cgpa),
+    tenth_percentage: Number(student.tenth_percentage),
+    twelfth_percentage: Number(student.twelfth_percentage),
+    backlogs_count: Number(student.backlogs_count),
+    aptitude_score: Number(aptitudeRows[0].aptitude_score),
+    coding_score: Number(codingRows[0].coding_score),
+    num_skills: numSkills,
+    num_projects: Number(portfolio.num_projects) || 0,
+    num_certifications: Number(portfolio.num_certifications) || 0,
+    num_internships: Number(portfolio.num_internships) || 0,
+    profile_completion_pct: student.profile_completion_pct === null || student.profile_completion_pct === undefined
+      ? 0
+      : Number(student.profile_completion_pct)
   };
 }
 
@@ -77,14 +118,18 @@ async function getStudentFeatureVector(studentId) {
  */
 exports.getStudentPlacementPrediction = async (req, res) => {
   try {
-    const { studentId } = req.params;
+    const studentId = req.params.studentId || req.user.id;
 
     const features = await getStudentFeatureVector(studentId);
     if (!features) {
       return res.status(404).json({ success: false, message: 'Student record not found.' });
     }
     if (features.missing) {
-      return res.status(422).json({ success: false, message: 'Verified academic and assessment records are incomplete.', missing: features.missing });
+      return res.status(422).json({
+        success: false,
+        message: 'Complete verified academic records and the required aptitude and coding assessments before viewing a placement analysis.',
+        missing: features.missing
+      });
     }
 
     const predictionPayload = await mlService.predictAndExplain(features);
@@ -136,7 +181,7 @@ exports.getBatchPlacementForecast = async (req, res) => {
     const featuresList = [];
     for (const stu of students) {
       const f = await getStudentFeatureVector(stu.user_id);
-      if (f) featuresList.push(f);
+      if (f && !f.missing) featuresList.push(f);
     }
 
     const batchForecast = await mlService.predictBatch(Number(batchId), featuresList);

@@ -1,7 +1,5 @@
 /**
- * Resume AI & ATS Scoring Engine
- * Analyzes resume content, evaluates section completeness, calculates ATS compatibility score,
- * checks action verb density, and cross-references verified platform credentials.
+ * ATS scoring based on the submitted resume content and selected target role.
  */
 
 const pool = require('../config/db');
@@ -18,15 +16,26 @@ const TECHNICAL_DOMAINS = {
   'Web Development': ['html', 'css', 'javascript', 'react', 'tailwind', 'express', 'mongodb', 'mysql'],
   'Core Computer Science': ['data structures', 'algorithms', 'dbms', 'operating systems', 'computer networks', 'oop']
 };
+const JOB_DESCRIPTION_KEYWORDS = [
+  ...new Set([
+    ...Object.values(TECHNICAL_DOMAINS).flat(),
+    'typescript', 'c#', 'ruby', 'php', 'go', 'rust', 'kotlin', 'swift',
+    'aws', 'azure', 'gcp', 'kubernetes', 'ci/cd', 'graphql', 'linux',
+    'microservices', 'deep learning', 'natural language processing',
+    'computer vision', 'data visualization', 'statistics', 'spark',
+    'hadoop', 'postgresql', 'redis', 'spring boot', 'fastapi', 'django',
+    'flask', 'agile', 'scrum', 'unit testing', 'automation testing'
+  ])
+];
+
+function containsTerm(text, term) {
+  const escapedTerm = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return new RegExp(`(^|[^a-z0-9])${escapedTerm}(?=$|[^a-z0-9])`, 'i').test(text);
+}
 
 class ResumeService {
-  /**
-   * Analyze raw resume text or structured resume data
-   */
-  async analyzeResume(studentId, resumeText = '', targetRole = 'Software Development') {
+  async analyzeResume(studentId, resumeText = '', targetRole = 'Software Development', jobDescription = '') {
     const textLower = resumeText.toLowerCase();
-
-    // 1. Detect Sections
     const sections = {
       contact_info: /(email|phone|linkedin|github|portfolio|contact)/i.test(resumeText),
       education: /(education|bachelor|b\.tech|b\.e|university|college|gpa|cgpa)/i.test(resumeText),
@@ -34,36 +43,32 @@ class ResumeService {
       technical_skills: /(skills|technical skills|technologies|proficiencies|languages)/i.test(resumeText),
       certifications: /(certifications|certified|courses|achievements|awards)/i.test(resumeText)
     };
+    const sectionScore = Object.values(sections).filter(Boolean).length * 8;
 
-    const sectionScore = Object.values(sections).filter(Boolean).length * 8; // Max 40 pts
+    const jobDescriptionTerms = jobDescription
+      ? JOB_DESCRIPTION_KEYWORDS.filter((keyword) => containsTerm(jobDescription.toLowerCase(), keyword))
+      : [];
+    const usesJobDescriptionTerms = jobDescriptionTerms.length > 0;
+    const relevantKeywords = usesJobDescriptionTerms
+      ? jobDescriptionTerms
+      : TECHNICAL_DOMAINS[targetRole] || TECHNICAL_DOMAINS['Software Development'];
+    const matchedKeywords = relevantKeywords.filter((keyword) => containsTerm(textLower, keyword));
+    const missingKeywords = relevantKeywords.filter((keyword) => !containsTerm(textLower, keyword));
+    const keywordScore = Math.round((matchedKeywords.length / relevantKeywords.length) * 30);
 
-    // 2. Keyword & Skill Matching
-    const relevantKeywords = TECHNICAL_DOMAINS[targetRole] || TECHNICAL_DOMAINS['Software Development'];
-    const matchedKeywords = relevantKeywords.filter(kw => textLower.includes(kw));
-    const missingKeywords = relevantKeywords.filter(kw => !textLower.includes(kw));
-    const keywordScore = Math.min((matchedKeywords.length / relevantKeywords.length) * 30, 30); // Max 30 pts
+    const matchedVerbs = ACTION_VERBS.filter((verb) => containsTerm(textLower, verb));
+    const hasQuantifiableMetrics = /\b\d+(\.\d+)?%|\b\d+x\b|\$\d+|\b\d+\s*(users|clients|requests|ms|seconds|hours)\b/i.test(resumeText);
+    const actionVerbScore = Math.min(matchedVerbs.length * 2.5, 15);
+    const metricScore = hasQuantifiableMetrics ? 10 : 0;
+    const impactScore = actionVerbScore + metricScore;
 
-    // 3. Action Verb & Impact Metrics Density
-    const matchedVerbs = ACTION_VERBS.filter(v => textLower.includes(v));
-    const hasQuantifiableMetrics = /\b\d+(\.\d+)?%|\b\d+x\b|\b\$\d+|\b\d+\s*(users|clients|requests|ms|seconds|hours)\b/i.test(resumeText);
-    
-    let impactScore = Math.min(matchedVerbs.length * 2.5, 15);
-    if (hasQuantifiableMetrics) impactScore += 10;
-    impactScore = Math.min(impactScore, 25); // Max 25 pts
+    const wordCount = resumeText.trim().split(/\s+/).filter(Boolean).length;
+    const lengthScore = wordCount >= 200 && wordCount <= 1000
+      ? 5
+      : wordCount >= 100 && wordCount <= 1500 ? 4
+        : wordCount >= 50 ? 3 : 1;
+    const atsScore = Math.min(sectionScore + keywordScore + impactScore + lengthScore, 100);
 
-    // 4. Formatting & Length Check
-    const wordCount = resumeText.trim().split(/\s+/).length;
-    let lengthScore = 5;
-    if (wordCount >= 200 && wordCount <= 800) {
-      lengthScore = 5; // Ideal single-page / two-page density
-    } else if (wordCount < 100) {
-      lengthScore = 1;
-    }
-
-    // Total ATS Score (0 - 100)
-    const atsScore = Math.min(Math.round(sectionScore + keywordScore + impactScore + lengthScore), 100);
-
-    // 5. Cross-reference Verified Platform Documents & Credentials
     let verifiedCrossReference = {
       verified_documents_count: 0,
       verified_skills_match: [],
@@ -76,9 +81,8 @@ class ResumeService {
           'SELECT document_type, verification_status FROM documents WHERE user_id = ?',
           [studentId]
         );
-        const verifiedDocs = docs.filter(d => d.verification_status === 'verified');
-        const pendingDocs = docs.filter(d => d.verification_status === 'pending');
-
+        const verifiedDocs = docs.filter((document) => document.verification_status === 'verified');
+        const pendingDocs = docs.filter((document) => document.verification_status === 'pending');
         const [skills] = await pool.query(
           'SELECT skill_name, avg_score FROM skill_proficiency WHERE student_id = ?',
           [studentId]
@@ -88,48 +92,47 @@ class ResumeService {
           verified_documents_count: verifiedDocs.length,
           total_platform_documents: docs.length,
           pending_verification_count: pendingDocs.length,
-          verified_skills_match: skills.map(s => s.skill_name)
+          verified_skills_match: skills.map((skill) => skill.skill_name)
         };
-      } catch (err) {
-        console.warn('Could not query verification data for resume:', err.message);
+      } catch (error) {
+        console.warn('Could not query verification data for resume:', error.message);
       }
     }
 
-    // 6. Generate Prescriptive ATS Feedback & Improvement Checklist
     const suggestions = [];
     if (!sections.certifications) {
       suggestions.push({
         type: 'SECTION',
         severity: 'MEDIUM',
-        tip: 'Add a dedicated Certifications or Achievements section highlighting specialized courseworks or hackathons.'
+        tip: 'Add a certifications, courses, or achievements section if you have relevant credentials.'
       });
     }
     if (!hasQuantifiableMetrics) {
       suggestions.push({
         type: 'IMPACT',
         severity: 'HIGH',
-        tip: 'Include quantifiable metrics in project bullet points (e.g., "Reduced latency by 35%", "Handled 500+ requests/sec").'
+        tip: 'Where accurate, add measurable outcomes to project or experience bullets.'
       });
     }
     if (missingKeywords.length > 0) {
       suggestions.push({
         type: 'KEYWORDS',
         severity: 'HIGH',
-        tip: `Incorporate industry-standard keywords: ${missingKeywords.slice(0, 4).join(', ')} to improve ATS parser rankings.`
+        tip: `Consider adding relevant ${usesJobDescriptionTerms ? 'job-description' : targetRole} keywords when they accurately describe your experience: ${missingKeywords.slice(0, 4).join(', ')}.`
       });
     }
     if (matchedVerbs.length < 4) {
       suggestions.push({
         type: 'ACTION_VERBS',
         severity: 'MEDIUM',
-        tip: 'Start bullet points with strong technical action verbs (e.g. Engineered, Spearheaded, Architected, Automated).'
+        tip: 'Use clear action verbs to describe work you actually completed.'
       });
     }
 
-    let atsGrade = 'C (Needs Work)';
-    if (atsScore >= 85) atsGrade = 'A+ (ATS Mastered)';
-    else if (atsScore >= 75) atsGrade = 'A (Recruiter Ready)';
-    else if (atsScore >= 60) atsGrade = 'B (Good Foundation)';
+    let atsGrade = 'C (Needs Improvement)';
+    if (atsScore >= 85) atsGrade = 'A+ (Strong Match)';
+    else if (atsScore >= 75) atsGrade = 'A (Good Match)';
+    else if (atsScore >= 60) atsGrade = 'B (Partial Match)';
 
     return {
       ats_score: atsScore,
@@ -137,10 +140,17 @@ class ResumeService {
       target_role: targetRole,
       word_count: wordCount,
       sections_detected: sections,
+      score_breakdown: {
+        section_completeness: { score: sectionScore, maximum: 40 },
+        keyword_match: { score: keywordScore, maximum: 30 },
+        impact_evidence: { score: impactScore, maximum: 25 },
+        resume_length: { score: lengthScore, maximum: 5 }
+      },
       keyword_analysis: {
         matched_keywords: matchedKeywords,
         missing_keywords: missingKeywords,
-        coverage_percent: Math.round((matchedKeywords.length / relevantKeywords.length) * 100)
+        coverage_percent: Math.round((matchedKeywords.length / relevantKeywords.length) * 100),
+        source: usesJobDescriptionTerms ? 'job_description' : 'target_role'
       },
       action_verbs_detected: matchedVerbs,
       has_quantifiable_metrics: hasQuantifiableMetrics,

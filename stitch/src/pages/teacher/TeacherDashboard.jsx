@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import PageHeader from '../../components/PageHeader';
 import StatCard from '../../components/StatCard';
 import ChartCard from '../../components/ChartCard';
 import DataTable from '../../components/DataTable';
 import StatusBadge from '../../components/StatusBadge';
 import Button from '../../components/Button';
+import { teacherApi } from '../../services/teacherApi';
 import {
   ResponsiveContainer,
   BarChart,
@@ -12,102 +13,68 @@ import {
   XAxis,
   YAxis,
   Tooltip,
-  CartesianGrid,
-  PieChart,
-  Pie,
-  Cell,
-  Legend
+  CartesianGrid
 } from 'recharts';
 
+function formatValue(value, digits = 1) {
+  return value == null || !Number.isFinite(Number(value)) ? '—' : Number(value).toFixed(digits);
+}
+
 export default function TeacherDashboard() {
-  const placementDistribution = [
-    { name: 'Tier 1 Dream (> 12 LPA)', value: 42, color: '#0051d5' },
-    { name: 'Tier 2 Core (6-12 LPA)', value: 68, color: '#102a43' },
-    { name: 'Tier 3 Mass (3.5-6 LPA)', value: 34, color: '#64748B' },
-    { name: 'At-Risk / Needs Intervention', value: 16, color: '#EF4444' }
-  ];
+  const [dashboard, setDashboard] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  const classCgpaTrends = [
-    { semester: 'Sem 1', avgCgpa: 7.42 },
-    { semester: 'Sem 2', avgCgpa: 7.68 },
-    { semester: 'Sem 3', avgCgpa: 7.85 },
-    { semester: 'Sem 4', avgCgpa: 8.12 },
-    { semester: 'Sem 5', avgCgpa: 8.35 },
-    { semester: 'Sem 6', avgCgpa: 8.48 }
-  ];
+  useEffect(() => {
+    let active = true;
+    teacherApi.getDashboard()
+      .then((response) => {
+        if (active) setDashboard(response.data);
+      })
+      .catch((requestError) => {
+        if (active) setError(requestError.message || 'Unable to load the teacher dashboard.');
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
 
-  const pendingQueue = [
-    {
-      id: 1,
-      student: 'Faizan Ansari',
-      rollNo: '21CS042',
-      type: 'Capstone Project',
-      title: 'EduPredict — AI Academic Predictor',
-      submitted: '2 hours ago',
-      status: 'pending'
-    },
-    {
-      id: 2,
-      student: 'Aarav Sharma',
-      rollNo: '21CS018',
-      type: 'Industrial Internship',
-      title: 'Goldman Sachs Summer Analyst',
-      submitted: '5 hours ago',
-      status: 'pending'
-    },
-    {
-      id: 3,
-      student: 'Sneha Patel',
-      rollNo: '21CS089',
-      type: 'Certification',
-      title: 'AWS Certified Developer Associate',
-      submitted: '1 day ago',
-      status: 'pending'
-    }
-  ];
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const summary = dashboard?.summary || {};
+  const hasDashboard = Boolean(dashboard);
+  const cgpaByBatch = (dashboard?.charts?.cgpaByBatch || []).map((row) => ({
+    ...row,
+    average_cgpa: Number(row.average_cgpa)
+  }));
+  const readinessByBatch = (dashboard?.charts?.readinessByBatch || []).map((row) => ({
+    ...row,
+    average_readiness: Number(row.average_readiness)
+  }));
+  const pendingVerifications = dashboard?.pendingVerifications || [];
 
   const columns = [
     {
-      header: 'Student & Roll No',
-      accessor: (row) => (
+      key: 'student',
+      label: 'Student',
+      render: (_, row) => (
         <div>
-          <div className="font-semibold text-on-surface">{row.student}</div>
-          <div className="text-xs font-mono text-on-surface-variant">{row.rollNo}</div>
+          <div className="font-semibold text-on-surface">{row.full_name}</div>
+          <div className="text-xs font-mono text-on-surface-variant">{row.enrollment_number}</div>
         </div>
       )
     },
     {
-      header: 'Submission Type',
-      accessor: (row) => (
-        <span className="px-2.5 py-1 bg-surface-container rounded-lg text-xs font-medium text-primary">
-          {row.type}
-        </span>
-      )
+      key: 'cgpa',
+      label: 'CGPA',
+      render: (value) => formatValue(value, 2)
     },
     {
-      header: 'Item Title',
-      accessor: (row) => <span className="text-xs text-on-surface font-medium truncate max-w-[200px] block">{row.title}</span>
-    },
-    {
-      header: 'Submitted',
-      accessor: (row) => <span className="text-xs text-on-surface-variant">{row.submitted}</span>
-    },
-    {
-      header: 'Status',
-      accessor: (row) => <StatusBadge status={row.status} />
-    },
-    {
-      header: 'Action',
-      accessor: (row) => (
-        <div className="flex gap-1.5">
-          <button className="p-1.5 rounded-lg bg-green-50 text-green-700 hover:bg-green-100 transition-colors" title="Approve">
-            <span className="material-symbols-outlined text-[16px]">check</span>
-          </button>
-          <button className="p-1.5 rounded-lg bg-red-50 text-red-700 hover:bg-red-100 transition-colors" title="Reject">
-            <span className="material-symbols-outlined text-[16px]">close</span>
-          </button>
-        </div>
-      )
+      key: 'verification_status',
+      label: 'Record status',
+      render: (value) => <StatusBadge status={value} />
     }
   ];
 
@@ -115,129 +82,141 @@ export default function TeacherDashboard() {
     <div className="space-y-6">
       <PageHeader
         eyebrow="Faculty & Mentor Portal"
-        title="Teacher Executive Dashboard"
-        subtitle="Department of Computer Science & Engineering • Cohort 2021-2025"
-        action={
-          <div className="flex gap-2">
-            <Button variant="outline" icon="upload_file">
-              Batch Upload Marks
-            </Button>
-            <Button variant="primary" icon="add">
-              Create Assessment
-            </Button>
-          </div>
+        title="Teacher Dashboard"
+        subtitle={dashboard?.teacher
+          ? `${dashboard.teacher.department} • ${dashboard.teacher.designation || 'Department roster'}`
+          : 'Department-scoped student and assessment overview'}
+        actions={
+          <Button variant="primary" icon="add" to="/teacher/assessments">
+            Manage Assessments
+          </Button>
         }
       />
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {error && (
+        <div role="alert" className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+          {error}
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">
         <StatCard
-          title="Assigned Students"
-          value="160"
-          trend="Section A & B (Final Year)"
-          trendType="neutral"
+          label="Assigned Students"
+          value={loading ? '…' : (hasDashboard ? (summary.assignedStudents ?? 0) : '—')}
+          trend={dashboard?.teacher?.department || (error ? 'Data unavailable' : 'Department roster')}
+          trendDirection="neutral"
           icon="group"
-          iconBgColor="bg-blue-100 text-blue-800"
+          iconColor="text-blue-800"
+          iconBg="bg-blue-100"
         />
         <StatCard
-          title="Pending Verifications"
-          value="14"
-          trend="3 urgent requests"
-          trendType="down"
+          label="Pending Academic Records"
+          value={loading ? '…' : (hasDashboard ? (summary.pendingVerifications ?? 0) : '—')}
+          trend={error ? 'Data unavailable' : 'Student records awaiting review'}
+          trendDirection={summary.pendingVerifications ? 'down' : 'neutral'}
           icon="pending_actions"
-          iconBgColor="bg-amber-100 text-amber-800"
+          iconColor="text-amber-800"
+          iconBg="bg-amber-100"
         />
         <StatCard
-          title="Batch Avg CGPA"
-          value="8.48"
-          trend="+0.13 vs previous term"
-          trendType="up"
-          icon="trending_up"
-          iconBgColor="bg-emerald-100 text-emerald-800"
+          label="Department Average CGPA"
+          value={loading ? '…' : (hasDashboard ? formatValue(summary.averageCgpa, 2) : '—')}
+          trend={error ? 'Data unavailable' : 'From student academic records'}
+          trendDirection="neutral"
+          icon="school"
+          iconColor="text-emerald-800"
+          iconBg="bg-emerald-100"
         />
         <StatCard
-          title="Predicted Placement Rate"
-          value="91.2%"
-          trend="146 / 160 eligible"
-          trendType="up"
+          label="Active Assessments"
+          value={loading ? '…' : (hasDashboard ? (summary.activeAssessments ?? 0) : '—')}
+          trend={error ? 'Data unavailable' : 'Published assessments owned by you'}
+          trendDirection="neutral"
+          icon="assignment"
+          iconColor="text-indigo-800"
+          iconBg="bg-indigo-100"
+        />
+        <StatCard
+          label="Students Meeting Readiness"
+          value={loading ? '…' : (!hasDashboard || summary.placementReadyPct == null ? '—' : `${formatValue(summary.placementReadyPct)}%`)}
+          trend={!hasDashboard && error
+            ? 'Data unavailable'
+            : summary.analyzedStudents
+            ? `${summary.placementReadyStudents} of ${summary.analyzedStudents} assessed`
+            : 'No evaluated assessment data yet'}
+          trendDirection="neutral"
           icon="psychology"
-          iconBgColor="bg-purple-100 text-purple-800"
+          iconColor="text-purple-800"
+          iconBg="bg-purple-100"
         />
       </div>
 
-      {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
-          <ChartCard
-            title="Class CGPA Progression"
-            subtitle="Semester-by-semester average academic performance for CSE 2021-25"
-          >
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <ChartCard
+          title="Academic Performance by Batch"
+          subtitle="Average CGPA from active students with submitted academic records"
+        >
+          {cgpaByBatch.length ? (
             <div className="h-72 w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={classCgpaTrends} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <BarChart data={cgpaByBatch} margin={{ top: 10, right: 12, left: -18, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
-                  <XAxis dataKey="semester" stroke="#64748B" fontSize={11} tickLine={false} />
-                  <YAxis domain={[6, 10]} stroke="#64748B" fontSize={11} tickLine={false} />
-                  <Tooltip
-                    contentStyle={{ backgroundColor: '#0D233A', color: '#fff', borderRadius: '8px', border: 'none' }}
-                  />
-                  <Bar dataKey="avgCgpa" fill="#0051d5" radius={[6, 6, 0, 0]} />
+                  <XAxis dataKey="batch" stroke="#64748B" fontSize={11} tickLine={false} />
+                  <YAxis domain={[0, 10]} stroke="#64748B" fontSize={11} tickLine={false} />
+                  <Tooltip />
+                  <Bar dataKey="average_cgpa" name="Average CGPA" fill="#0051d5" radius={[6, 6, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
-          </ChartCard>
-        </div>
+          ) : (
+            <p className="py-12 text-center text-sm text-on-surface-variant">
+              {error ? 'Academic data is unavailable because the dashboard request failed.' : loading ? 'Loading academic records…' : 'CGPA data will appear when students add academic records.'}
+            </p>
+          )}
+        </ChartCard>
 
-        <div>
-          <ChartCard
-            title="AI Placement Readiness"
-            subtitle="Cohort tier prediction distribution"
-          >
-            <div className="h-72 w-full flex items-center justify-center">
+        <ChartCard
+          title="Placement Readiness by Batch"
+          subtitle="Average readiness score for students with evaluated assessments"
+        >
+          {readinessByBatch.length ? (
+            <div className="h-72 w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={placementDistribution}
-                    innerRadius={50}
-                    outerRadius={75}
-                    paddingAngle={3}
-                    dataKey="value"
-                  >
-                    {placementDistribution.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    contentStyle={{ backgroundColor: '#0D233A', color: '#fff', borderRadius: '8px', border: 'none' }}
-                  />
-                  <Legend
-                    verticalAlign="bottom"
-                    iconSize={8}
-                    wrapperStyle={{ fontSize: '11px', paddingTop: '10px' }}
-                  />
-                </PieChart>
+                <BarChart data={readinessByBatch} margin={{ top: 10, right: 12, left: -18, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
+                  <XAxis dataKey="batch" stroke="#64748B" fontSize={11} tickLine={false} />
+                  <YAxis domain={[0, 100]} stroke="#64748B" fontSize={11} tickLine={false} />
+                  <Tooltip />
+                  <Bar dataKey="average_readiness" name="Readiness score" fill="#14B8A6" radius={[6, 6, 0, 0]} />
+                </BarChart>
               </ResponsiveContainer>
             </div>
-          </ChartCard>
-        </div>
+          ) : (
+            <p className="py-12 text-center text-sm text-on-surface-variant">
+              {error ? 'Readiness data is unavailable because the dashboard request failed.' : loading ? 'Loading assessment outcomes…' : 'Readiness data will appear after students complete evaluated assessments.'}
+            </p>
+          )}
+        </ChartCard>
       </div>
 
-      {/* Pending Verifications Queue */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h3 className="font-headline font-bold text-lg text-on-surface">
-            Pending Student Verifications Queue
-          </h3>
-          <span className="text-xs text-primary font-semibold hover:underline cursor-pointer">
-            View All (14) →
-          </span>
+      <section className="space-y-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <h2 className="font-heading font-bold text-lg text-on-surface">Pending Academic Record Reviews</h2>
+            <p className="text-xs text-on-surface-variant">
+              {hasDashboard ? (summary.pendingVerifications || 0) : '—'} pending in your department
+            </p>
+          </div>
+          <Button variant="outline" size="sm" icon="fact_check" to="/teacher/verification">
+            Review uploaded documents
+          </Button>
         </div>
         <DataTable
           columns={columns}
-          data={pendingQueue}
-          keyExtractor={(r) => r.id}
+          data={pendingVerifications}
+          emptyMessage={error ? 'Pending records are unavailable because the dashboard request failed.' : loading ? 'Loading pending records…' : 'No academic records are waiting for review.'}
         />
-      </div>
+      </section>
     </div>
   );
 }

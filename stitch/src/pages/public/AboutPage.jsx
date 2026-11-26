@@ -6,7 +6,7 @@ import Button from '../../components/Button';
 
 export default function AboutPage() {
   return (
-    <div className="min-h-screen bg-background font-body text-on-surface flex flex-col transition-colors duration-200">
+    <div className="public-page min-h-screen bg-background font-body text-on-surface flex flex-col transition-colors duration-200">
       <PublicHeader />
 
       <main className="w-full pt-20 flex-1">

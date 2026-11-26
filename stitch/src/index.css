@@ -56,13 +56,13 @@
 /* Dark Theme Palette */
 .dark, [data-theme="dark"] {
   --color-primary: #f0f6fc;
-  --color-primary-container: #1e293b;
+  --color-primary-container: #17243a;
   --color-on-primary: #0b1320;
-  --color-on-primary-container: #94a3b8;
+  --color-on-primary-container: #dbeafe;
   --color-primary-fixed: #1e3a5f;
   --color-primary-fixed-dim: #172a44;
 
-  --color-secondary: #3b82f6;
+  --color-secondary: #60a5fa;
   --color-secondary-container: #1d4ed8;
   --color-secondary-fixed: #1e3a8a;
   --color-secondary-fixed-dim: #172554;
@@ -86,17 +86,152 @@
   --color-surface-container-lowest: #050a17;
   --color-surface-container-low: #0a1324;
   --color-surface-container: #0e1a32;
-  --color-surface-container-high: #203456;
-  --color-surface-container-highest: #2a436e;
+  --color-surface-container-high: #1c3150;
+  --color-surface-container-highest: #29466e;
 
   --color-on-surface: #f1f5f9;
-  --color-on-surface-variant: #94a3b8;
-  --color-outline: #64748b;
-  --color-outline-variant: #1e293b;
+  --color-on-surface-variant: #cbd5e1;
+  --color-outline: #a8b8cc;
+  --color-outline-variant: #334155;
 
   --color-error: #ef4444;
   --color-error-container: #7f1d1d;
   --color-on-error: #ffffff;
+}
+
+/* Keep older page-level slate utilities readable on dark surfaces. */
+.dark .text-slate-300,
+[data-theme="dark"] .text-slate-300 {
+  color: #dbe4f0;
+}
+
+.dark .text-slate-400,
+[data-theme="dark"] .text-slate-400 {
+  color: #b8c5d6;
+}
+
+.dark .text-slate-500,
+[data-theme="dark"] .text-slate-500 {
+  color: #9fb0c5;
+}
+
+.dark .text-slate-600,
+[data-theme="dark"] .text-slate-600 {
+  color: #c4d0df;
+}
+
+.dark .text-slate-700,
+[data-theme="dark"] .text-slate-700 {
+  color: #dbe4f0;
+}
+
+.dark input,
+.dark select,
+.dark textarea,
+[data-theme="dark"] input,
+[data-theme="dark"] select,
+[data-theme="dark"] textarea {
+  color: var(--color-on-surface);
+  caret-color: var(--color-secondary);
+}
+
+.dark input::placeholder,
+.dark textarea::placeholder,
+[data-theme="dark"] input::placeholder,
+[data-theme="dark"] textarea::placeholder {
+  color: #a8b8cc;
+  opacity: 1;
+}
+
+/* Landing page headings must remain bright when dark variants are unavailable
+   in older utility output. */
+.dark .landing-page .text-slate-900,
+[data-theme="dark"] .landing-page .text-slate-900,
+.dark .landing-page .text-white,
+[data-theme="dark"] .landing-page .text-white {
+  color: #f8fafc;
+}
+
+.dark .landing-page .text-slate-100,
+[data-theme="dark"] .landing-page .text-slate-100 {
+  color: #e8f0fa;
+}
+
+.dark .landing-page .text-slate-600,
+[data-theme="dark"] .landing-page .text-slate-600 {
+  color: #cbd5e1;
+}
+
+.dark .landing-page .text-slate-300,
+[data-theme="dark"] .landing-page .text-slate-300 {
+  color: #dbe7f5;
+}
+
+.dark .landing-page .landing-card,
+[data-theme="dark"] .landing-page .landing-card {
+  background-color: #0b1628 !important;
+  border-color: #29466e !important;
+  color: #f8fafc !important;
+}
+
+.dark .landing-page [class*="bg-white/85"],
+[data-theme="dark"] .landing-page [class*="bg-white/85"] {
+  background-color: #0b1628 !important;
+  border-color: #29466e !important;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.38) !important;
+  color: #f8fafc !important;
+}
+
+/* Public pages: consistent card and text contrast in dark mode */
+.dark .public-page .bg-surface-container-lowest,
+[data-theme="dark"] .public-page .bg-surface-container-lowest {
+  background-color: #0b1628 !important;
+  border-width: 1px !important;
+  border-style: solid !important;
+  border-color: #3b526f !important;
+  color: #f8fafc;
+}
+
+.dark .public-page .bg-surface-container-low,
+[data-theme="dark"] .public-page .bg-surface-container-low {
+  background-color: #081224 !important;
+  border-width: 1px !important;
+  border-style: solid !important;
+  border-color: #3b526f !important;
+}
+
+.dark .public-page [class*="rounded-"][class*="border-outline"],
+[data-theme="dark"] .public-page [class*="rounded-"][class*="border-outline"] {
+  border-width: 1px !important;
+  border-style: solid !important;
+  border-color: #3b526f !important;
+}
+
+.dark .landing-page .landing-card,
+[data-theme="dark"] .landing-page .landing-card {
+  border-width: 1px !important;
+  border-style: solid !important;
+  border-color: #3b526f !important;
+}
+
+.dark .public-page .text-primary,
+[data-theme="dark"] .public-page .text-primary {
+  color: #f8fafc !important;
+}
+
+.dark .public-page .text-on-surface,
+[data-theme="dark"] .public-page .text-on-surface {
+  color: #f8fafc !important;
+}
+
+.dark .public-page .text-on-surface-variant,
+[data-theme="dark"] .public-page .text-on-surface-variant {
+  color: #cbd5e1 !important;
+}
+
+.dark .public-page .border-outline-variant\/30,
+[data-theme="dark"] .public-page .border-outline-variant\/30 {
+  border-color: #334155 !important;
 }
 
 @theme {

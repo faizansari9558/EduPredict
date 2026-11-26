@@ -1,119 +1,169 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import PageHeader from '../../components/PageHeader';
 import DataTable from '../../components/DataTable';
-import StatusBadge from '../../components/StatusBadge';
 import Button from '../../components/Button';
 import Modal from '../../components/Modal';
+import { teacherApi } from '../../services/teacherApi';
+
+const assessmentTypes = [
+  { value: 'coding', label: 'Coding Assessment' },
+  { value: 'aptitude', label: 'Aptitude & Logic' },
+  { value: 'general', label: 'General Assessment' }
+];
+
+function getAssessmentLabel(type) {
+  return assessmentTypes.find((option) => option.value === type)?.label || type;
+}
+
+function formatAverage(assessment) {
+  const maximum = Number(assessment.total_marks);
+  const score = Number(assessment.average_score);
+  if (!Number(assessment.evaluated_attempts) || maximum <= 0 || !Number.isFinite(score)) return '—';
+  return `${((score / maximum) * 100).toFixed(1)}%`;
+}
 
 export default function TeacherAssessments() {
-  const [assessments, setAssessments] = useState([
-    {
-      id: 1,
-      title: 'National Mock Placement Exam – Stage 3',
-      category: 'Mock Placement Drive',
-      duration: '90 Mins',
-      totalQuestions: 60,
-      submissions: '142 / 160',
-      avgScore: '78.4%',
-      status: 'active',
-      scheduledDate: 'Sep 12, 2024'
-    },
-    {
-      id: 2,
-      title: 'Advanced Data Structures Coding Challenge',
-      category: 'Coding Assessment',
-      duration: '120 Mins',
-      totalQuestions: 4,
-      submissions: '158 / 160',
-      avgScore: '84.2%',
-      status: 'completed',
-      scheduledDate: 'Aug 28, 2024'
-    },
-    {
-      id: 3,
-      title: 'Operating Systems & System Architecture Quiz',
-      category: 'Core CS Domain',
-      duration: '45 Mins',
-      totalQuestions: 30,
-      submissions: '155 / 160',
-      avgScore: '81.0%',
-      status: 'completed',
-      scheduledDate: 'Aug 14, 2024'
-    }
-  ]);
-
+  const [assessments, setAssessments] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [publishingId, setPublishingId] = useState(null);
+  const [error, setError] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [newTest, setNewTest] = useState({
+  const [newAssessment, setNewAssessment] = useState({
     title: '',
-    category: 'Coding Assessment',
-    duration: '60 Mins',
-    totalQuestions: 30,
-    scheduledDate: ''
+    description: '',
+    assessment_type: 'coding'
   });
 
-  const handleCreate = (e) => {
-    e.preventDefault();
-    if (!newTest.title) return;
-    const item = {
-      id: Date.now(),
-      title: newTest.title,
-      category: newTest.category,
-      duration: newTest.duration,
-      totalQuestions: Number(newTest.totalQuestions) || 30,
-      submissions: '0 / 160',
-      avgScore: 'N/A',
-      status: 'active',
-      scheduledDate: newTest.scheduledDate || 'Upcoming'
+  useEffect(() => {
+    let active = true;
+    teacherApi.getAssessments()
+      .then((response) => {
+        if (active) setAssessments(response.data || []);
+      })
+      .catch((requestError) => {
+        if (active) setError(requestError.message || 'Unable to load your assessments.');
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
     };
-    setAssessments([item, ...assessments]);
-    setIsModalOpen(false);
-    setNewTest({ title: '', category: 'Coding Assessment', duration: '60 Mins', totalQuestions: 30, scheduledDate: '' });
+  }, []);
+
+  const handleCreate = async (event) => {
+    event.preventDefault();
+    const title = newAssessment.title.trim();
+    if (!title) return;
+
+    setSaving(true);
+    setError('');
+    try {
+      const response = await teacherApi.createAssessment({
+        title,
+        description: newAssessment.description.trim(),
+        assessment_type: newAssessment.assessment_type
+      });
+      setAssessments((current) => [{
+        ...response.data,
+        total_marks: 100,
+        total_questions: 0,
+        submissions: 0,
+        evaluated_attempts: 0,
+        average_score: null,
+        published_at: null,
+        created_at: new Date().toISOString()
+      }, ...current]);
+      setNewAssessment({ title: '', description: '', assessment_type: 'coding' });
+      setIsModalOpen(false);
+    } catch (requestError) {
+      setError(requestError.message || 'Unable to create the assessment.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handlePublish = async (assessment) => {
+    setPublishingId(assessment.id);
+    setError('');
+    try {
+      await teacherApi.publishAssessment(assessment.id);
+      setAssessments((current) => current.map((item) => item.id === assessment.id
+        ? { ...item, published_at: new Date().toISOString() }
+        : item));
+    } catch (requestError) {
+      setError(requestError.message || 'Unable to publish the assessment.');
+    } finally {
+      setPublishingId(null);
+    }
   };
 
   const columns = [
     {
-      header: 'Assessment Title & Domain',
-      accessor: (row) => (
+      key: 'title',
+      label: 'Assessment',
+      render: (value, row) => (
         <div>
-          <div className="font-semibold text-on-surface">{row.title}</div>
-          <div className="text-xs text-on-surface-variant">{row.category} • Scheduled: {row.scheduledDate}</div>
+          <div className="font-semibold text-on-surface">{value}</div>
+          <div className="text-xs text-on-surface-variant">
+            {getAssessmentLabel(row.assessment_type)} · {row.description || 'No description'}
+          </div>
         </div>
       )
     },
     {
-      header: 'Duration / Questions',
-      accessor: (row) => (
-        <span className="text-xs text-on-surface font-medium">
-          {row.duration} • {row.totalQuestions} Qs
+      key: 'total_questions',
+      label: 'Questions',
+      render: (value, row) => `${Number(value) || 0} · ${row.total_marks ?? '—'} marks`
+    },
+    {
+      key: 'submissions',
+      label: 'Submissions',
+      render: (value) => Number(value) || 0
+    },
+    {
+      key: 'average_score',
+      label: 'Evaluated average',
+      render: (_, row) => formatAverage(row)
+    },
+    {
+      key: 'published_at',
+      label: 'Status',
+      render: (value) => (
+        <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
+          value ? 'bg-emerald-50 text-emerald-800' : 'bg-slate-100 text-slate-700'
+        }`}>
+          {value ? 'Published' : 'Draft'}
         </span>
       )
     },
     {
-      header: 'Submissions',
-      accessor: (row) => (
-        <span className="font-mono font-bold text-xs text-primary bg-primary/10 px-2 py-0.5 rounded">
-          {row.submissions}
-        </span>
-      )
-    },
-    {
-      header: 'Batch Avg Score',
-      accessor: (row) => <span className="font-mono font-bold text-xs text-on-surface">{row.avgScore}</span>
-    },
-    {
-      header: 'Status',
-      accessor: (row) => (
-        <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${row.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-slate-100 text-slate-700'}`}>
-          {row.status.toUpperCase()}
-        </span>
-      )
-    },
-    {
-      header: 'Action',
-      accessor: (row) => (
-        <Button variant="outline" size="sm" icon="monitoring">
-          Analytics
-        </Button>
+      key: 'actions',
+      label: 'Actions',
+      render: (_, row) => (
+        <div className="flex flex-wrap gap-2">
+          {!row.published_at && (
+            <Button
+              variant="outline"
+              size="sm"
+              icon="publish"
+              loading={publishingId === row.id}
+              disabled={Boolean(publishingId)}
+              onClick={() => handlePublish(row)}
+            >
+              Publish
+            </Button>
+          )}
+          <Button
+            variant="outline"
+            size="sm"
+            icon="analytics"
+            to={`/teacher/results?assessmentId=${row.id}`}
+          >
+            Results
+          </Button>
+        </div>
       )
     }
   ];
@@ -123,101 +173,81 @@ export default function TeacherAssessments() {
       <PageHeader
         eyebrow="Faculty Assessment Suite"
         title="Assessment Management"
-        subtitle="Author, configure, and monitor technical assessments and mock placement drives"
-        action={
+        subtitle="Assessments, submissions, and evaluated scores are fetched from your teacher account."
+        actions={
           <Button variant="primary" icon="add_task" onClick={() => setIsModalOpen(true)}>
             Create Assessment
           </Button>
         }
       />
 
+      {error && (
+        <div role="alert" className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+          {error}
+        </div>
+      )}
+
       <DataTable
         columns={columns}
         data={assessments}
-        keyExtractor={(r) => r.id}
+        emptyMessage={loading ? 'Loading your assessments…' : 'No assessments have been created by this teacher account.'}
       />
 
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        title="Create New Technical Assessment"
-        size="md"
+        title="Create Assessment"
       >
         <form onSubmit={handleCreate} className="space-y-4">
           <div>
-            <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">
-              Assessment Title *
+            <label htmlFor="assessment-title" className="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1.5">
+              Assessment title
             </label>
             <input
+              id="assessment-title"
               type="text"
               required
-              value={newTest.title}
-              onChange={(e) => setNewTest({ ...newTest, title: e.target.value })}
-              placeholder="e.g. Full Stack & API Architecture Challenge"
-              className="w-full px-4 py-2.5 rounded-xl border border-outline-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/20 text-xs bg-surface"
+              maxLength={255}
+              value={newAssessment.title}
+              onChange={(event) => setNewAssessment((current) => ({ ...current, title: event.target.value }))}
+              className="w-full rounded-xl border border-outline-variant/50 bg-surface px-4 py-2.5 text-sm"
+              placeholder="e.g. Data Structures Midterm"
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">
-                Category
-              </label>
-              <select
-                value={newTest.category}
-                onChange={(e) => setNewTest({ ...newTest, category: e.target.value })}
-                className="w-full px-4 py-2.5 rounded-xl border border-outline-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/20 text-xs bg-surface"
-              >
-                <option value="Coding Assessment">Coding Assessment</option>
-                <option value="Aptitude & Logic">Aptitude & Logic</option>
-                <option value="Core CS Domain">Core CS Domain</option>
-                <option value="Mock Placement Drive">Mock Placement Drive</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">
-                Duration
-              </label>
-              <input
-                type="text"
-                value={newTest.duration}
-                onChange={(e) => setNewTest({ ...newTest, duration: e.target.value })}
-                placeholder="60 Mins"
-                className="w-full px-4 py-2.5 rounded-xl border border-outline-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/20 text-xs bg-surface"
-              />
-            </div>
+          <div>
+            <label htmlFor="assessment-description" className="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1.5">
+              Description
+            </label>
+            <textarea
+              id="assessment-description"
+              rows={3}
+              value={newAssessment.description}
+              onChange={(event) => setNewAssessment((current) => ({ ...current, description: event.target.value }))}
+              className="w-full rounded-xl border border-outline-variant/50 bg-surface px-4 py-2.5 text-sm"
+              placeholder="What should students know about this assessment?"
+            />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">
-                Total Questions
-              </label>
-              <input
-                type="number"
-                value={newTest.totalQuestions}
-                onChange={(e) => setNewTest({ ...newTest, totalQuestions: e.target.value })}
-                className="w-full px-4 py-2.5 rounded-xl border border-outline-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/20 text-xs bg-surface"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">
-                Scheduled Date
-              </label>
-              <input
-                type="date"
-                value={newTest.scheduledDate}
-                onChange={(e) => setNewTest({ ...newTest, scheduledDate: e.target.value })}
-                className="w-full px-4 py-2.5 rounded-xl border border-outline-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/20 text-xs bg-surface"
-              />
-            </div>
+          <div>
+            <label htmlFor="assessment-type" className="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1.5">
+              Assessment type
+            </label>
+            <select
+              id="assessment-type"
+              value={newAssessment.assessment_type}
+              onChange={(event) => setNewAssessment((current) => ({ ...current, assessment_type: event.target.value }))}
+              className="w-full rounded-xl border border-outline-variant/50 bg-surface px-4 py-2.5 text-sm"
+            >
+              {assessmentTypes.map((option) => (
+                <option key={option.value} value={option.value}>{option.label}</option>
+              ))}
+            </select>
           </div>
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-outline-variant/20">
+          <div className="flex justify-end gap-3 border-t border-outline-variant/20 pt-4">
             <Button variant="outline" onClick={() => setIsModalOpen(false)}>Cancel</Button>
-            <Button type="submit" variant="primary">Schedule Test</Button>
+            <Button type="submit" variant="primary" loading={saving}>Create</Button>
           </div>
         </form>
       </Modal>

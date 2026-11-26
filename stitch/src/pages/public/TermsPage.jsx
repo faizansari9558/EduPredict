@@ -4,7 +4,7 @@ import PublicFooter from '../../components/PublicFooter';
 
 export default function TermsPage() {
   return (
-    <div className="min-h-screen bg-background font-body text-on-surface flex flex-col">
+    <div className="public-page min-h-screen bg-background font-body text-on-surface flex flex-col">
       <PublicHeader />
 
       <main className="w-full pt-20 flex-1">

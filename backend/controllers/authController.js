@@ -72,13 +72,21 @@ async function checkUniversityRecord(req, res) {
       });
     }
     const [rows] = await db.query(
-      `SELECT email, user_id_number, full_name, consumed_user_id
-       FROM institutional_identity_records
-       WHERE email = ? AND LOWER(user_id_number) = ? AND LOWER(full_name) = LOWER(?)`,
+      `SELECT i.email, i.user_id_number, i.full_name, i.role_name, i.department_id,
+              i.batch_id, i.consumed_user_id, d.name AS department_name
+       FROM institutional_identity_records i
+       LEFT JOIN departments d ON d.id = i.department_id
+       WHERE i.email = ? AND LOWER(i.user_id_number) = ? AND LOWER(i.full_name) = LOWER(?)`,
       [normalizedEmail, userIdNumber.trim().toLowerCase(), fullName.trim()]
     );
     if (!rows.length || rows[0].consumed_user_id) {
       return res.status(404).json({ success: false, message: 'The supplied institutional identity could not be verified.' });
+    }
+    if (rows[0].role_name === 'student' && (!rows[0].department_id || !rows[0].batch_id)) {
+      return res.status(409).json({ success: false, message: 'The institutional student record is missing department or batch placement.' });
+    }
+    if (rows[0].role_name === 'teacher' && !rows[0].department_id) {
+      return res.status(409).json({ success: false, message: 'The institutional teacher record is missing department placement.' });
     }
 
     const demo = await issueOtp(normalizedEmail, 'onboarding');
@@ -121,7 +129,21 @@ async function verifyOtp(req, res) {
       'UPDATE auth_otp_challenges SET verification_token_hash = ? WHERE id = ?',
       [hashToken(verificationToken), challenge.id]
     );
-    return res.json({ success: true, message: 'Email verified. You may now activate your account.', verificationToken });
+    const [identityRows] = await db.query(
+      `SELECT i.role_name, d.name AS department_name
+       FROM institutional_identity_records i
+       LEFT JOIN departments d ON d.id = i.department_id
+       WHERE i.email = ? AND i.consumed_user_id IS NULL`,
+      [normalizedEmail]
+    );
+    return res.json({
+      success: true,
+      message: 'Email verified. You may now activate your account.',
+      verificationToken,
+      data: identityRows[0]
+        ? { role: identityRows[0].role_name, department: identityRows[0].department_name }
+        : undefined
+    });
   } catch (error) {
     console.error('OTP verification error:', error);
     return res.status(503).json({ success: false, message: 'Authentication service unavailable.' });
@@ -163,6 +185,15 @@ async function register(req, res) {
     }
 
     const record = records[0];
+    if (record.role_name === 'student' && (!record.department_id || !record.batch_id)) {
+       await connection.rollback();
+       return res.status(409).json({ success: false, message: 'The institutional student record is missing department or batch placement.' });
+    }
+    if (record.role_name === 'teacher' && !record.department_id) {
+       await connection.rollback();
+       return res.status(409).json({ success: false, message: 'The institutional teacher record is missing department placement.' });
+    }
+
     const passwordHash = await hashPassword(password);
     const [result] = await connection.query(
       `INSERT INTO users (role_id, email, password_hash, user_id_number, full_name, status)
@@ -170,15 +201,17 @@ async function register(req, res) {
       [record.role_id, record.email, passwordHash, record.user_id_number, record.full_name]
     );
     if (record.role_name === 'student') {
-      if (!record.department_id || !record.batch_id) {
-        await connection.rollback();
-        return res.status(409).json({ success: false, message: 'The institutional record is missing student placement data.' });
-      }
       await connection.query(
         `INSERT INTO students (user_id, batch_id, department_id, enrollment_number)
          VALUES (?, ?, ?, ?)`,
         [result.insertId, record.batch_id, record.department_id, record.user_id_number]
       );
+    } else if (record.role_name === 'teacher') {
+       await connection.query(
+         `INSERT INTO teachers (user_id, department_id, employee_code)
+          VALUES (?, ?, ?)`,
+         [result.insertId, record.department_id, record.user_id_number]
+       );
     }
     await connection.query('UPDATE institutional_identity_records SET consumed_user_id = ? WHERE id = ?', [result.insertId, record.id]);
     await connection.query('UPDATE auth_otp_challenges SET consumed_at = CURRENT_TIMESTAMP WHERE id = ?', [proofs[0].id]);
@@ -204,50 +237,97 @@ async function requestPasswordReset(req, res) {
       `SELECT u.id, u.email FROM users u WHERE u.email = ? AND u.status = 'active'`,
       [email]
     );
-    if (users.length) {
-      const token = crypto.randomBytes(32).toString('hex');
-      await db.query(
-        `INSERT INTO password_reset_tokens (user_id, token_hash, expires_at)
-         VALUES (?, ?, DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 30 MINUTE))`,
-        [users[0].id, hashToken(token)]
-      );
-      const delivery = await sendPasswordResetLink({ to: users[0].email, token });
-      if (demoEmailEnabled() && delivery?.demo) {
-        return res.json({
-          success: true,
-          message: 'Demo reset email generated for local development.',
-          demoResetUrl: delivery.resetUrl,
-          demoOnly: true
-        });
-      }
+    if (!users.length) {
+      return res.status(404).json({ success: false, message: 'No active account exists with this email address.' });
     }
-    return res.json({ success: true, message: 'If the account exists, a reset link has been sent.' });
+    const demo = await issueOtp(users[0].email, 'password_reset');
+    return res.json({
+      success: true,
+      message: 'A demo password reset OTP was generated for this account.',
+      ...(demoEmailEnabled() && demo ? { demoOtp: demo.otp, demoOnly: true } : {})
+    });
   } catch (error) {
     return unavailableEmail(res, error);
   }
 }
 
+async function verifyPasswordResetOtp(req, res) {
+  const { email, otp } = req.body || {};
+  if (!email || !/^\d{6}$/.test(String(otp || ''))) {
+    return res.status(400).json({ success: false, message: 'A valid six-digit OTP is required.' });
+  }
+  try {
+    const normalizedEmail = email.trim().toLowerCase();
+    const [rows] = await db.query(
+      `SELECT id, otp_hash, expires_at, attempts
+       FROM auth_otp_challenges
+       WHERE email = ? AND purpose = 'password_reset' AND consumed_at IS NULL
+       ORDER BY created_at DESC LIMIT 1`,
+      [normalizedEmail]
+    );
+    const challenge = rows[0];
+    if (!challenge || new Date(challenge.expires_at) <= new Date() || challenge.attempts >= MAX_OTP_ATTEMPTS) {
+      return res.status(400).json({ success: false, message: 'The reset OTP is expired or unavailable.' });
+    }
+    if (hashToken(String(otp)) !== challenge.otp_hash) {
+      await db.query('UPDATE auth_otp_challenges SET attempts = attempts + 1 WHERE id = ?', [challenge.id]);
+      return res.status(400).json({ success: false, message: 'Invalid reset OTP.' });
+    }
+    const verificationToken = crypto.randomBytes(32).toString('hex');
+    await db.query(
+      'UPDATE auth_otp_challenges SET verification_token_hash = ? WHERE id = ?',
+      [hashToken(verificationToken), challenge.id]
+    );
+    return res.json({ success: true, message: 'OTP verified. You may now set a new password.', verificationToken });
+  } catch (error) {
+    console.error('Password reset OTP verification error:', error);
+    return res.status(503).json({ success: false, message: 'Password reset verification is temporarily unavailable.' });
+  }
+}
+
 async function resetPassword(req, res) {
-  const { token, password } = req.body || {};
-  if (!token || !password || String(password).length < 8) {
-    return res.status(400).json({ success: false, message: 'A valid reset token and password of at least 8 characters are required.' });
+  const { email, verificationToken, token, password } = req.body || {};
+  if (!password || String(password).length < 8) {
+    return res.status(400).json({ success: false, message: 'Password must be at least 8 characters long.' });
   }
   let connection;
   try {
     connection = await db.getConnection();
     await connection.beginTransaction();
-    const [rows] = await connection.query(
-      `SELECT id, user_id FROM password_reset_tokens
-       WHERE token_hash = ? AND used_at IS NULL AND expires_at > CURRENT_TIMESTAMP
-       FOR UPDATE`,
-      [hashToken(token)]
-    );
+    let rows;
+    if (verificationToken && email) {
+      [rows] = await connection.query(
+        `SELECT c.id AS challenge_id, u.id AS user_id
+         FROM auth_otp_challenges c
+         JOIN users u ON u.email = c.email
+         WHERE c.email = ? AND c.purpose = 'password_reset'
+           AND c.verification_token_hash = ? AND c.consumed_at IS NULL
+           AND c.expires_at > CURRENT_TIMESTAMP
+         ORDER BY c.created_at DESC LIMIT 1 FOR UPDATE`,
+        [email.trim().toLowerCase(), hashToken(verificationToken)]
+      );
+      if (rows.length) {
+        await connection.query('UPDATE auth_otp_challenges SET consumed_at = CURRENT_TIMESTAMP WHERE id = ?', [rows[0].challenge_id]);
+      }
+    } else if (token) {
+      [rows] = await connection.query(
+        `SELECT id, user_id FROM password_reset_tokens
+         WHERE token_hash = ? AND used_at IS NULL AND expires_at > CURRENT_TIMESTAMP
+         FOR UPDATE`,
+        [hashToken(token)]
+      );
+    } else {
+      await connection.rollback();
+      return res.status(400).json({ success: false, message: 'A verified reset OTP or reset token is required.' });
+    }
     if (!rows.length) {
       await connection.rollback();
-      return res.status(400).json({ success: false, message: 'The reset link is invalid or expired.' });
+      return res.status(400).json({ success: false, message: 'The reset verification is invalid or expired.' });
     }
     await connection.query('UPDATE users SET password_hash = ? WHERE id = ?', [await hashPassword(password), rows[0].user_id]);
-    await connection.query('UPDATE password_reset_tokens SET used_at = CURRENT_TIMESTAMP WHERE id = ?', [rows[0].id]);
+    if (token) {
+      await connection.query('UPDATE password_reset_tokens SET used_at = CURRENT_TIMESTAMP WHERE id = ?', [rows[0].id]);
+    }
     await connection.commit();
     return res.json({ success: true, message: 'Password reset successfully.' });
   } catch (error) {
@@ -256,6 +336,41 @@ async function resetPassword(req, res) {
     return res.status(503).json({ success: false, message: 'Password reset is temporarily unavailable.' });
   } finally {
     if (connection) connection.release();
+  }
+}
+
+async function ensureTeacherProfile(user) {
+  const [existingProfiles] = await db.query(
+    'SELECT id FROM teachers WHERE user_id = ?',
+    [user.id]
+  );
+  if (existingProfiles.length) return;
+
+  const [identityRows] = await db.query(
+    `SELECT department_id, user_id_number
+     FROM institutional_identity_records
+     WHERE consumed_user_id = ? AND role_name = 'teacher' AND department_id IS NOT NULL`,
+    [user.id]
+  );
+  if (!identityRows.length) {
+    const error = new Error('The institutional teacher record has no department assignment.');
+    error.code = 'TEACHER_PROFILE_UNAVAILABLE';
+    throw error;
+  }
+
+  try {
+    await db.query(
+      `INSERT INTO teachers (user_id, department_id, employee_code)
+       VALUES (?, ?, ?)`,
+      [user.id, identityRows[0].department_id, identityRows[0].user_id_number]
+    );
+  } catch (error) {
+    if (error.code !== 'ER_DUP_ENTRY') throw error;
+    const [profilesAfterConflict] = await db.query(
+      'SELECT id FROM teachers WHERE user_id = ?',
+      [user.id]
+    );
+    if (!profilesAfterConflict.length) throw error;
   }
 }
 
@@ -274,6 +389,23 @@ async function login(req, res) {
     if (!user || !(await comparePassword(password, user.password_hash))) {
       return res.status(401).json({ success: false, message: 'Invalid credentials.' });
     }
+    if (user.role_name === 'teacher') {
+      try {
+        await ensureTeacherProfile(user);
+      } catch (error) {
+        if (error.code === 'TEACHER_PROFILE_UNAVAILABLE') {
+          return res.status(409).json({
+            success: false,
+            message: 'The teacher account is missing its official department assignment. Contact an administrator.'
+          });
+        }
+        console.error('Teacher profile repair error:', error);
+        return res.status(503).json({
+          success: false,
+          message: 'Teacher profile service is temporarily unavailable.'
+        });
+      }
+    }
     return res.json({
       success: true,
       message: 'Login successful.',
@@ -291,5 +423,5 @@ async function me(req, res) {
 }
 
 module.exports = {
-  checkUniversityRecord, verifyOtp, register, requestPasswordReset, resetPassword, login, me
+  checkUniversityRecord, verifyOtp, register, requestPasswordReset, verifyPasswordResetOtp, resetPassword, login, me
 };

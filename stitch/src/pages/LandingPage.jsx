@@ -21,7 +21,7 @@ import PublicFooter from '../components/PublicFooter';
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-background font-body text-on-surface antialiased flex flex-col selection:bg-secondary/20 selection:text-secondary transition-colors duration-200">
+    <div className="landing-page min-h-screen bg-background font-body text-on-surface antialiased flex flex-col selection:bg-secondary/20 selection:text-secondary transition-colors duration-200">
       {/* 1. STICKY TOPBAR HEADER */}
       <PublicHeader />
 
@@ -95,7 +95,7 @@ export default function LandingPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 max-w-6xl mx-auto text-left">
 
               {/* CARD 1: Student Portal */}
-              <div className="bg-white/85 dark:bg-[#070e1e]/85 backdrop-blur-xl rounded-2xl border border-slate-200/90 dark:border-blue-900/40 p-6 sm:p-7 shadow-[0_4px_20px_rgba(0,0,0,0.03)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.45)] hover:shadow-lg transition-all flex flex-col justify-between">
+              <div className="landing-card bg-white/85 dark:bg-[#070e1e]/85 backdrop-blur-xl rounded-2xl border border-slate-200/90 dark:border-blue-900/40 p-6 sm:p-7 shadow-[0_4px_20px_rgba(0,0,0,0.03)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.45)] hover:shadow-lg transition-all flex flex-col justify-between">
                 <div>
                   {/* Top Bar: Icon + Badge */}
                   <div className="flex items-center justify-between">
@@ -153,7 +153,7 @@ export default function LandingPage() {
               </div>
 
               {/* CARD 2: Teacher Portal */}
-              <div className="bg-white/85 dark:bg-[#070e1e]/85 backdrop-blur-xl rounded-2xl border border-slate-200/90 dark:border-blue-900/40 p-6 sm:p-7 shadow-[0_4px_20px_rgba(0,0,0,0.03)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.45)] hover:shadow-lg transition-all flex flex-col justify-between">
+              <div className="landing-card bg-white/85 dark:bg-[#070e1e]/85 backdrop-blur-xl rounded-2xl border border-slate-200/90 dark:border-blue-900/40 p-6 sm:p-7 shadow-[0_4px_20px_rgba(0,0,0,0.03)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.45)] hover:shadow-lg transition-all flex flex-col justify-between">
                 <div>
                   {/* Top Bar: Icon + Badge */}
                   <div className="flex items-center justify-between">
@@ -217,7 +217,7 @@ export default function LandingPage() {
               </div>
 
               {/* CARD 3: Admin Portal */}
-              <div className="bg-white/85 dark:bg-[#070e1e]/85 backdrop-blur-xl rounded-2xl border border-slate-200/90 dark:border-blue-900/40 p-6 sm:p-7 shadow-[0_4px_20px_rgba(0,0,0,0.03)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.45)] hover:shadow-lg transition-all flex flex-col justify-between">
+              <div className="landing-card bg-white/85 dark:bg-[#070e1e]/85 backdrop-blur-xl rounded-2xl border border-slate-200/90 dark:border-blue-900/40 p-6 sm:p-7 shadow-[0_4px_20px_rgba(0,0,0,0.03)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.45)] hover:shadow-lg transition-all flex flex-col justify-between">
                 <div>
                   {/* Top Bar: Icon + Badge */}
                   <div className="flex items-center justify-between">
@@ -302,7 +302,7 @@ export default function LandingPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 max-w-6xl mx-auto text-left">
 
               {/* CARD 1: Machine Learning Placement Prediction */}
-              <div className="bg-white/85 dark:bg-[#070e1e]/85 backdrop-blur-xl rounded-2xl border border-slate-200/90 dark:border-blue-900/40 p-6 sm:p-7 shadow-[0_4px_20px_rgba(0,0,0,0.03)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.45)] hover:shadow-lg transition-all flex flex-col justify-between">
+              <div className="landing-card bg-white/85 dark:bg-[#070e1e]/85 backdrop-blur-xl rounded-2xl border border-slate-200/90 dark:border-blue-900/40 p-6 sm:p-7 shadow-[0_4px_20px_rgba(0,0,0,0.03)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.45)] hover:shadow-lg transition-all flex flex-col justify-between">
                 <div>
                   <div className="w-11 h-11 rounded-xl bg-sky-50 dark:bg-sky-950/60 flex items-center justify-center text-sky-500">
                     <GitFork className="w-5 h-5" />
@@ -321,7 +321,7 @@ export default function LandingPage() {
               </div>
 
               {/* CARD 2: Coding & Aptitude Assessment Engine */}
-              <div className="bg-white/85 dark:bg-[#070e1e]/85 backdrop-blur-xl rounded-2xl border border-slate-200/90 dark:border-blue-900/40 p-6 sm:p-7 shadow-[0_4px_20px_rgba(0,0,0,0.03)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.45)] hover:shadow-lg transition-all flex flex-col justify-between">
+              <div className="landing-card bg-white/85 dark:bg-[#070e1e]/85 backdrop-blur-xl rounded-2xl border border-slate-200/90 dark:border-blue-900/40 p-6 sm:p-7 shadow-[0_4px_20px_rgba(0,0,0,0.03)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.45)] hover:shadow-lg transition-all flex flex-col justify-between">
                 <div>
                   <div className="w-11 h-11 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 flex items-center justify-center text-indigo-500">
                     <Terminal className="w-5 h-5" />
@@ -340,7 +340,7 @@ export default function LandingPage() {
               </div>
 
               {/* CARD 3: Teacher Document Verification */}
-              <div className="bg-white/85 dark:bg-[#070e1e]/85 backdrop-blur-xl rounded-2xl border border-slate-200/90 dark:border-blue-900/40 p-6 sm:p-7 shadow-[0_4px_20px_rgba(0,0,0,0.03)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.45)] hover:shadow-lg transition-all flex flex-col justify-between">
+              <div className="landing-card bg-white/85 dark:bg-[#070e1e]/85 backdrop-blur-xl rounded-2xl border border-slate-200/90 dark:border-blue-900/40 p-6 sm:p-7 shadow-[0_4px_20px_rgba(0,0,0,0.03)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.45)] hover:shadow-lg transition-all flex flex-col justify-between">
                 <div>
                   <div className="w-11 h-11 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 flex items-center justify-center text-emerald-500">
                     <FileCheck className="w-5 h-5" />
@@ -359,7 +359,7 @@ export default function LandingPage() {
               </div>
 
               {/* CARD 4: Strengths & Weakness Analysis */}
-              <div className="bg-white/85 dark:bg-[#070e1e]/85 backdrop-blur-xl rounded-2xl border border-slate-200/90 dark:border-blue-900/40 p-6 sm:p-7 shadow-[0_4px_20px_rgba(0,0,0,0.03)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.45)] hover:shadow-lg transition-all flex flex-col justify-between">
+              <div className="landing-card bg-white/85 dark:bg-[#070e1e]/85 backdrop-blur-xl rounded-2xl border border-slate-200/90 dark:border-blue-900/40 p-6 sm:p-7 shadow-[0_4px_20px_rgba(0,0,0,0.03)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.45)] hover:shadow-lg transition-all flex flex-col justify-between">
                 <div>
                   <div className="w-11 h-11 rounded-xl bg-amber-50 dark:bg-amber-950/60 flex items-center justify-center text-amber-500">
                     <Compass className="w-5 h-5" />
@@ -378,7 +378,7 @@ export default function LandingPage() {
               </div>
 
               {/* CARD 5: Role-Based Access Control */}
-              <div className="bg-white/85 dark:bg-[#070e1e]/85 backdrop-blur-xl rounded-2xl border border-slate-200/90 dark:border-blue-900/40 p-6 sm:p-7 shadow-[0_4px_20px_rgba(0,0,0,0.03)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.45)] hover:shadow-lg transition-all flex flex-col justify-between">
+              <div className="landing-card bg-white/85 dark:bg-[#070e1e]/85 backdrop-blur-xl rounded-2xl border border-slate-200/90 dark:border-blue-900/40 p-6 sm:p-7 shadow-[0_4px_20px_rgba(0,0,0,0.03)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.45)] hover:shadow-lg transition-all flex flex-col justify-between">
                 <div>
                   <div className="w-11 h-11 rounded-xl bg-purple-50 dark:bg-purple-950/60 flex items-center justify-center text-purple-500">
                     <Shield className="w-5 h-5" />
@@ -397,7 +397,7 @@ export default function LandingPage() {
               </div>
 
               {/* CARD 6: Academic Structure & Batch Management */}
-              <div className="bg-white/85 dark:bg-[#070e1e]/85 backdrop-blur-xl rounded-2xl border border-slate-200/90 dark:border-blue-900/40 p-6 sm:p-7 shadow-[0_4px_20px_rgba(0,0,0,0.03)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.45)] hover:shadow-lg transition-all flex flex-col justify-between">
+              <div className="landing-card bg-white/85 dark:bg-[#070e1e]/85 backdrop-blur-xl rounded-2xl border border-slate-200/90 dark:border-blue-900/40 p-6 sm:p-7 shadow-[0_4px_20px_rgba(0,0,0,0.03)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.45)] hover:shadow-lg transition-all flex flex-col justify-between">
                 <div>
                   <div className="w-11 h-11 rounded-xl bg-teal-50 dark:bg-teal-950/60 flex items-center justify-center text-teal-500">
                     <Network className="w-5 h-5" />

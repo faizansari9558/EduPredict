@@ -5,7 +5,7 @@ import { authApi } from '../services/api';
 
 /**
  * Stitch Official Topbar Header
- * Includes Predictive Search, Academic Session Filter, Persona Switcher, & Notifications
+ * Includes Predictive Search, Academic Session Filter, Account Menu, & Notifications
  */
 export default function Navbar({
   role = 'student',
@@ -15,16 +15,15 @@ export default function Navbar({
 }) {
   const navigate = useNavigate();
   const [sessionOpen, setSessionOpen] = useState(false);
-  const [personaOpen, setPersonaOpen] = useState(false);
+  const [accountOpen, setAccountOpen] = useState(false);
   const [selectedYear, setSelectedYear] = useState('2024 - 2025');
-
-  const personas = [
-    { role: 'student', label: 'Faiz Ansari (Student)', path: '/student/dashboard', email: 'faiz.ansari@edupredict.edu' },
-    { role: 'teacher', label: 'Dr. Anand Sharma (Faculty)', path: '/teacher/dashboard', email: 'sharma@edupredict.local' },
-    { role: 'admin', label: 'System Admin (Dean Office)', path: '/admin/dashboard', email: 'admin@edupredict.local' }
-  ];
-
-  const currentPersona = personas.find((p) => p.role === role) || personas[0];
+  const displayName = user?.full_name || user?.email || 'Account';
+  const initials = displayName
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0].toUpperCase())
+    .join('');
 
   return (
     <header
@@ -59,7 +58,7 @@ export default function Navbar({
         </div>
       </div>
 
-      {/* Right: Academic Session, Notifications, User Persona Switcher */}
+      {/* Right: Academic Session, Notifications, Signed-In Account */}
       <div className="flex items-center gap-2 sm:gap-3">
         {/* Academic Session Selector */}
         <div className="relative hidden md:block">
@@ -115,69 +114,49 @@ export default function Navbar({
 
         <div className="h-6 w-px bg-outline-variant/40 mx-1 hidden sm:block" />
 
-        {/* Quick Persona Switcher Dropdown */}
+        {/* Signed-In Account Menu */}
         <div className="relative">
           <button
-            onClick={() => setPersonaOpen(!personaOpen)}
+            onClick={() => setAccountOpen(!accountOpen)}
+            aria-label="Open account menu"
             className="flex items-center gap-2 p-1.5 rounded-lg hover:bg-surface-container transition-colors"
           >
             <div className="w-8 h-8 rounded-full bg-primary-container text-on-primary flex items-center justify-center text-xs font-bold ring-2 ring-secondary/20">
-              {role === 'student' ? 'FA' : role === 'teacher' ? 'AS' : 'AD'}
+              {initials}
             </div>
             <div className="hidden xl:flex flex-col text-left leading-tight">
               <span className="text-xs font-bold text-on-surface">
-                {currentPersona.label.split(' (')[0]}
+                {displayName}
               </span>
               <span className="text-[10px] font-semibold text-secondary capitalize">
-                {role} Mode ▾
+                {role} Account ▾
               </span>
             </div>
           </button>
 
-          {personaOpen && (
+          {accountOpen && (
             <div className="absolute right-0 mt-2 w-64 bg-surface-container-lowest rounded-2xl shadow-xl border border-outline-variant/40 p-2 z-50 animate-fade-in">
               <div className="px-3 py-2 border-b border-outline-variant/30 mb-1">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">
-                  Switch Portal Persona
+                  Signed-In Account
                 </span>
+                <p className="mt-1 text-xs font-semibold text-on-surface">{user?.full_name || 'Name unavailable'}</p>
+                <p className="text-[10px] text-on-surface-variant break-all">{user?.email}</p>
+                {user?.user_id_number && (
+                  <p className="mt-1 text-[10px] text-on-surface-variant">ID: {user.user_id_number}</p>
+                )}
               </div>
-              {personas.map((p) => (
-                <button
-                  key={p.role}
-                  onClick={() => {
-                    setPersonaOpen(false);
-                    navigate(p.path);
-                  }}
-                  className={`w-full text-left px-3 py-2 rounded-xl text-xs flex items-center justify-between transition-colors ${
-                    role === p.role
-                      ? 'bg-secondary text-on-secondary font-bold shadow-sm'
-                      : 'text-on-surface hover:bg-surface-container-low'
-                  }`}
-                >
-                  <div className="flex flex-col">
-                    <span>{p.label}</span>
-                    <span className={`text-[10px] ${role === p.role ? 'text-white/80' : 'text-on-surface-variant'}`}>
-                      {p.email}
-                    </span>
-                  </div>
-                  {role === p.role && (
-                    <span className="material-symbols-outlined text-[16px]">check</span>
-                  )}
-                </button>
-              ))}
-              <div className="mt-1 pt-1 border-t border-outline-variant/30">
-                <button
-                  onClick={() => {
-                    setPersonaOpen(false);
-                    authApi.logout();
-                    navigate('/login');
-                  }}
-                  className="w-full text-left px-3 py-2 rounded-xl text-xs text-rose-600 hover:bg-rose-50 flex items-center gap-2 font-semibold"
-                >
-                  <span className="material-symbols-outlined text-[16px]">logout</span>
-                  Sign Out
-                </button>
-              </div>
+              <button
+                onClick={() => {
+                  setAccountOpen(false);
+                  authApi.logout();
+                  navigate('/login');
+                }}
+                className="w-full text-left px-3 py-2 rounded-xl text-xs text-rose-600 hover:bg-rose-50 flex items-center gap-2 font-semibold"
+              >
+                <span className="material-symbols-outlined text-[16px]">logout</span>
+                Sign Out
+              </button>
             </div>
           )}
         </div>

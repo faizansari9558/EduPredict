@@ -20,7 +20,7 @@ export default function RegisterPage() {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [userIdNumber, setUserIdNumber] = useState('');
-  const [department, setDepartment] = useState('Computer Science & Engineering');
+  const [department, setDepartment] = useState('');
 
   // Step 2 OTP State
   const [otp, setOtp] = useState('');
@@ -102,7 +102,10 @@ export default function RegisterPage() {
       setCanResend(false);
       setCurrentStep(2);
     } catch (err) {
-      setError(err.message || 'University record verification failed.');
+      const message = err.message || 'University record verification failed.';
+      setError(/identity could not be verified/i.test(message)
+        ? 'We could not find a matching institutional record. Check your full name, official email, and university ID, or ask your administrator to provision your record.'
+        : message);
     } finally {
       setLoading(false);
     }
@@ -148,6 +151,8 @@ export default function RegisterPage() {
       });
 
       if (res?.success) {
+        setRole(res.data?.role || role);
+        setDepartment(res.data?.department || '');
         setVerificationToken(res.verificationToken);
         setSuccessMsg('Email verified successfully! Now set your secure account password.');
         setCurrentStep(3);
@@ -385,7 +390,7 @@ export default function RegisterPage() {
 
                   <div>
                     <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">
-                      University User ID (Roll / Admission / Employee ID) *
+                      University User ID  *
                     </label>
                     <input
                       type="text"
@@ -400,19 +405,11 @@ export default function RegisterPage() {
 
                 <div>
                   <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">
-                    Academic Department
+                    Official Department
                   </label>
-                  <select
-                    value={department}
-                    onChange={(e) => setDepartment(e.target.value)}
-                    className="w-full px-4 py-2.5 rounded-xl border border-outline-variant/50 focus:outline-none focus:ring-2 focus:ring-secondary/30 text-sm bg-surface text-on-surface"
-                  >
-                    <option value="Computer Science & Engineering">Computer Science &amp; Engineering</option>
-                    <option value="Information Technology">Information Technology</option>
-                    <option value="Electronics & Communication">Electronics &amp; Communication</option>
-                    <option value="Electrical & Electronics">Electrical &amp; Electronics</option>
-                    <option value="Mechanical Engineering">Mechanical Engineering</option>
-                  </select>
+                  <div className="w-full px-4 py-2.5 rounded-xl border border-outline-variant/50 text-sm bg-surface-container-low text-on-surface">
+                    {department || 'Shown after email verification'}
+                  </div>
                 </div>
 
                 {/* Verification Notice */}
@@ -421,7 +418,7 @@ export default function RegisterPage() {
                     verified_user
                   </span>
                   <p className="text-[11px] text-on-surface-variant leading-relaxed">
-                    EduPredict verifies your email and ID with pre-authorized university records before generating a 6-digit OTP code.
+                    Your department comes from your pre-authorized university record and appears after email verification. Enter the exact full name, official email, and university ID registered with your institution.
                   </p>
                 </div>
 

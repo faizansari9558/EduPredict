@@ -3,7 +3,7 @@
  * Communicates with Node.js/Express backend (port 5000)
  */
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
+export const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 export function getAuthToken() {
   return localStorage.getItem('edupredict_jwt') || null;
@@ -61,6 +61,10 @@ export const authApi = {
   login: async (email,password) => { const res=await apiClient('/auth/login',{body:{email,password}}); setAuthToken(res.token); return res; },
   register: async body => { const res=await apiClient('/auth/register',{body}); setAuthToken(res.token); return res; },
   requestPasswordReset: email => apiClient('/auth/forgot-password', { body: { email } }),
+  verifyPasswordResetOtp: (email, otp) => apiClient('/auth/verify-reset-otp', { body: { email, otp } }),
+  resetPassword: (email, verificationToken, password) => apiClient('/auth/reset-password', {
+    body: { email, verificationToken, password }
+  }),
   getMe: () => apiClient('/auth/me'),
   logout: () => setAuthToken(null)
 };
@@ -71,12 +75,16 @@ export const adminApi = {
     const endpoint = `/admin/users${query ? `?${query}` : ''}`;
     return await apiClient(endpoint);
   },
+  getDepartments: () => apiClient('/admin/departments'),
+  getBatches: (departmentId) => apiClient(`/admin/batches?departmentId=${encodeURIComponent(departmentId)}`),
   createUser: async (userData) => {
     return await apiClient('/admin/users', { body: userData });
   },
   bulkImportUsers: async (usersOrFile) => {
-    if (usersOrFile instanceof File) {
-      return await apiClient('/admin/users/bulk', { body: usersOrFile });
+    if (typeof File !== 'undefined' && usersOrFile instanceof File) {
+      const formData = new FormData();
+      formData.append('file', usersOrFile);
+      return await apiClient('/admin/users/bulk', { body: formData });
     }
     return await apiClient('/admin/users/bulk', { body: { users: usersOrFile } });
   }

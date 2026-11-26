@@ -9,6 +9,8 @@ const predictionController = require('../controllers/predictionController');
 const { authenticateToken, authorizeRoles } = require('../middleware/auth');
 const db = require('../config/db');
 
+router.get('/me', authenticateToken, authorizeRoles('student'), predictionController.getStudentPlacementPrediction);
+
 /**
  * GET /api/prediction/model-info
  * Get model metadata and metrics

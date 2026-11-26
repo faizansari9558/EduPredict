@@ -6,7 +6,7 @@
 const express = require('express');
 const router = express.Router();
 const analyticsController = require('../controllers/analyticsController');
-const { authenticateToken } = require('../middleware/auth');
+const { authenticateToken, authorizeRoles } = require('../middleware/auth');
 
 // ============================================================================
 // STUDENT ANALYTICS ROUTES
@@ -88,19 +88,23 @@ router.get('/department/:departmentId/skills', authenticateToken, analyticsContr
  * GET /api/analytics/admin/system-overview
  * Get system-wide analytics (admin only)
  */
-router.get('/admin/system-overview', authenticateToken, analyticsController.getSystemOverview);
+router.get('/admin/system-overview', authenticateToken, authorizeRoles('admin'), analyticsController.getSystemOverview);
 
 /**
  * GET /api/analytics/admin/departments
  * Get comparative metrics for all departments (admin only)
  */
-router.get('/admin/departments', authenticateToken, analyticsController.getDepartmentComparison);
+router.get('/admin/departments', authenticateToken, authorizeRoles('admin'), analyticsController.getDepartmentComparison);
 
 /**
  * GET /api/analytics/admin/placement-readiness
  * Get placement readiness statistics by department (admin only)
  */
-router.get('/admin/placement-readiness', authenticateToken, analyticsController.getPlacementReadiness);
-router.get('/admin/compensation-tiers', authenticateToken, analyticsController.getCompensationTiers);
+router.get('/admin/placement-readiness', authenticateToken, authorizeRoles('admin'), analyticsController.getPlacementReadiness);
+router.get('/admin/student-performance', authenticateToken, authorizeRoles('admin'), analyticsController.getStudentPerformanceDistribution);
+router.get('/admin/assessment-results', authenticateToken, authorizeRoles('admin'), analyticsController.getAssessmentResultsDistribution);
+router.get('/admin/academic-trends', authenticateToken, authorizeRoles('admin'), analyticsController.getAcademicTrends);
+router.get('/admin/skills-comparison', authenticateToken, authorizeRoles('admin'), analyticsController.getSkillsComparison);
+router.get('/admin/compensation-tiers', authenticateToken, authorizeRoles('admin'), analyticsController.getCompensationTiers);
 
 module.exports = router;

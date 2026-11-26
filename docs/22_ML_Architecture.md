@@ -2,7 +2,11 @@
 
 ## 1. ML Pipeline Architecture
 
-The EduPredict Machine Learning tier is architected as an asynchronous, independent microservice decoupled from the Node.js API server.
+The EduPredict Machine Learning tier is an independent FastAPI service
+decoupled from the Node.js API server. Inference is synchronous over HTTP.
+The service uses a pure-NumPy predictor and serializes its trained model and
+preprocessing parameters as JSON, avoiding a runtime dependency on
+scikit-learn or binary model artifacts.
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -10,8 +14,8 @@ The EduPredict Machine Learning tier is architected as an asynchronous, independ
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                             │
 │  [ EXPRESS API SERVER (PORT 5000) ]                                         │
-│  • Gathers verified academic metrics & assessment scores from MySQL         │
-│  • Constructs 16-feature input vector                                       │
+│  • Gathers student academic, assessment, and profile metrics               │
+│  • Sends a StudentFeatures JSON payload                                    │
 │                                                                             │
 │                        │ HTTP POST (JSON Payload)                           │
 │                        ▼                                                    │
@@ -19,18 +23,18 @@ The EduPredict Machine Learning tier is architected as an asynchronous, independ
 │  ├── `ml/app.py` (FastAPI ASGI Web Server)                                  │
 │  │                                                                          │
 │  ├── [ FEATURE PREPROCESSING PIPELINE (`pipeline.py`) ]                     │
-│  │   • Feature Validation & Type Casting                                    │
-│  │   • Categorical Encoding (One-Hot / Ordinal)                             │
-│  │   • StandardScaler Feature Normalization                                 │
+│  │   • Pydantic range and type validation                                  │
+│  │   • Five domain-specific engineered features                            │
+│  │   • Mean/standard-deviation normalization learned during training       │
 │  │                                                                          │
-│  ├── [ TRAINED INFERENCE MODEL (`placement_model.joblib`) ]                 │
-│  │   • Logistic Regression / Gradient Boosting Classifier                   │
-│  │   • `predict_proba()` ──► Placement Probability (0.0% to 100.0%)         │
+│  ├── [ TRAINED INFERENCE MODEL (`placement_model.json`) ]                   │
+│  │   • Logistic Regression trained with NumPy gradient descent              │
+│  │   • `predict_proba()` ──► Placement Probability (0.0 to 1.0)             │
 │  │                                                                          │
 │  └── [ EXPLAINABILITY ENGINE (`explainability.py`) ]                        │
-│      • Feature Contribution Impact Scoring                                  │
-│      • Top 3 Positive Drivers & Top 3 Risk Blockers Identification          │
-│      • Prescriptive Improvement Recommendations Generation                  │
+│      • Positive drivers and risk blockers                                   │
+│      • Risk-level classification                                            │
+│      • Prescriptive improvement recommendations                             │
 │                                                                             │
 │                        │ HTTP Response (JSON Forecast & Explainability)     │
 │                        ▼                                                    │
@@ -39,41 +43,68 @@ The EduPredict Machine Learning tier is architected as an asynchronous, independ
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
----
-
 ## 2. Microservice API Endpoints (`ml/app.py`)
 
 ### 2.1 Liveness & Diagnostic Endpoints
-- `GET /health`: Returns microservice health status, uptime, and model load confirmation:
-  ```json
-  { "status": "online", "service": "EduPredict ML Microservice", "model_loaded": true }
-  ```
-- `GET /model-info`: Returns model hyperparameters, feature list, and evaluation metrics:
+
+- `GET /health`: Loads the model if necessary and returns service status and
+  model confirmation:
   ```json
   {
-    "model_name": "LogisticRegression",
-    "roc_auc": 0.8984,
-    "f1_score": 0.8676,
-    "feature_count": 16,
-    "features": ["cgpa", "tenth_percentage", "twelfth_percentage", "backlogs", "aptitude_score", "coding_score", ...]
+    "status": "healthy",
+    "service": "EduPredict ML API",
+    "model_loaded": true,
+    "model_name": "Logistic Regression (Baseline)",
+    "timestamp": "2026-01-01T00:00:00+00:00"
   }
   ```
+- `GET /model-info`: Returns the selected model, training timestamp, metrics,
+  feature importances, and feature lists. Metric values are generated from
+  the trained dataset and therefore change when the model is retrained.
 
 ### 2.2 Inference Endpoints
-- `POST /predict/placement`: Takes single student 16-feature vector and outputs placement probability and confidence category.
-- `POST /predict/explain`: Returns placement probability together with top positive drivers and risk blockers.
-- `POST /predict/batch`: High-throughput batch inference endpoint accepting a list of student records for cohort placement forecasting.
 
----
+- `POST /predict/placement`: Accepts one `StudentFeatures` record and returns
+  placement probability, readiness, tier, confidence, and estimated package.
+- `POST /predict/explain`: Returns the placement response plus positive
+  drivers, risk blockers, risk level, and actionable recommendations.
+- `POST /predict/batch`: Accepts `{ "batch_id": number, "students": [...] }`
+  and returns per-student results plus cohort summary counts and average
+  probability.
 
-## 3. Resilience & Fallback Protocol
+`StudentFeatures` contains the following fields:
+`student_id`, `cgpa`, `tenth_percentage`, `twelfth_percentage`,
+`backlogs_count`, `aptitude_score`, `coding_score`, `num_skills`,
+`num_projects`, `num_certifications`, `num_internships`, and
+`profile_completion_pct`. Most fields have defaults in the Pydantic schema;
+bounded percentage and score fields are validated from 0 to 100.
 
-If the FastAPI ML microservice is temporarily unreachable:
-1. `backend/services/mlService.js` intercepts network errors (timeout or connection refused).
-2. The service logs a warning and automatically activates a deterministic rule-based fallback heuristic:
-   ```javascript
-   const fallbackProb = Math.min(100, Math.max(0,
-     (cgpa * 6.5) + (aptitudeScore * 0.25) + (codingScore * 0.25) - (backlogs * 12)
-   ));
-   ```
-3. Dashboard receives valid data marked `is_fallback: true` ensuring uninterrupted user experience.
+## 3. Feature Transformation
+
+The model receives 11 raw features. The preprocessing pipeline derives five
+additional features:
+
+- `academic_index`: weighted CGPA, tenth-percentage, and twelfth-percentage
+  score.
+- `technical_index`: weighted aptitude and coding score.
+- `experience_score`: capped contribution from projects, internships, and
+  certifications.
+- `backlog_penalty`: `backlogs_count * 15`.
+- `holistic_readiness`: weighted academic, technical, and experience score
+  minus the backlog penalty.
+
+The 16 resulting columns are normalized using the training mean and standard
+deviation saved in the JSON model bundle.
+
+## 4. Model Loading & Resilience
+
+The service lazily loads `ml/saved_models/placement_model.json` on the first
+health or inference request. If the artifact is missing, it trains the
+predictor from `ml/data/placement_dataset.csv` and stores a new JSON bundle.
+If the model cannot be loaded or trained, the endpoint returns an explicit
+service error; it does not silently substitute a rule-based prediction.
+
+The Node.js client in `backend/services/mlService.js` applies an eight-second
+request timeout and propagates rejected responses or network errors to its
+caller. Operational deployments should therefore monitor the ML service and
+handle unavailable-service errors at the API boundary.

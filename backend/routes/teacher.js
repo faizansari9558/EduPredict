@@ -3,6 +3,7 @@ const {
   getTeacherDashboard,
   getTeacherStudents,
   getStudentDetails,
+  getTeacherAnalytics,
   createAssessment,
   getTeacherAssessments,
   publishAssessment,
@@ -19,6 +20,13 @@ router.get(
   authenticateToken,
   authorizeRoles('teacher'),
   getTeacherDashboard
+);
+
+router.get(
+  '/analytics',
+  authenticateToken,
+  authorizeRoles('teacher'),
+  getTeacherAnalytics
 );
 
 // Student Management
@@ -74,5 +82,6 @@ router.get(
 
 const review = require('../controllers/documentReviewController');
 router.get('/verifications',authenticateToken,authorizeRoles('teacher'),review.list);
+router.get('/verifications/:itemId/file',authenticateToken,authorizeRoles('teacher'),review.download);
 router.put('/verifications/:itemId',authenticateToken,authorizeRoles('teacher'),review.review);
 module.exports = router;

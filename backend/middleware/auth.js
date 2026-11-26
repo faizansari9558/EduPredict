@@ -15,7 +15,13 @@ async function authenticateToken(req, res, next) {
   try {
     if (!process.env.JWT_SECRET) return res.status(503).json({success:false,message:'Authentication is not configured.'});
     const decoded = jwt.verify(token, process.env.JWT_SECRET, {algorithms:['HS256']});
-    const [users] = await db.query(`SELECT u.id,u.email,r.name AS role FROM users u JOIN roles r ON r.id=u.role_id WHERE u.id=? AND u.status='active'`, [decoded.id]);
+    const [users] = await db.query(
+      `SELECT u.id, u.email, u.full_name, u.user_id_number, r.name AS role
+       FROM users u
+       JOIN roles r ON r.id = u.role_id
+       WHERE u.id = ? AND u.status = 'active'`,
+      [decoded.id]
+    );
     if (!users.length) return res.status(401).json({success:false,message:'Account is unavailable.'});
     req.user = users[0];
     return next();

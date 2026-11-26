@@ -266,6 +266,7 @@ Comprehensive technical documentation is cataloged inside the `docs/` directory:
 
 | Document | Description |
 | :--- | :--- |
+| [`EduPredict_Project_Report.md`](docs/EduPredict_Project_Report.md) | Detailed project report with requirements, diagrams, testing plan, limitations, and future scope |
 | [`01_Project_Introduction.md`](docs/01_Project_Introduction.md) | Executive summary, vision, and core purpose |
 | [`02_PRD.md`](docs/02_PRD.md) | Full Product Requirements Document and personas |
 | [`03_IRD.md`](docs/03_IRD.md) | Institutional governance, hierarchy, and compliance |

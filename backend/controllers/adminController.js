@@ -2,31 +2,66 @@ const db = require('../config/db');
 const XLSX = require('xlsx');
 
 async function getDashboardOverview(req, res) {
-  const overview = {
-    summary: {
-      totalStudents: 1284,
-      totalTeachers: 118,
-      totalDepartments: 12,
-      pendingVerifications: 23
-    },
-    alerts: [
-      'Student document verification pending for 8 records.',
-      'Assessment results for Batch 2025-A are ready to publish.',
-      '2 teacher assignments need department approval.'
-    ],
-    role: req.user?.role || 'admin'
-  };
+  try {
+    const [rows] = await db.query(`
+      SELECT
+        (SELECT COUNT(*) FROM users u JOIN roles r ON r.id = u.role_id
+         WHERE r.name = 'student' AND u.status = 'active') AS total_students,
+        (SELECT COUNT(*) FROM users u JOIN roles r ON r.id = u.role_id
+         WHERE r.name = 'teacher' AND u.status = 'active') AS total_teachers,
+        (SELECT COUNT(*) FROM departments) AS total_departments,
+        (SELECT COUNT(*) FROM students WHERE verification_status = 'pending') AS pending_verifications,
+        (SELECT COUNT(*) FROM assessments) AS total_assessments,
+        (SELECT COUNT(*) FROM student_metrics sm
+         JOIN users u ON u.id = sm.student_id
+         JOIN roles r ON r.id = u.role_id
+         WHERE r.name = 'student' AND u.status = 'active' AND sm.assessment_attempts > 0) AS students_with_metrics,
+        (SELECT COUNT(*) FROM student_metrics sm
+         JOIN users u ON u.id = sm.student_id
+         JOIN roles r ON r.id = u.role_id
+         WHERE r.name = 'student' AND u.status = 'active'
+           AND sm.assessment_attempts > 0 AND sm.placement_ready_score >= 60) AS placement_ready_students
+    `);
+    const stats = rows[0] || {};
+    const studentsWithMetrics = Number(stats.students_with_metrics || 0);
+    const placementReadyStudents = Number(stats.placement_ready_students || 0);
+    const pendingVerifications = Number(stats.pending_verifications || 0);
+    const totalAssessments = Number(stats.total_assessments || 0);
+    const alerts = [];
 
-  const payload = {
-    success: true,
-    data: overview
-  };
+    if (pendingVerifications > 0) {
+      alerts.push(`${pendingVerifications} student verification${pendingVerifications === 1 ? '' : 's'} pending review.`);
+    }
+    if (totalAssessments === 0) {
+      alerts.push('No assessments have been created yet.');
+    }
 
-  if (res && typeof res.json === 'function') {
-    return res.json(payload);
+    return res.json({
+      success: true,
+      data: {
+        summary: {
+          totalStudents: Number(stats.total_students || 0),
+          totalTeachers: Number(stats.total_teachers || 0),
+          totalDepartments: Number(stats.total_departments || 0),
+          pendingVerifications,
+          totalAssessments,
+          studentsWithMetrics,
+          placementReadyStudents,
+          placementReadyPct: studentsWithMetrics > 0
+            ? Number((placementReadyStudents / studentsWithMetrics * 100).toFixed(2))
+            : null
+        },
+        alerts,
+        role: req.user?.role || 'admin'
+      }
+    });
+  } catch (error) {
+    console.error('Get dashboard overview error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to retrieve dashboard overview.'
+    });
   }
-
-  return payload;
 }
 
 async function getRecentAudits(req, res) {
@@ -52,15 +87,24 @@ async function getAllUsers(req, res) {
     const { role, status, limit = 50, offset = 0 } = req.query;
     const [registered] = await db.query(
       `SELECT u.id, u.email, u.full_name, u.user_id_number, u.phone_number,
-              u.status, r.name AS role, 'registered' AS record_status
-       FROM users u INNER JOIN roles r ON r.id = u.role_id`
+              u.status, r.name AS role, d.name AS department, b.name AS batch,
+              'registered' AS record_status
+       FROM users u
+       INNER JOIN roles r ON r.id = u.role_id
+       LEFT JOIN students s ON s.user_id = u.id
+       LEFT JOIN teachers t ON t.user_id = u.id
+       LEFT JOIN departments d ON d.id = COALESCE(s.department_id, t.department_id)
+       LEFT JOIN batches b ON b.id = s.batch_id`
     );
     const [preauthorized] = await db.query(
       `SELECT CONCAT('identity-', i.id) AS id, i.email, i.full_name, i.user_id_number,
-              NULL AS phone_number,
-              CASE WHEN i.consumed_user_id IS NULL THEN 'preauthorized' ELSE 'registered' END AS status,
-              i.role_name AS role, 'preauthorized' AS record_status
-       FROM institutional_identity_records i`
+              NULL AS phone_number, d.name AS department, b.name AS batch,
+              'preauthorized' AS status, i.role_name AS role,
+              'preauthorized' AS record_status
+       FROM institutional_identity_records i
+       LEFT JOIN departments d ON d.id = i.department_id
+       LEFT JOIN batches b ON b.id = i.batch_id
+       WHERE i.consumed_user_id IS NULL`
     );
     const users = [...registered, ...preauthorized]
       .filter(user => !role || user.role === role)
@@ -298,6 +342,24 @@ async function getAllDepartments(req, res) {
   }
 }
 
+async function getDepartmentBatches(req, res) {
+  const departmentId = Number(req.query.departmentId);
+  if (!Number.isSafeInteger(departmentId) || departmentId <= 0) {
+    return res.status(400).json({ success: false, message: 'A valid department is required.' });
+  }
+
+  try {
+    const [batches] = await db.query(
+      'SELECT id, name, department_id FROM batches WHERE department_id = ? ORDER BY name, id',
+      [departmentId]
+    );
+    return res.json({ success: true, data: batches });
+  } catch (error) {
+    console.error('Get department batches error:', error);
+    return res.status(500).json({ success: false, message: 'Failed to retrieve department batches.' });
+  }
+}
+
 async function getDepartmentById(req, res) {
   try {
     const { deptId } = req.params;
@@ -417,57 +479,153 @@ async function updateDepartment(req, res) {
   }
 }
 
+function provisioningError(message, status = 400) {
+  const error = new Error(message);
+  error.status = status;
+  return error;
+}
+
+async function provisionIdentityRecord(record, adminUserId) {
+  const fullName = typeof record.fullName === 'string' ? record.fullName.trim() : '';
+  const email = typeof record.email === 'string' ? record.email.trim().toLowerCase() : '';
+  const userIdNumber = typeof record.userIdNumber === 'string' ? record.userIdNumber.trim() : '';
+  const role = typeof record.role === 'string' ? record.role.trim().toLowerCase() : 'student';
+  const departmentId = Number(record.departmentId);
+  const departmentName = typeof record.department === 'string' ? record.department.trim() : '';
+  const batchId = Number(record.batchId);
+  const batchName = typeof record.batch === 'string' ? record.batch.trim() : '';
+
+  if (!fullName || fullName.length > 255 || !email || email.length > 255 ||
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ||
+      !userIdNumber || userIdNumber.length > 100) {
+    throw provisioningError('Enter a valid full name, official email, and university ID.');
+  }
+  if (!['student', 'teacher'].includes(role)) {
+    throw provisioningError('Only student and teacher identity records can be provisioned here.');
+  }
+  if ((!Number.isSafeInteger(departmentId) || departmentId <= 0) && !departmentName) {
+    throw provisioningError('Select a valid department.');
+  }
+  if (role === 'student' && ((!Number.isSafeInteger(batchId) || batchId <= 0) && !batchName)) {
+    throw provisioningError('Select a batch for the student.');
+  }
+
+  let connection;
+  try {
+    connection = await db.getConnection();
+    await connection.beginTransaction();
+
+    const [existingUsers] = await connection.query(
+      `SELECT id FROM users
+       WHERE LOWER(email) = ? OR LOWER(user_id_number) = ?
+       LIMIT 1`,
+      [email, userIdNumber.toLowerCase()]
+    );
+    if (existingUsers.length) {
+      throw provisioningError('An account already exists with this email or university ID.', 409);
+    }
+
+    const [existingIdentities] = await connection.query(
+      `SELECT id FROM institutional_identity_records
+       WHERE LOWER(email) = ? OR LOWER(user_id_number) = ?
+       LIMIT 1`,
+      [email, userIdNumber.toLowerCase()]
+    );
+    if (existingIdentities.length) {
+      throw provisioningError('An institutional identity already exists with this email or university ID.', 409);
+    }
+
+    const [departments] = Number.isSafeInteger(departmentId) && departmentId > 0
+      ? await connection.query('SELECT id, name FROM departments WHERE id = ?', [departmentId])
+      : await connection.query('SELECT id, name FROM departments WHERE LOWER(name) = LOWER(?)', [departmentName]);
+    if (!departments.length) {
+      throw provisioningError('The selected department does not exist.');
+    }
+    const department = departments[0];
+
+    let batch = null;
+    if (role === 'student') {
+      const [batches] = Number.isSafeInteger(batchId) && batchId > 0
+        ? await connection.query(
+          'SELECT id, name FROM batches WHERE id = ? AND department_id = ?',
+          [batchId, department.id]
+        )
+        : await connection.query(
+          'SELECT id, name FROM batches WHERE LOWER(name) = LOWER(?) AND department_id = ?',
+          [batchName, department.id]
+        );
+      if (!batches.length) {
+        throw provisioningError('The selected batch does not belong to the selected department.');
+      }
+      batch = batches[0];
+    }
+
+    const [result] = await connection.query(
+      `INSERT INTO institutional_identity_records
+       (email, user_id_number, full_name, role_name, department_id, batch_id)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [email, userIdNumber, fullName, role, department.id, batch?.id || null]
+    );
+    await connection.query(
+      `INSERT INTO audit_logs (user_id, action, entity_type, entity_id, metadata_json)
+       VALUES (?, 'identity_record_provisioned', 'institutional_identity_record', ?, ?)`,
+      [adminUserId, result.insertId, JSON.stringify({
+        role,
+        department_id: department.id,
+        batch_id: batch?.id || null
+      })]
+    );
+    await connection.commit();
+    return {
+      id: result.insertId,
+      fullName,
+      email,
+      userIdNumber,
+      role,
+      department: department.name,
+      batch: batch?.name || null,
+      status: 'preauthorized'
+    };
+  } catch (error) {
+    if (connection) {
+      try {
+        await connection.rollback();
+      } catch (rollbackError) {
+        console.error('Identity provisioning rollback error:', rollbackError);
+      }
+    }
+    if (error.code === 'ER_DUP_ENTRY') {
+      error.status = 409;
+      error.message = 'An institutional identity already exists with this email or university ID.';
+    }
+    throw error;
+  } finally {
+    if (connection) connection.release();
+  }
+}
+
 async function createUser(req, res) {
   try {
-    const { fullName, email, userIdNumber, role = 'student', department, phoneNumber, status = 'active' } = req.body;
-    if (!fullName || !email || !userIdNumber) {
-      return res.status(400).json({
-        success: false,
-        message: 'Full name, email, and user ID number are required.'
-      });
-    }
-
-    const cleanEmail = email.trim().toLowerCase();
-    const cleanId = userIdNumber.trim();
-    const cleanRole = role.toLowerCase();
-    if (!['student', 'teacher'].includes(cleanRole)) {
-      return res.status(400).json({ success: false, message: 'Only student and teacher identity records can be provisioned here.' });
-    }
-
-    await db.query(
-      `INSERT INTO institutional_identity_records
-       (email, user_id_number, full_name, role_name, department_id)
-       VALUES (?, ?, ?, ?, (SELECT id FROM departments WHERE name LIKE ? LIMIT 1))`,
-      [cleanEmail, cleanId, fullName.trim(), cleanRole, `%${department || ''}%`]
-    );
-
+    const identity = await provisionIdentityRecord(req.body || {}, req.user.id);
     return res.status(201).json({
       success: true,
-      message: 'User record provisioned successfully.',
-      data: {
-        id: cleanId,
-        email: cleanEmail,
-        fullName: fullName.trim(),
-        userIdNumber: cleanId,
-        role: cleanRole,
-        status
-      }
+      message: 'Official identity record created. The user can now complete email OTP registration.',
+      data: identity
     });
   } catch (error) {
-    console.error('Create user error:', error);
-    if (error.code === 'ER_DUP_ENTRY') {
-      return res.status(409).json({ success: false, message: 'A record with this email or university ID already exists.' });
+    if (error.status) {
+      return res.status(error.status).json({ success: false, message: error.message });
     }
+    console.error('Create identity record error:', error);
     return res.status(500).json({
-      success: false,
-      message: error.message || 'Failed to create user.'
+      success: false, message: 'Failed to create the institutional identity record.'
     });
   }
 }
 
 async function bulkImportUsers(req, res) {
   try {
-    let users = req.body.users;
+    let users = req.body?.users;
     if (req.file) {
       const workbook = XLSX.read(req.file.buffer, { type: 'buffer' });
       const sheet = workbook.Sheets[workbook.SheetNames[0]];
@@ -476,49 +634,42 @@ async function bulkImportUsers(req, res) {
         email: row['Official Email'] || row.email,
         userIdNumber: row['University User ID'] || row.userIdNumber || row['University ID'],
         role: row.Role || row.role || 'student',
-        department: row.Department || row.department || ''
+        department: row.Department || row.department || '',
+        batch: row.Batch || row.batch || ''
       }));
     }
-    if (!Array.isArray(users) || !users.length) {
+    if (!Array.isArray(users) || !users.length || users.length > 500) {
       return res.status(400).json({
         success: false,
-        message: 'A list of user records is required for bulk import.'
+        message: 'Provide between 1 and 500 identity records for bulk import.'
       });
     }
 
     let imported = 0;
     const rejected = [];
 
-    for (const [index, u] of users.entries()) {
-      if (!u.email || !u.userIdNumber || !u.fullName) {
-        rejected.push({ row: index + 2, reason: 'Full name, email, and university ID are required.' });
-        continue;
-      }
-      const cleanEmail = String(u.email).trim().toLowerCase();
-      const cleanId = String(u.userIdNumber).trim();
-      const cleanRole = String(u.role || 'student').toLowerCase();
-      if (!['student', 'teacher'].includes(cleanRole)) {
-        rejected.push({ row: index + 2, reason: 'Role must be student or teacher.' });
-        continue;
-      }
+    for (const [index, user] of users.entries()) {
       try {
-        await db.query(
-          `INSERT INTO institutional_identity_records
-           (email, user_id_number, full_name, role_name, department_id)
-           VALUES (?, ?, ?, ?, (SELECT id FROM departments WHERE name LIKE ? LIMIT 1))
-           ON DUPLICATE KEY UPDATE full_name = VALUES(full_name), role_name = VALUES(role_name), department_id = VALUES(department_id)`,
-          [cleanEmail, cleanId, String(u.fullName).trim(), cleanRole, `%${u.department || ''}%`]
-        );
+        await provisionIdentityRecord(user, req.user.id);
         imported++;
       } catch (error) {
-        if (error.code === 'ER_DUP_ENTRY') rejected.push({ row: index + 2, reason: 'Email or university ID conflicts with another record.' });
-        else throw error;
+        if (error.status === 400 || error.status === 409 || error.code === 'ER_DUP_ENTRY') {
+          rejected.push({ row: index + 2, reason: error.message });
+          continue;
+        }
+        console.error(`Bulk identity import failed at row ${index + 2}:`, error);
+        return res.status(500).json({
+          success: false,
+          message: `Bulk import stopped after ${imported} records were created. Review those records before retrying.`,
+          importedCount: imported,
+          rejected
+        });
       }
     }
 
     return res.json({
       success: true,
-      message: `Successfully imported ${imported} user records.`,
+      message: `Created ${imported} institutional identity records.`,
       importedCount: imported,
       rejected
     });
@@ -544,6 +695,7 @@ module.exports = {
   getStudentById,
   updateStudentVerification,
   getAllDepartments,
+  getDepartmentBatches,
   getDepartmentById,
   createDepartment,
   updateDepartment

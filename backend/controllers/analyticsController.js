@@ -5,6 +5,19 @@
  */
 
 const pool = require('../config/db');
+const assessmentQuestionMarksJoin = `
+  LEFT JOIN (
+    SELECT assessment_id, SUM(marks) AS total_question_marks
+    FROM assessment_questions
+    GROUP BY assessment_id
+  ) question_totals ON question_totals.assessment_id = a.id
+`;
+const assessmentScorePercent = `
+  aa.score * 100 / NULLIF(
+    COALESCE(NULLIF(a.total_marks, 0), question_totals.total_question_marks, 0),
+    0
+  )
+`;
 
 // ============================================================================
 // STUDENT ANALYTICS ENDPOINTS
@@ -616,40 +629,59 @@ exports.getSystemOverview = async (req, res) => {
   try {
     const query = `
       SELECT 
-        COUNT(DISTINCT CASE WHEN r.name = 'student' THEN u.id END) as total_students,
-        COUNT(DISTINCT CASE WHEN r.name = 'teacher' THEN u.id END) as total_teachers,
-        COUNT(DISTINCT CASE WHEN r.name = 'admin' THEN u.id END) as total_admins,
-        COUNT(DISTINCT d.id) as total_departments,
-        COUNT(DISTINCT a.id) as total_assessments,
-        ROUND(AVG(sm.overall_score), 2) as system_avg_score,
-        ROUND(COUNT(DISTINCT CASE WHEN sm.overall_score >= 60 THEN sm.student_id END) / NULLIF(COUNT(DISTINCT CASE WHEN r.name = 'student' THEN u.id END), 0) * 100, 2) as system_pass_rate,
-        COUNT(DISTINCT CASE WHEN sm.placement_ready_score >= 60 THEN sm.student_id END) as placement_ready_students
-      FROM users u
-      LEFT JOIN roles r ON u.role_id = r.id
-      CROSS JOIN departments d
-      CROSS JOIN assessments a
-      LEFT JOIN student_metrics sm ON u.role_id = (SELECT id FROM roles WHERE name = 'student') AND u.id = sm.student_id
+        (SELECT COUNT(*) FROM users u
+         JOIN roles r ON r.id = u.role_id
+         WHERE r.name = 'student' AND u.status = 'active') AS total_students,
+        (SELECT COUNT(*) FROM users u
+         JOIN roles r ON r.id = u.role_id
+         WHERE r.name = 'teacher' AND u.status = 'active') AS total_teachers,
+        (SELECT COUNT(*) FROM users u
+         JOIN roles r ON r.id = u.role_id
+         WHERE r.name = 'admin' AND u.status = 'active') AS total_admins,
+        (SELECT COUNT(*) FROM departments) AS total_departments,
+        (SELECT COUNT(*) FROM assessments) AS total_assessments,
+        (SELECT COUNT(*) FROM student_metrics sm
+         JOIN users u ON u.id = sm.student_id
+         JOIN roles r ON r.id = u.role_id
+         WHERE r.name = 'student' AND u.status = 'active' AND sm.assessment_attempts > 0) AS students_with_metrics,
+        (SELECT ROUND(AVG(sm.overall_score), 2) FROM student_metrics sm
+         JOIN users u ON u.id = sm.student_id
+         JOIN roles r ON r.id = u.role_id
+         WHERE r.name = 'student' AND u.status = 'active' AND sm.assessment_attempts > 0) AS system_avg_score,
+        (SELECT ROUND(SUM(sm.assessment_passed) / NULLIF(SUM(sm.assessment_attempts), 0) * 100, 2)
+         FROM student_metrics sm
+         JOIN users u ON u.id = sm.student_id
+         JOIN roles r ON r.id = u.role_id
+         WHERE r.name = 'student' AND u.status = 'active' AND sm.assessment_attempts > 0) AS system_pass_rate,
+        (SELECT COUNT(*) FROM student_metrics sm
+         JOIN users u ON u.id = sm.student_id
+         JOIN roles r ON r.id = u.role_id
+         WHERE r.name = 'student' AND u.status = 'active'
+           AND sm.assessment_attempts > 0 AND sm.placement_ready_score >= 60) AS placement_ready_students
     `;
 
     const [result] = await pool.query(query);
 
     const stats = result[0] || {};
-    const totalStudents = stats.total_students || 0;
-    const placementReadyPct = totalStudents > 0 ? 
-      ((stats.placement_ready_students || 0) / totalStudents * 100).toFixed(2) : 0;
+    const studentsWithMetrics = Number(stats.students_with_metrics || 0);
+    const placementReadyStudents = Number(stats.placement_ready_students || 0);
+    const placementReadyPct = studentsWithMetrics > 0
+      ? Number((placementReadyStudents / studentsWithMetrics * 100).toFixed(2))
+      : null;
 
-    res.json({
+    return res.json({
       success: true,
       data: {
-        total_users: (stats.total_students || 0) + (stats.total_teachers || 0) + (stats.total_admins || 0),
+        total_users: Number(stats.total_students || 0) + Number(stats.total_teachers || 0) + Number(stats.total_admins || 0),
         total_students: stats.total_students || 0,
         total_teachers: stats.total_teachers || 0,
         total_admins: stats.total_admins || 0,
         total_departments: stats.total_departments || 0,
         total_assessments: stats.total_assessments || 0,
-        system_avg_score: stats.system_avg_score || 0,
-        system_pass_rate: stats.system_pass_rate || 0,
-        placement_ready_students: stats.placement_ready_students || 0,
+        students_with_metrics: studentsWithMetrics,
+        system_avg_score: stats.system_avg_score,
+        system_pass_rate: stats.system_pass_rate,
+        placement_ready_students: placementReadyStudents,
         placement_ready_pct: placementReadyPct
       }
     });
@@ -669,13 +701,15 @@ exports.getDepartmentComparison = async (req, res) => {
       SELECT 
         d.id,
         d.name,
-        COUNT(DISTINCT s.user_id) as student_count,
+        COUNT(DISTINCT u.id) as student_count,
+        COUNT(DISTINCT sm.student_id) as students_with_metrics,
         ROUND(AVG(sm.overall_score), 2) as avg_score,
-        ROUND(COUNT(DISTINCT CASE WHEN sm.overall_score >= 60 THEN s.user_id END) / NULLIF(COUNT(DISTINCT s.user_id), 0) * 100, 2) as pass_rate,
-        ROUND(COUNT(DISTINCT CASE WHEN sm.placement_ready_score >= 60 THEN s.user_id END) / NULLIF(COUNT(DISTINCT s.user_id), 0) * 100, 2) as placement_ready_pct
+        ROUND(SUM(sm.assessment_passed) / NULLIF(SUM(sm.assessment_attempts), 0) * 100, 2) as pass_rate,
+        ROUND(COUNT(DISTINCT CASE WHEN sm.placement_ready_score >= 60 THEN sm.student_id END) / NULLIF(COUNT(DISTINCT sm.student_id), 0) * 100, 2) as placement_ready_pct
       FROM departments d
       LEFT JOIN students s ON d.id = s.department_id
-      LEFT JOIN student_metrics sm ON s.user_id = sm.student_id
+      LEFT JOIN users u ON u.id = s.user_id AND u.status = 'active'
+      LEFT JOIN student_metrics sm ON u.id = sm.student_id AND sm.assessment_attempts > 0
       GROUP BY d.id, d.name
       ORDER BY avg_score DESC
     `;
@@ -709,14 +743,16 @@ exports.getPlacementReadiness = async (req, res) => {
     const query = `
       SELECT 
         d.name as department_name,
-        COUNT(DISTINCT s.user_id) as total_students,
-        COUNT(DISTINCT CASE WHEN sm.placement_ready_score >= 60 THEN s.user_id END) as ready_count,
-        ROUND(COUNT(DISTINCT CASE WHEN sm.placement_ready_score >= 60 THEN s.user_id END) / NULLIF(COUNT(DISTINCT s.user_id), 0) * 100, 2) as ready_pct,
-        COUNT(DISTINCT CASE WHEN sm.placement_ready_score >= 40 AND sm.placement_ready_score < 60 THEN s.user_id END) as borderline_count,
-        COUNT(DISTINCT CASE WHEN sm.placement_ready_score < 40 THEN s.user_id END) as not_ready_count
+        COUNT(DISTINCT u.id) as total_students,
+        COUNT(DISTINCT sm.student_id) as analyzed_students,
+        COUNT(DISTINCT CASE WHEN sm.placement_ready_score >= 60 THEN sm.student_id END) as ready_count,
+        ROUND(COUNT(DISTINCT CASE WHEN sm.placement_ready_score >= 60 THEN sm.student_id END) / NULLIF(COUNT(DISTINCT sm.student_id), 0) * 100, 2) as ready_pct,
+        COUNT(DISTINCT CASE WHEN sm.placement_ready_score >= 40 AND sm.placement_ready_score < 60 THEN sm.student_id END) as borderline_count,
+        COUNT(DISTINCT CASE WHEN sm.placement_ready_score < 40 THEN sm.student_id END) as not_ready_count
       FROM departments d
       LEFT JOIN students s ON d.id = s.department_id
-      LEFT JOIN student_metrics sm ON s.user_id = sm.student_id
+      LEFT JOIN users u ON u.id = s.user_id AND u.status = 'active'
+      LEFT JOIN student_metrics sm ON u.id = sm.student_id AND sm.assessment_attempts > 0
       GROUP BY d.id, d.name
       ORDER BY ready_pct DESC
     `;
@@ -729,6 +765,7 @@ exports.getPlacementReadiness = async (req, res) => {
         placement_readiness: data.map(d => ({
           department: d.department_name,
           total_students: d.total_students,
+          analyzed_students: d.analyzed_students,
           ready_count: d.ready_count,
           ready_pct: d.ready_pct,
           borderline_count: d.borderline_count,
@@ -739,6 +776,163 @@ exports.getPlacementReadiness = async (req, res) => {
   } catch (error) {
     console.error('Placement readiness error:', error);
     res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+exports.getStudentPerformanceDistribution = async (req, res) => {
+  try {
+    const [rows] = await pool.query(`
+      SELECT
+        CASE
+          WHEN student_scores.average_score >= 80 THEN '80-100'
+          WHEN student_scores.average_score >= 60 THEN '60-79'
+          WHEN student_scores.average_score >= 40 THEN '40-59'
+          ELSE '0-39'
+        END AS band,
+        COUNT(*) AS student_count
+      FROM (
+        SELECT aa.student_user_id, AVG(${assessmentScorePercent}) AS average_score
+        FROM assessment_attempts aa
+        JOIN assessments a ON a.id = aa.assessment_id
+        ${assessmentQuestionMarksJoin}
+        JOIN users u ON u.id = aa.student_user_id AND u.status = 'active'
+        JOIN roles r ON r.id = u.role_id AND r.name = 'student'
+        WHERE aa.status = 'evaluated'
+          AND aa.submitted_at IS NOT NULL
+          AND aa.score IS NOT NULL
+          AND COALESCE(NULLIF(a.total_marks, 0), question_totals.total_question_marks, 0) > 0
+        GROUP BY aa.student_user_id
+      ) AS student_scores
+      GROUP BY band
+    `);
+
+    const counts = new Map(rows.map((row) => [row.band, Number(row.student_count || 0)]));
+    const bands = [
+      { band: '80-100', students: counts.get('80-100') || 0 },
+      { band: '60-79', students: counts.get('60-79') || 0 },
+      { band: '40-59', students: counts.get('40-59') || 0 },
+      { band: '0-39', students: counts.get('0-39') || 0 }
+    ];
+
+    return res.json({
+      success: true,
+      data: {
+        students_analyzed: bands.reduce((total, item) => total + item.students, 0),
+        bands
+      }
+    });
+  } catch (error) {
+    console.error('Student performance analytics error:', error);
+    return res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+exports.getAssessmentResultsDistribution = async (req, res) => {
+  try {
+    const [rows] = await pool.query(`
+      SELECT
+        SUM(CASE WHEN scored_attempts.score_percent >= 60 THEN 1 ELSE 0 END) AS passed_attempts,
+        SUM(CASE WHEN scored_attempts.score_percent < 60 THEN 1 ELSE 0 END) AS needs_support_attempts,
+        COUNT(*) AS evaluated_attempts
+      FROM (
+        SELECT ${assessmentScorePercent} AS score_percent
+        FROM assessment_attempts aa
+        JOIN assessments a ON a.id = aa.assessment_id
+        ${assessmentQuestionMarksJoin}
+        JOIN users u ON u.id = aa.student_user_id AND u.status = 'active'
+        JOIN roles r ON r.id = u.role_id AND r.name = 'student'
+        WHERE aa.status = 'evaluated'
+          AND aa.submitted_at IS NOT NULL
+          AND aa.score IS NOT NULL
+      ) AS scored_attempts
+      WHERE scored_attempts.score_percent IS NOT NULL
+    `);
+    const results = rows[0] || {};
+
+    return res.json({
+      success: true,
+      data: {
+        passed_attempts: Number(results.passed_attempts || 0),
+        needs_support_attempts: Number(results.needs_support_attempts || 0),
+        evaluated_attempts: Number(results.evaluated_attempts || 0)
+      }
+    });
+  } catch (error) {
+    console.error('Assessment results analytics error:', error);
+    return res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+exports.getAcademicTrends = async (req, res) => {
+  try {
+    const [rows] = await pool.query(`
+      SELECT
+        DATE_FORMAT(aa.submitted_at, '%Y-%m') AS period,
+        a.assessment_type,
+        ROUND(AVG(${assessmentScorePercent}), 2) AS average_score,
+        COUNT(*) AS evaluated_attempts
+      FROM assessment_attempts aa
+      JOIN assessments a ON a.id = aa.assessment_id
+      ${assessmentQuestionMarksJoin}
+      JOIN users u ON u.id = aa.student_user_id AND u.status = 'active'
+      JOIN roles r ON r.id = u.role_id AND r.name = 'student'
+      WHERE aa.status = 'evaluated'
+        AND aa.submitted_at IS NOT NULL
+        AND aa.submitted_at >= DATE_SUB(DATE_FORMAT(CURRENT_DATE, '%Y-%m-01'), INTERVAL 11 MONTH)
+        AND aa.score IS NOT NULL
+        AND COALESCE(NULLIF(a.total_marks, 0), question_totals.total_question_marks, 0) > 0
+      GROUP BY period, a.assessment_type
+      ORDER BY period ASC, a.assessment_type ASC
+    `);
+
+    return res.json({
+      success: true,
+      data: {
+        monthly_trends: rows.map((row) => ({
+          period: row.period,
+          assessment_type: row.assessment_type,
+          average_score: Number(row.average_score),
+          evaluated_attempts: Number(row.evaluated_attempts)
+        }))
+      }
+    });
+  } catch (error) {
+    console.error('Academic trends analytics error:', error);
+    return res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+exports.getSkillsComparison = async (req, res) => {
+  try {
+    const [rows] = await pool.query(`
+      SELECT
+        sp.skill_category AS category,
+        ROUND(AVG(sp.avg_score), 2) AS average_proficiency,
+        COUNT(DISTINCT sp.student_id) AS students_assessed,
+        SUM(sp.attempts) AS skill_attempts
+      FROM skill_proficiency sp
+      JOIN users u ON u.id = sp.student_id AND u.status = 'active'
+      JOIN roles r ON r.id = u.role_id AND r.name = 'student'
+      WHERE sp.attempts > 0
+        AND TRIM(sp.skill_category) <> ''
+      GROUP BY sp.skill_category
+      ORDER BY sp.skill_category ASC
+    `);
+
+    return res.json({
+      success: true,
+      data: {
+        categories: rows.map((row) => ({
+          category: row.category,
+          average_proficiency: Number(row.average_proficiency),
+          students_assessed: Number(row.students_assessed),
+          skill_attempts: Number(row.skill_attempts)
+        }))
+      }
+    });
+  } catch (error) {
+    console.error('Skills comparison analytics error:', error);
+    return res.status(500).json({ success: false, error: error.message });
   }
 };
 

@@ -3,6 +3,7 @@ const {
   getStudentDashboard,
   getStudentProfile,
   updateStudentProfile,
+  updateAcademicRecords,
   uploadDocument,
   getStudentDocuments,
   downloadDocument,
@@ -10,6 +11,7 @@ const {
   createPortfolioItem,
   getSkills,
   createSkill,
+  getStudentResults,
   getAssessmentList,
   startAssessment,
   submitAssessmentResponse,
@@ -31,6 +33,28 @@ const upload = multer({
 });
 fs.mkdirSync(path.resolve(__dirname, '../uploads/.quarantine'), { recursive: true });
 
+const academicRecordUpload = upload.fields([
+  { name: 'cgpa_document', maxCount: 1 },
+  { name: 'tenth_document', maxCount: 1 },
+  { name: 'twelfth_document', maxCount: 1 },
+  { name: 'graduation_document', maxCount: 1 }
+]);
+const portfolioCertificateUpload = upload.single('certificate');
+function handleAcademicRecordUpload(req, res, next) {
+  academicRecordUpload(req, res, (error) => {
+    if (!error) return next();
+    const status = error.code === 'LIMIT_FILE_SIZE' ? 413 : 400;
+    return res.status(status).json({ success: false, message: error.message });
+  });
+}
+function handlePortfolioCertificateUpload(req, res, next) {
+  portfolioCertificateUpload(req, res, (error) => {
+    if (!error) return next();
+    const status = error.code === 'LIMIT_FILE_SIZE' ? 413 : 400;
+    return res.status(status).json({ success: false, message: error.message });
+  });
+}
+
 // Dashboard
 router.get(
   '/dashboard',
@@ -40,7 +64,13 @@ router.get(
 );
 router.get('/documents/:documentId/download', authenticateToken, downloadDocument);
 router.get('/portfolio/:itemType', authenticateToken, authorizeRoles('student'), getPortfolioItems);
-router.post('/portfolio/:itemType', authenticateToken, authorizeRoles('student'), createPortfolioItem);
+router.post(
+  '/portfolio/:itemType',
+  authenticateToken,
+  authorizeRoles('student'),
+  handlePortfolioCertificateUpload,
+  createPortfolioItem
+);
 router.get('/skills', authenticateToken, authorizeRoles('student'), getSkills);
 router.post('/skills', authenticateToken, authorizeRoles('student'), createSkill);
 
@@ -57,6 +87,13 @@ router.patch(
   authenticateToken,
   authorizeRoles('student'),
   updateStudentProfile
+);
+router.put(
+  '/academic-records',
+  authenticateToken,
+  authorizeRoles('student'),
+  handleAcademicRecordUpload,
+  updateAcademicRecords
 );
 
 // Document Management
@@ -76,6 +113,8 @@ router.get(
 );
 
 // Assessment Management
+router.get('/results', authenticateToken, authorizeRoles('student'), getStudentResults);
+
 router.get(
   '/assessments',
   authenticateToken,

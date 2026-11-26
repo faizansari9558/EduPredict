@@ -86,7 +86,7 @@ export default function StudentAssessments() {
       <PageHeader
         eyebrow="Evaluation & Testing Arena"
         title="Assessments Hub"
-        subtitle="Standardized aptitude benchmarks, core subject quizzes, and sandboxed coding challenges."
+        subtitle="Published assessments and coding challenges, with your own latest attempt and solution status."
         icon="assignment"
       />
       {loading && <p className="text-sm text-on-surface-variant">Loading assessments...</p>}
@@ -123,8 +123,16 @@ export default function StudentAssessments() {
                   {test.assessment_type}
                 </span>
                 <StatusBadge
-                  status="pending"
-                  label="Available"
+                  status={test.attempt_status === 'evaluated' ? 'completed' : 'pending'}
+                  label={
+                    test.attempt_status === 'evaluated'
+                      ? 'Completed'
+                      : test.attempt_status === 'submitted'
+                      ? 'Submitted'
+                      : test.attempt_status === 'in_progress'
+                      ? 'In Progress'
+                      : 'Available'
+                  }
                 />
               </div>
 
@@ -137,6 +145,11 @@ export default function StudentAssessments() {
                 <div>Questions: <strong className="text-on-surface">{test.question_count || '—'}</strong></div>
                 <div>Duration: <strong className="text-on-surface">{test.duration || '—'} minutes</strong></div>
                 <div>Type: <strong className="text-on-surface">{test.assessment_type}</strong></div>
+                {test.attempt_status && (
+                  <div className="col-span-2">
+                    Your latest score: <strong className="text-on-surface">{test.attempt_score ?? 'Not scored yet'}</strong>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -163,7 +176,7 @@ export default function StudentAssessments() {
             <p className="text-xs text-on-surface-variant">Real-time autograded algorithmic problem bank</p>
           </div>
           <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
-            2 / 4 Solved
+          {codingChallenges.filter((challenge) => challenge.solve_status === 'solved').length} / {codingChallenges.length} Solved
           </span>
         </div>
 
@@ -178,12 +191,12 @@ export default function StudentAssessments() {
                 <div className="flex items-center gap-2">
                   <h4 className="font-bold text-sm text-on-surface">{prob.title}</h4>
                   <StatusBadge
-                    status={prob.difficulty === 'Hard' ? 'at-risk' : 'info'}
-                    label={prob.difficulty}
+                    status={prob.solve_status === 'solved' ? 'completed' : prob.solve_status === 'attempted' ? 'pending' : 'info'}
+                    label={prob.difficulty_level || 'Unrated'}
                   />
                 </div>
                 <p className="text-xs text-on-surface-variant">
-                  {prob.category} • Acceptance: {prob.acceptance_rate} • {prob.points} Pts
+                  {prob.testcase_count} test cases • Your status: {prob.solve_status} • Best score: {prob.best_score ?? 'Not scored'}
                 </p>
               </div>
 

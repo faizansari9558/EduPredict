@@ -12,6 +12,7 @@ const {
   getStudentById,
   updateStudentVerification,
   getAllDepartments,
+  getDepartmentBatches,
   getDepartmentById,
   createDepartment,
   updateDepartment
@@ -104,6 +105,13 @@ router.get(
   authenticateToken,
   authorizeRoles('admin'),
   getAllDepartments
+);
+
+router.get(
+  '/batches',
+  authenticateToken,
+  authorizeRoles('admin'),
+  getDepartmentBatches
 );
 
 router.get(

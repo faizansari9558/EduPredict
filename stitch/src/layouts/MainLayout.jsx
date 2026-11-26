@@ -47,6 +47,7 @@ export default function MainLayout() {
         {/* Topbar Header */}
         <Navbar
           role={currentRole}
+          user={session}
           collapsed={collapsed}
           onOpenMobileMenu={() => setMobileOpen(true)}
         />
@@ -59,7 +60,6 @@ export default function MainLayout() {
         {/* Institutional Footer */}
         <footer className="mt-auto py-6 px-6 border-t border-outline-variant/30 text-center text-xs text-on-surface-variant flex flex-col sm:flex-row items-center justify-between gap-2">
           <span>© 2026 EduPredict • Smart Student Academic &amp; Placement Prediction System</span>
-          <span className="font-mono text-[11px] text-outline">Stitch UI v2.4 • Tailwind CSS v4</span>
         </footer>
       </div>
     </div>
